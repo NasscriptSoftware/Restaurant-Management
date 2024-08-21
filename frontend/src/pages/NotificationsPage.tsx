@@ -15,7 +15,7 @@ const NotificationsPage: React.FC = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await api.get("http://127.0.0.1:8000/api/notifications/");
+      const response = await api.get("/notifications/");
       setNotifications(response.data.results);
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -24,7 +24,7 @@ const NotificationsPage: React.FC = () => {
 
   const markAsRead = async (id: number) => {
     try {
-      await api.post(`http://127.0.0.1:8000/api/notifications/${id}/mark_as_read/`);
+      await api.post(`/notifications/${id}/mark_as_read/`);
       setNotifications((prevNotifications) =>
         prevNotifications.map((notif) =>
           notif.id === id ? { ...notif, is_read: true } : notif
@@ -37,7 +37,7 @@ const NotificationsPage: React.FC = () => {
 
   const handleDeleteNotification = async (id: number) => {
     try {
-      await api.delete(`http://127.0.0.1:8000/api/notifications/${id}/`);
+      await api.delete(`/notifications/${id}/`);
       setNotifications((prevNotifications) =>
         prevNotifications.filter((notification) => notification.id !== id)
       );

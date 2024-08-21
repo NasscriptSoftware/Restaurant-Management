@@ -21,9 +21,9 @@ const NotificationBadge: React.FC<NotificationBadgeProps> = ({ className = "" })
 
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000);
+    // const interval = setInterval(fetchUnreadCount, 30000);
 
-    return () => clearInterval(interval);
+    // return () => clearInterval(interval);
   }, []);
 
   if (unreadCount === 0) return null;

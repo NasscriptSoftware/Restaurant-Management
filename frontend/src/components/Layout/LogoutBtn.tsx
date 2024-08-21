@@ -1,9 +1,10 @@
 import { logout } from "@/features/slices/authSlice";
-import { logout as logoutAPI} from "@/services/api";
+import { logout as logoutAPI } from "@/services/api";
 import { LogOutIcon } from "lucide-react";
 import React from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 
 const LogoutBtn: React.FC = () => {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ const LogoutBtn: React.FC = () => {
         await logoutAPI({ refresh_token: refreshToken });
         localStorage.removeItem("token");
         localStorage.removeItem("refresh");
-        dispatch(logout())
+        dispatch(logout());
         navigate("/login");
       }
     } catch (error) {
@@ -25,12 +26,27 @@ const LogoutBtn: React.FC = () => {
   };
 
   return (
-    <button className="w-full flex items-center space-x-2 px-3 hover:text-red-500 cursor-pointer mt-2 justify-start py-1 rounded-md focus:outline-none font-bold"
-    onClick={handleLogout}
-      >
-        <LogOutIcon />
-        <p>Logout</p>
-    </button>
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <button className="w-full flex items-center space-x-2 px-3 hover:text-red-500 cursor-pointer mt-2 justify-start py-1 rounded-md focus:outline-none">
+          <LogOutIcon />
+          <p className="hidden sm:block font-bold">Logout</p>
+        </button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to log out? You will need to log in again to
+            access your account.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleLogout} className="hover:bg-white border hover:border-gray-200 hover:text-red-500">Logout</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

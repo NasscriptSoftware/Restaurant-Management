@@ -1,6 +1,18 @@
-venv/
+# Ignore Python bytecode
 __pycache__/
-db.sqlite3
-*.env
+*.py[cod]
 *.pyc
+
+# Ignore environment variables
+venv/
+*.env
+
+# Ignore media files
+/media/
+
+# Ignore static files and test data
+staticfiles/
+test_data.json
+
+db.sqlite3
 sample_data.txt

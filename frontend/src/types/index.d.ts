@@ -25,7 +25,7 @@ export interface Order {
   status: "pending" | "approved" | "cancelled" | "delivered";
   bill_generated: boolean;
   items: OrderItem[];
-  order_type: "dining" | "takeaway" | "delivery"; // Add order_type to Order interface
+  order_type: "dining" | "takeaway" | "delivery";
 }
 
 export interface Bill {
@@ -64,10 +64,9 @@ export interface OrderFormData {
   items: OrderItem[];
   total_amount: number;
   status: "pending" | "approved" | "cancelled" | "delivered";
-  order_type: "dining" | "takeaway" | "delivery"; 
-  payment_method: "cash" | "bank"; 
+  order_type: "dining" | "takeaway" | "delivery";
+  payment_method: "cash" | "bank";
 }
-
 
 // Analytics types
 export interface AnalyticsData {
@@ -156,8 +155,8 @@ export interface UseDishesReturn {
   isError: boolean;
   refetch: () => void;
   addDishToOrder: (id: number, quantity: number) => void;
-  page: number; 
-  setPage: (page: number) => void; 
+  page: number;
+  setPage: (page: number) => void;
 }
 
 export interface UseOrdersReturn {
@@ -246,6 +245,49 @@ export interface MessType {
 }
 
 // Add FloorName type and initialFloors array
-export type FloorName = "Ground floor" | "1st Floor" | "2nd floor" | "3rd floor";
+export type FloorName =
+  | "Ground floor"
+  | "1st Floor"
+  | "2nd floor"
+  | "3rd floor";
 
-export const initialFloors: FloorName[] = ["Ground floor", "1st Floor", "2nd floor", "3rd floor"];
+export const initialFloors: FloorName[] = [
+  "Ground floor",
+  "1st Floor",
+  "2nd floor",
+  "3rd floor",
+];
+
+// Delivery Driver
+export type DeliveryDriver = {
+  id: number;
+  username: string;
+  email: string;
+  mobile_number: string;
+  is_active: boolean;
+  is_available: boolean;
+};
+
+export type DeliveryOrderStatus =
+  | "pending"
+  | "accepted"
+  | "in_progress"
+  | "delivered"
+  | "cancelled";
+
+export type DeliveryOrder = {
+  id: number;
+  driver: number;
+  driver_name: string;
+  status: string;
+  order: Order;
+  created_at: Date;
+  updated_at: Date;
+};
+
+export type PaginatedResponse<T> = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+};

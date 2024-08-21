@@ -1,20 +1,34 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "@/features/slices/authSlice";
 import { login } from "@/services/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EyeIcon, EyeOffIcon, RotateCcw } from "lucide-react";
 
 const LoginSchema = Yup.object().shape({
   username: Yup.string().trim().required("Username is required"),
   password: Yup.string().trim().required("Password is required"),
 });
 
-const LoginPage: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
+const LoginPage = () => {
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleNavigate = (user: any) => {
     if (user.role === "driver") {
@@ -45,80 +59,86 @@ const LoginPage: React.FC = () => {
         localStorage.setItem("refresh", response.data.refresh);
 
         dispatch(loginSuccess({ user, token }));
-
-        setIsLoading(false);
         handleNavigate(user);
       } catch (error: any) {
+        console.error("Login failed:", error);
+        setError(error.response?.data?.detail || "An error occurred");
+      } finally {
         setIsLoading(false);
-        if (error.response?.status === 401) {
-          formik.setErrors({ password: "Invalid username or password" });
-        } else {
-          console.error(`Failed to log in: ${error}`);
-          formik.setErrors({
-            password: "An error occurred. Please try again.",
-          });
-        }
       }
     },
   });
 
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
   return (
-    <div className="flex items-center justify-center py-3 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <h2 className="mt-6 text-center text-3xl font-extrabold">
-          Sign in to your account
-        </h2>
-        <form className="mt-8 space-y-8" onSubmit={formik.handleSubmit}>
-          <input type="hidden" name="remember" defaultValue="true" />
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="username" className="sr-only">
-                Username
-              </label>
-              <input
-                type="text"
-                id="username"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Username"
-                {...formik.getFieldProps("username")}
-              />
-              {formik.touched.username && formik.errors.username ? (
-                <div className="text-red-500 text-sm">
-                  {formik.errors.username}
+    <div className="container mx-auto flex flex-col items-center justify-center min-h-screen">
+      <img
+        src="/images/logo.png"
+        alt="Logo"
+        className="align-middle h-auto w-[150px] mb-5"
+      />
+      <Card className="w-[350px]">
+        <CardHeader>
+          <CardTitle>Sign in</CardTitle>
+          <CardDescription></CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={formik.handleSubmit}>
+            <div className="grid w-full items-center gap-4">
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  placeholder="Enter your username"
+                  {...formik.getFieldProps("username")}
+                />
+                {formik.touched.username && formik.errors.username && (
+                  <p className="text-sm text-red-500">
+                    {formik.errors.username}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    {...formik.getFieldProps("password")}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={togglePasswordVisibility}
+                  >
+                    {showPassword ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
+                  </Button>
                 </div>
-              ) : null}
+                {formik.touched.password && formik.errors.password && (
+                  <p className="text-sm text-red-500">
+                    {formik.errors.password}
+                  </p>
+                )}
+              </div>
             </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                {...formik.getFieldProps("password")}
-              />
-              {formik.touched.password && formik.errors.password ? (
-                <div className="text-red-500 text-sm py-3">
-                  {formik.errors.password}
-                </div>
-              ) : null}
-            </div>
-          </div>
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="mt-2 group relative w-full justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
+
+            {error && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <Button className="w-full mt-4" type="submit" disabled={isLoading}>
+              {isLoading && <RotateCcw className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading ? "Signing in..." : "Sign in"}
-            </button>
-          </div>
-        </form>
-      </div>
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };

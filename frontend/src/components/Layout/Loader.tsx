@@ -1,6 +1,6 @@
 const Loader = () => {
   return (
-    <div className="h-screen flex size-full h-screen items-center justify-center gap-3 text-white">
+    <div className="h-screen flex size-full items-center justify-center gap-3 text-black">
       <img
         src="/icons/loader.svg"
         alt="loader"

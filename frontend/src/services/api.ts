@@ -1,4 +1,4 @@
-import axios, {AxiosInstance } from "axios";
+import axios, { AxiosInstance } from "axios";
 import {
   Dish,
   ApiResponse,
@@ -8,13 +8,15 @@ import {
   Order,
   Bill,
   DashboardData,
+  DeliveryOrder,
+  DeliveryDriver,
+  PaginatedResponse,
 } from "../types";
 
 export const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_APP_API_URL,
   withCredentials: true,
 });
-
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -34,10 +36,10 @@ export const getCategories = () =>
     .get<ApiResponse<Category>>("/categories/")
     .then((response) => response.data.results);
 export const getDishes = (page: number = 1, pageSize: number = 10) =>
-      api
-        .get<ApiResponse<Dish>>(`/dishes/?page=${page}&page_size=${pageSize}`)
-        .then((response) => response.data);
-    
+  api
+    .get<ApiResponse<Dish>>(`/dishes/?page=${page}&page_size=${pageSize}`)
+    .then((response) => response.data);
+
 export const fetchDish = async (dishId: number) => {
   const response = await api.get(`/dishes/${dishId}/`);
   return response.data;
@@ -112,8 +114,33 @@ export const fetchDashboardData = async (
   ]);
 
   const dashboardData = dashboardResponse.data;
-  
+
   const trendsData = trendsResponse.data;
 
   return { ...dashboardData, ...trendsData };
+};
+
+// Fetch driver orders
+export const fetchDriverOrders = () => {
+  return api.get<PaginatedResponse<DeliveryOrder>>("/delivery-orders/");
+};
+
+// Fetch driver profile
+export const fetchDriverProfile = (driverId: number) => {
+  return api.get<DeliveryDriver>(`/delivery-drivers/${driverId}/`);
+};
+
+// Update driver status
+export const updateDriverStatus = (driverId: number, action: string) => {
+  return api.patch(`/delivery-drivers/${driverId}/${action}/`);
+};
+
+// Update delivery status
+export const updateDeliveryOrderStatus = (orderId: number, status: string) => {
+  return api.patch(`/delivery-orders/${orderId}/update_status/`, { status: status });
+};
+
+// Delete delivery status
+export const deleteDeliveryOrder = (orderId: number) => {
+  return api.delete(`/delivery-orders/${orderId}/`);
 };
