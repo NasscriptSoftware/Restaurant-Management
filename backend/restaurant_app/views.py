@@ -3,12 +3,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import TokenError, RefreshToken
+from rest_framework_simplejwt.exceptions import InvalidToken
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from restaurant_app.utils import generate_order_pdf, send_sms, shorten_url
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 from django.db.models import Sum, Count, Avg, F
 from django.db.models.functions import TruncDate, TruncHour
 from restaurant_app.models import *
@@ -18,19 +17,20 @@ from restaurant_app.serializers import *
 User = get_user_model()
 
 
-class UserRegisterViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.AllowAny]
+class LoginViewSet(viewsets.ModelViewSet, TokenObtainPairView):
+    serializer_class = LoginSerializer
+    permission_classes = (permissions.AllowAny,)
+    http_method_names = ["post"]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
 class LogoutView(viewsets.ViewSet):

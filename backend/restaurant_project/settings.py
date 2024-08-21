@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'restaurant_app.apps.RestaurantAppConfig',
+    'delivery_drivers.apps.DeliveryDriversConfig',
 ]
 
 REST_FRAMEWORK = {
@@ -143,7 +144,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'restaurant_app.Customer'
+AUTH_USER_MODEL = 'restaurant_app.User'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
