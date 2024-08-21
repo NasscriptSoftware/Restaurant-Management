@@ -24,45 +24,42 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export const login = (credentials: any) => api.post("http://127.0.0.1:8000/api/token/", credentials);
-
-export const register = (userData: any) =>
-  api.post("http://127.0.0.1:8000/api/register/", userData)
+export const login = (credentials: any) => api.post("/login/", credentials);
 
 export const logout = (refresh_token: any) =>
-  api.post("http://127.0.0.1:8000/api/logout/", refresh_token);
+  api.post("/logout/", refresh_token);
 
 export const getCategories = () =>
   api
-    .get<ApiResponse<Category>>("http://127.0.0.1:8000/api/categories/")
+    .get<ApiResponse<Category>>("/categories/")
     .then((response) => response.data.results);
 export const getDishes = (page: number = 1, pageSize: number = 10) =>
       api
-        .get<ApiResponse<Dish>>(`http://127.0.0.1:8000/api/dishes/?page=${page}&page_size=${pageSize}`)
+        .get<ApiResponse<Dish>>(`/dishes/?page=${page}&page_size=${pageSize}`)
         .then((response) => response.data);
     
 export const fetchDish = async (dishId: number) => {
-  const response = await api.get(`http://127.0.0.1:8000/api/dishes/${dishId}/`);
+  const response = await api.get(`/dishes/${dishId}/`);
   return response.data;
 };
 
 export const getOrders = async () => {
-  const response = await api.get("http://127.0.0.1:8000/api/orders/");
+  const response = await api.get("/orders/");
   return response.data;
 };
 
 export const fetchOrders = async (page: number) => {
-  const response = await api.get(`http://127.0.0.1:8000/api/orders/?page=${page}`);
+  const response = await api.get(`/orders/?page=${page}`);
   return response.data;
 };
 
 export const fetchOrder = async (orderId: number) => {
-  const response = await api.get(`http://127.0.0.1:8000/api/orders/${orderId}/`);
+  const response = await api.get(`/orders/${orderId}/`);
   return response.data;
 };
 
 export const createOrder = async (orderData: OrderFormData) => {
-  const response = await api.post("http://127.0.0.1:8000/api/orders/", orderData);
+  const response = await api.post("/orders/", orderData);
   return response.data;
 };
 
@@ -70,17 +67,17 @@ export const updateOrderStatus = async (
   orderId: number,
   status: Order["status"]
 ) => {
-  const response = await api.patch<Order>(`http://127.0.0.1:8000/api/orders/${orderId}/`, { status });
+  const response = await api.patch<Order>(`/orders/${orderId}/`, { status });
   return response.data;
 };
 
 export const deleteOrder = async (orderId: number) => {
-  const response = await api.delete<Order>(`http://127.0.0.1:8000/api/orders/${orderId}/`);
+  const response = await api.delete<Order>(`/orders/${orderId}/`);
   return response.data;
 };
 
 export const generateBill = async (orderId: number, totalAmount: number) => {
-  const response = await api.post<Bill>("http://127.0.0.1:8000/api/bills/", {
+  const response = await api.post<Bill>("/bills/", {
     order: orderId,
     total_amount: totalAmount,
   });
@@ -88,13 +85,13 @@ export const generateBill = async (orderId: number, totalAmount: number) => {
 };
 
 export const fetchBills = async (page: number) => {
-  const response = await api.get(`http://127.0.0.1:8000/api/bills/?page=${page}`);
+  const response = await api.get(`/bills/?page=${page}`);
   return response.data;
 };
 
 export const fetchUnreadCount = async () => {
   try {
-    const response = await api.get("http://127.0.0.1:8000/api/notifications/unread/");
+    const response = await api.get("/notifications/unread/");
     return response.data.length;
   } catch (error) {
     console.error("Error fetching unread notifications:", error);
@@ -103,15 +100,15 @@ export const fetchUnreadCount = async () => {
 
 export const getAnalytics = () =>
   api
-    .get<AnalyticsData>("http://127.0.0.1:8000/api/orders/analytics/")
+    .get<AnalyticsData>("/orders/analytics/")
     .then((response) => response.data);
 
 export const fetchDashboardData = async (
   timeRange: string
 ): Promise<DashboardData> => {
   const [dashboardResponse, trendsResponse] = await Promise.all([
-    api.get(`http://127.0.0.1:8000/api/orders/dashboard_data/?time_range=${timeRange}`),
-    api.get(`http://127.0.0.1:8000/api/orders/sales_trends/?time_range=${timeRange}`),
+    api.get(`/orders/dashboard_data/?time_range=${timeRange}`),
+    api.get(`/orders/sales_trends/?time_range=${timeRange}`),
   ]);
 
   const dashboardData = dashboardResponse.data;

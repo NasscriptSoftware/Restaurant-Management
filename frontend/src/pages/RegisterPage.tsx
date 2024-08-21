@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { register } from "@/services/api";
+// import { register } from "@/services/api";
 
 const RegisterSchema = Yup.object().shape({
   username: Yup.string()
@@ -36,8 +36,8 @@ const Register: React.FC = () => {
     onSubmit: async (values) => {
         setIsLoading(true);
       try {
-        const user = await register(values);
-        console.log(user);
+        // const user = await register(values);
+        console.log(values);
         setIsLoading(false)
         navigate("/login");
       } catch (error: any) {

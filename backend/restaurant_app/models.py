@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from datetime import date
+from django.contrib.auth.hashers import make_password
 
 
 class User(AbstractUser):
@@ -34,6 +34,9 @@ class User(AbstractUser):
         elif self.role == "driver":
             self.is_staff = False
             self.is_superuser = False
+
+        if self.pk is None or not self.password.startswith("pbkdf2_"):
+            self.password = make_password(self.password)
 
         super().save(*args, **kwargs)
 

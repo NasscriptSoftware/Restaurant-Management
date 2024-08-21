@@ -1,18 +1,22 @@
-import { logout } from "@/services/api";
+import { logout } from "@/features/slices/authSlice";
+import { logout as logoutAPI} from "@/services/api";
 import { LogOutIcon } from "lucide-react";
 import React from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 const LogoutBtn: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogout = async () => {
     try {
       const refreshToken = localStorage.getItem("refresh");
       if (refreshToken) {
-        await logout({ refresh_token: refreshToken });
+        await logoutAPI({ refresh_token: refreshToken });
         localStorage.removeItem("token");
         localStorage.removeItem("refresh");
+        dispatch(logout())
         navigate("/login");
       }
     } catch (error) {

@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import DeliveryDriver, DeliveryOrder
 
-# Register your models here.
+admin.site.register(DeliveryDriver)
+admin.site.register(DeliveryOrder)
