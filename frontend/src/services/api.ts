@@ -12,6 +12,8 @@ import {
   DeliveryDriver,
   PaginatedResponse,
 } from "../types";
+import store from "@/features/store";
+import { setTokenExpired } from "@/features/slices/authSlice";
 
 export const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_APP_API_URL,
@@ -26,15 +28,42 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (
+      error.response.status === 401 &&
+      error.response.data.messages &&
+      error.response.data.messages[0] &&
+      error.response.data.messages[0].message === "Token is invalid or expired"
+    ) {
+      store.dispatch(setTokenExpired(true));
+
+      return Promise.reject(error);
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const login = (credentials: any) => api.post("/login/", credentials);
 
-export const logout = (refresh_token: any) =>
-  api.post("/logout/", refresh_token);
+export const logout = async () => {
+  const refresh_token = localStorage.getItem('refresh');
+  try {
+      await api.post("/logout/", { refresh_token });
+  } catch (error) {
+      console.error("Logout error:", error);
+  } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh');
+  }
+};
 
 export const getCategories = () =>
   api
     .get<ApiResponse<Category>>("/categories/")
     .then((response) => response.data.results);
+
 export const getDishes = (page: number = 1, pageSize: number = 10) =>
   api
     .get<ApiResponse<Dish>>(`/dishes/?page=${page}&page_size=${pageSize}`)
@@ -137,7 +166,9 @@ export const updateDriverStatus = (driverId: number, action: string) => {
 
 // Update delivery status
 export const updateDeliveryOrderStatus = (orderId: number, status: string) => {
-  return api.patch(`/delivery-orders/${orderId}/update_status/`, { status: status });
+  return api.patch(`/delivery-orders/${orderId}/update_status/`, {
+    status: status,
+  });
 };
 
 // Delete delivery status

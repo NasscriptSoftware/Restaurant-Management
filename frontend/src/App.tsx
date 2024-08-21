@@ -13,6 +13,7 @@ import store from "./features/store";
 import DeliveryDriverOrdersPage from "./pages/DeliveryDriver/DeliveryDriverOrdersPage";
 import DeliveryDriverProfile from "./pages/DeliveryDriver/DeliveryDriverProfile";
 import Loader from "./components/Layout/Loader";
+import TokenExpirationModal from "./components/modals/TokenExpirationModal";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ function App() {
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <Router>
+            <TokenExpirationModal />
             <Suspense fallback={<Loader />}>
               <Routes>
                 <Route

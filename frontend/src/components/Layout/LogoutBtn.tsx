@@ -4,7 +4,17 @@ import { LogOutIcon } from "lucide-react";
 import React from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
 
 const LogoutBtn: React.FC = () => {
   const navigate = useNavigate();
@@ -14,9 +24,7 @@ const LogoutBtn: React.FC = () => {
     try {
       const refreshToken = localStorage.getItem("refresh");
       if (refreshToken) {
-        await logoutAPI({ refresh_token: refreshToken });
-        localStorage.removeItem("token");
-        localStorage.removeItem("refresh");
+        await logoutAPI();
         dispatch(logout());
         navigate("/login");
       }
@@ -43,7 +51,12 @@ const LogoutBtn: React.FC = () => {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleLogout} className="hover:bg-white border hover:border-gray-200 hover:text-red-500">Logout</AlertDialogAction>
+          <AlertDialogAction
+            onClick={handleLogout}
+            className="hover:bg-white border hover:border-gray-200 hover:text-red-500"
+          >
+            Logout
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -89,7 +89,7 @@ const DeliveryOrdersPage: React.FC = () => {
   const columns: ColumnDef<DeliveryOrder>[] = [
     {
       accessorKey: "id",
-      header: "Order #",
+      header: "Order ID",
     },
     {
       accessorKey: "driver_name",
