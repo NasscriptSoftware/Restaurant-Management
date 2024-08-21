@@ -74,13 +74,15 @@ const DriverProfilePage: React.FC = () => {
                 onCheckedChange={handleToggleActive}
               />
             </div>
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Available for Orders</span>
-              <Switch
-                checked={driver.is_available}
-                onCheckedChange={handleToggleAvailable}
-              />
-            </div>
+            {driver.is_active && (
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Available for Orders</span>
+                <Switch
+                  checked={driver.is_available}
+                  onCheckedChange={handleToggleAvailable}
+                />
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
