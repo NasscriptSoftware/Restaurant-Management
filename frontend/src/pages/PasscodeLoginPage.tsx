@@ -14,7 +14,8 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RotateCcw, X } from "lucide-react";
+import { ArrowLeft, RotateCcw, X } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const PasscodeLoginPage = () => {
   const [passcode, setPasscode] = useState("");
@@ -117,6 +118,12 @@ const PasscodeLoginPage = () => {
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
+          <Link
+            to="/login"
+            className="flex items-center justify-center gap-2 mt-4 text-center"
+          >
+            <span className="hover:underline">Login with username</span>
+          </Link>
         </CardContent>
       </Card>
     </div>

@@ -16,7 +16,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { EyeIcon, EyeOffIcon, RotateCcw } from "lucide-react";
+import { ArrowRight, EyeIcon, EyeOffIcon, RotateCcw } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const LoginSchema = Yup.object().shape({
@@ -116,7 +116,11 @@ const LoginPage = () => {
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={togglePasswordVisibility}
                   >
-                    {showPassword ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
+                    {showPassword ? (
+                      <EyeOffIcon size={20} />
+                    ) : (
+                      <EyeIcon size={20} />
+                    )}
                   </Button>
                 </div>
                 {formik.touched.password && formik.errors.password && (
@@ -138,11 +142,9 @@ const LoginPage = () => {
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <Link to="/login-passcode" className="hover:underline">
-              Login with Passcode
-            </Link>
-          </div>
+          <Link to="/login-passcode" className="group flex gap-2 items-center justify-center mt-4 text-center">
+            <span className="hover:underline">Login with passcode</span>
+          </Link>
         </CardContent>
       </Card>
     </div>
