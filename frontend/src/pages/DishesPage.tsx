@@ -33,7 +33,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type OrderType = "dining" | "takeaway" | "delivery";
-type PaymentMethod = "cash" | "bank";
+type PaymentMethod = "cash" | "bank" | "cash_bank";
 
 const DishesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -258,7 +258,7 @@ const DishesPage: React.FC = () => {
         {orderItems.length > 0 && (
           <div
             className={` bg-white p-8 ${
-              isOrderVisible ? "block lg:w-[500px]" : "hidden lg:block"
+              isOrderVisible ? "flex justify-end lg:w-[550px]" : "hidden lg:block"
             }`}
           >
             <div className="sticky top-0">
@@ -288,120 +288,139 @@ const DishesPage: React.FC = () => {
                   <span>QAR {total.toFixed(2)}</span>
                 </div>
               </div>
-              <div className="mt-8">
-                <RadioGroup
-                  value={orderType}
-                  onValueChange={(value) => setOrderType(value as OrderType)}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="dining" id="dining" />
-                    <Label htmlFor="dining">Dining</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="takeaway" id="takeaway" />
-                    <Label htmlFor="takeaway">Takeaway</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="delivery" id="delivery" />
-                    <Label htmlFor="delivery">Delivery</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              {orderType === "delivery" && (
-                <>
-                  <div className="mt-4">
-                    <Label htmlFor="deliveryAddress">Delivery Address</Label>
-                    <Input
-                      id="deliveryAddress"
-                      value={deliveryAddress}
-                      onChange={(e) => setDeliveryAddress(e.target.value)}
-                      placeholder="Enter delivery address"
-                    />
-                  </div>
+              <div className="mt-2 pr-2 overflow-y-auto custom-scrollbar max-h-[500px]">
+                <div className="mt-8">
+                  <RadioGroup
+                    value={orderType}
+                    onValueChange={(value) => setOrderType(value as OrderType)}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="dining" id="dining" />
+                      <Label htmlFor="dining">Dining</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="takeaway" id="takeaway" />
+                      <Label htmlFor="takeaway">Takeaway</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="delivery" id="delivery" />
+                      <Label htmlFor="delivery">Delivery</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                {orderType === "delivery" && (
+                  <>
+                    <div className="mt-4">
+                      <Label htmlFor="deliveryAddress">Delivery Address</Label>
+                      <Input
+                        id="deliveryAddress"
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                        placeholder="Enter delivery address"
+                      />
+                    </div>
 
-                  <div className="mt-4">
-                    <Label>Select Delivery Driver</Label>
-                    <Popover
-                      open={openDriverSelect}
-                      onOpenChange={setOpenDriverSelect}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openDriverSelect}
-                          className="w-full justify-between"
-                        >
-                          {selectedDriver
-                            ? selectedDriver.username
-                            : "Select driver..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput placeholder="Search drivers..." />
-                          <CommandList>
-                            <CommandEmpty>No driver found.</CommandEmpty>
-                            <CommandGroup>
-                              {deliveryDrivers?.map(
-                                (driver: DeliveryDriver) => (
-                                  <CommandItem
-                                    key={driver.id}
-                                    value={driver.username}
-                                    onSelect={() => {
-                                      setSelectedDriver(driver);
-                                      setOpenDriverSelect(false);
-                                    }}
-                                  >
-                                    <Check
-                                      className={`mr-2 h-4 w-4 ${
-                                        selectedDriver?.id === driver.id
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      }`}
-                                    />
-                                    {driver.username}
-                                  </CommandItem>
-                                )
-                              )}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </>
-              )}
+                    <div className="mt-4">
+                      <Label>Select Delivery Driver</Label>
+                      <Popover
+                        open={openDriverSelect}
+                        onOpenChange={setOpenDriverSelect}
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openDriverSelect}
+                            className="w-full justify-between"
+                          >
+                            {selectedDriver
+                              ? selectedDriver.username
+                              : "Select driver..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput placeholder="Search drivers..." />
+                            <CommandList>
+                              <CommandEmpty>No driver found.</CommandEmpty>
+                              <CommandGroup>
+                                {deliveryDrivers?.map(
+                                  (driver: DeliveryDriver) => (
+                                    <CommandItem
+                                      key={driver.id}
+                                      value={driver.username}
+                                      onSelect={() => {
+                                        setSelectedDriver(driver);
+                                        setOpenDriverSelect(false);
+                                      }}
+                                    >
+                                      <Check
+                                        className={`mr-2 h-4 w-4 ${
+                                          selectedDriver?.id === driver.id
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        }`}
+                                      />
+                                      {driver.username}
+                                    </CommandItem>
+                                  )
+                                )}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </>
+                )}
 
-              <div className="mt-8">
-                <RadioGroup
-                  value={paymentMethod}
-                  onValueChange={(value) =>
-                    setPaymentMethod(value as PaymentMethod)
-                  }
+                <div className="mt-8 mb-4">
+                  <RadioGroup
+                    value={paymentMethod}
+                    onValueChange={(value) =>
+                      setPaymentMethod(value as PaymentMethod)
+                    }
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="cash" id="cash" />
+                      <Label htmlFor="cash">Cash</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="bank" id="bank" />
+                      <Label htmlFor="bank">Bank</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="cash_bank" id="cash_bank" />
+                      <Label htmlFor="cash_bank">Cash & Bank</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {paymentMethod === "cash_bank" && (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex w-full max-w-sm items-center gap-1.5">
+                      <Label htmlFor="cash_value">Cash</Label>
+                      <Input type="text" id="cash_value" placeholder="Cash" className="focus:outline-none" />
+                    </div>
+                    <div className="flex w-full max-w-sm items-center gap-1.5">
+                      <Label htmlFor="bank_value">Bank</Label>
+                      <Input type="text" id="bank_value" placeholder="Bank" />
+                    </div>
+                    </div>
+                )}
+                {error && (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                <button
+                  className="w-full bg-red-500 text-white py-3 rounded-lg mt-6"
+                  onClick={handleCheckout}
                 >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="cash" id="cash" />
-                    <Label htmlFor="cash">Cash</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="bank" id="bank" />
-                    <Label htmlFor="bank">Bank</Label>
-                  </div>
-                </RadioGroup>
+                  Checkout
+                </button>
               </div>
-              {error && (
-              <Alert variant="destructive" className="mt-4">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-              <button
-                className="w-full bg-red-500 text-white py-3 rounded-lg mt-6"
-                onClick={handleCheckout}
-              >
-                Checkout
-              </button>
             </div>
           </div>
         )}
