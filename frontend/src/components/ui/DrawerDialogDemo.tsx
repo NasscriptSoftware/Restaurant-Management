@@ -5,7 +5,6 @@ import {
   DialogContent,
   DialogTrigger,
 } from "./dialog";
-import DriverProfilePage from "@/pages/DeliveryDriver/DeliveryDriverProfile";
 import {
   Drawer,
   DrawerClose,
@@ -17,6 +16,7 @@ import {
   DrawerTrigger,
 } from "./drawer";
 import { Button } from "./button";
+import { DeliveryDriverProfile } from "@/pages/deliveryDriver/DeliveryDriverProfile";
 
 export function DrawerDialogDemo({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = React.useState(false);
@@ -30,7 +30,7 @@ export function DrawerDialogDemo({ children }: { children: React.ReactNode }) {
           <DrawerTitle></DrawerTitle>
           <DrawerDescription></DrawerDescription>
         </DrawerHeader>
-        <DriverProfilePage />
+        <DeliveryDriverProfile />
       </DialogContent>
     </Dialog>
   ) : (
@@ -41,7 +41,7 @@ export function DrawerDialogDemo({ children }: { children: React.ReactNode }) {
           <DrawerTitle></DrawerTitle>
           <DrawerDescription></DrawerDescription>
         </DrawerHeader>
-        <DriverProfilePage />
+        <DeliveryDriverProfile />
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>

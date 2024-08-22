@@ -64,7 +64,7 @@ export const STATUS_CHOICES: [string, string][] = [
   ["cancelled", "Cancelled"],
 ];
 
-const DeliveryOrdersPage: React.FC = () => {
+export const DeliveryDriverOrdersPage: React.FC = () => {
   const [orders, setOrders] = React.useState<DeliveryOrder[]>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -326,5 +326,3 @@ const DeliveryOrdersPage: React.FC = () => {
     </div>
   );
 };
-
-export default DeliveryOrdersPage;

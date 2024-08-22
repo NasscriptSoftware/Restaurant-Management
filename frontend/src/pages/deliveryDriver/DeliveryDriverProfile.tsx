@@ -6,7 +6,7 @@ import Loader from "@/components/Layout/Loader";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 
-const DriverProfilePage: React.FC = () => {
+export const DeliveryDriverProfile: React.FC = () => {
   const driverId = useSelector((state: any) => state.auth.user?.driver_profile);
   const [driver, setDriver] = useState<DeliveryDriver | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,5 +89,3 @@ const DriverProfilePage: React.FC = () => {
     </div>
   );
 };
-
-export default DriverProfilePage;

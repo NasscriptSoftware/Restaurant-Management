@@ -15,7 +15,15 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["username", "email", "role", "mobile_number", "gender", "password", "driver_profile"]
+        fields = [
+            "username",
+            "email",
+            "role",
+            "mobile_number",
+            "gender",
+            "password",
+            "driver_profile",
+        ]
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
@@ -30,9 +38,9 @@ class LoginSerializer(TokenObtainPairSerializer):
 
         user_data = UserSerializer(self.user).data
 
-        data['user'] = user_data
-        data['refresh'] = str(refresh)
-        data['access'] = str(refresh.access_token)
+        data["user"] = user_data
+        data["refresh"] = str(refresh)
+        data["access"] = str(refresh.access_token)
 
         if api_settings.UPDATE_LAST_LOGIN:
             update_last_login(None, self.user)
@@ -44,7 +52,7 @@ class PasscodeLoginSerializer(serializers.Serializer):
     passcode = serializers.CharField(max_length=6, min_length=6)
 
     def validate(self, attrs):
-        passcode = attrs.get('passcode')
+        passcode = attrs.get("passcode")
         User = get_user_model()
 
         try:
@@ -57,9 +65,9 @@ class PasscodeLoginSerializer(serializers.Serializer):
 
         refresh = RefreshToken.for_user(user)
         return {
-            'user': UserSerializer(user).data,
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
+            "user": UserSerializer(user).data,
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
         }
 
 
@@ -98,11 +106,14 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             "id",
-            "user",
+            "customer",
             "created_at",
             "total_amount",
             "status",
             "bill_generated",
+            "bank_amount",
+            "cash_amount",
+            "invoice_number",
             "items",
             "order_type",
             "payment_method",
@@ -210,7 +221,10 @@ class MessSerializer(serializers.ModelSerializer):
             "start_date",
             "end_date",
             "mess_type",
+            "mess_type_id",
             "payment_method",
+            "bank_amount",
+            "cash_amount",
             "total_amount",
             "paid_amount",
             "pending_amount",

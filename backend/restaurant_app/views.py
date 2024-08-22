@@ -10,6 +10,8 @@ from rest_framework_simplejwt.exceptions import InvalidToken
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.db.models import Sum, Count, Avg, F
+from django.utils.dateparse import parse_date
+from django.db.models import Q
 from django.db.models.functions import TruncDate, TruncHour
 from restaurant_app.models import *
 from restaurant_app.serializers import *
@@ -124,10 +126,37 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         return self.queryset.filter(created_at__range=(start_date, end_date))
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"])  # Update on 21-08-2024
     def sales_report(self, request):
-        time_range = request.query_params.get("time_range", "month")
-        queryset = self.get_queryset_by_time_range(time_range)
+        from_date = request.query_params.get("from_date")
+        to_date = request.query_params.get("to_date")
+        order_type = request.query_params.get("order_type")
+        payment_method = request.query_params.get("payment_method")
+        status = request.query_params.get("order_status")
+
+        from_date = parse_date(from_date) if from_date else None
+        to_date = parse_date(to_date) if to_date else None
+
+        queryset = self.get_queryset()
+
+        # Apply date filters if provided
+        if from_date and to_date:
+            queryset = queryset.filter(
+                created_at__date__gte=from_date, created_at__date__lte=to_date
+            )
+        elif from_date:
+            queryset = queryset.filter(created_at__date__gte=from_date)
+        elif to_date:
+            queryset = queryset.filter(created_at__date__lte=to_date)
+
+        # Apply additional filters based on query parameters
+        if order_type:
+            queryset = queryset.filter(order_type=order_type)
+        if payment_method:
+            queryset = queryset.filter(payment_method=payment_method)
+        if status:
+            queryset = queryset.filter(status=status)
+
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -388,3 +417,41 @@ class MessViewSet(viewsets.ModelViewSet):
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
+
+    @action(detail=False, methods=["get"])
+    def mess_report(self, request):
+        from_date = request.query_params.get("from_date")
+        to_date = request.query_params.get("to_date")
+        payment_method = request.query_params.get("payment_method")
+        credit = request.query_params.get("credit")
+        mess_type_name = request.query_params.get("mess_type")
+
+        # Convert to datetime objects for filtering
+        from_date = parse_date(from_date) if from_date else None
+        to_date = parse_date(to_date) if to_date else None
+        print("from :", from_date, "to :", to_date)
+
+        queryset = self.get_queryset()
+
+        if from_date and to_date:
+            queryset = queryset.filter(
+                Q(start_date__gte=from_date) & Q(end_date__lte=to_date)
+            )
+        elif from_date:
+            queryset = queryset.filter(start_date__gte=from_date)
+        elif to_date:
+            queryset = queryset.filter(end_date__lte=to_date)
+        if payment_method:
+            queryset = queryset.filter(payment_method=payment_method)
+        if credit:
+            queryset = queryset.filter(pending_amount__gt=0)
+        if mess_type_name:
+            try:
+                mess_type_instance = MessType.objects.get(name=mess_type_name)
+                mess_type_id = mess_type_instance.id
+                queryset = queryset.filter(mess_type=mess_type_id)
+            except MessType.DoesNotExist:
+                return Response({"detail": "Invalid mess_type"}, status=400)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

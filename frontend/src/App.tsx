@@ -10,11 +10,11 @@ import ProtectedRoute, {
 import Unauthorized from "./components/Layout/Unauthorized";
 import { Provider } from "react-redux";
 import store from "./features/store";
-import DeliveryDriverOrdersPage from "./pages/DeliveryDriver/DeliveryDriverOrdersPage";
-import DeliveryDriverProfile from "./pages/DeliveryDriver/DeliveryDriverProfile";
 import Loader from "./components/Layout/Loader";
 import TokenExpirationModal from "./components/modals/TokenExpirationModal";
 import PasscodeLoginPage from "./pages/PasscodeLoginPage";
+import { DeliveryDriverOrdersPage } from "./pages/deliveryDriver/DeliveryDriverOrdersPage";
+import { DeliveryDriverProfile } from "./pages/deliveryDriver/DeliveryDriverProfile";
 
 const queryClient = new QueryClient();
 
