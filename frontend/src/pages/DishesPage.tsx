@@ -4,11 +4,34 @@ import DishList from "../components/Dishes/DishList";
 import OrderItem from "../components/Orders/OrderItem";
 import { useDishes } from "../hooks/useDishes";
 import { useOrders } from "../hooks/useOrders";
-import { Dish, Category, OrderFormData } from "../types";
-import { fetchUnreadCount, getCategories } from "../services/api";
+import { Dish, Category, OrderFormData, DeliveryDriver } from "../types";
+import {
+  fetchDeliveryDrivers,
+  fetchUnreadCount,
+  getCategories,
+} from "../services/api";
 import { useQuery } from "react-query";
-import { CircleCheckBig } from "lucide-react";
+import { Check, ChevronsUpDown, CircleCheckBig } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
 type OrderType = "dining" | "takeaway" | "delivery";
 type PaymentMethod = "cash" | "bank";
 
@@ -18,14 +41,27 @@ const DishesPage: React.FC = () => {
     useDishes();
   const { createOrder } = useOrders();
   const { data: categories } = useQuery("categories", getCategories);
+  const { data: deliveryDriversList } = useQuery(
+    "deliveryDrivers",
+    fetchDeliveryDrivers
+  );
+  const deliveryDrivers = deliveryDriversList
+    ? deliveryDriversList.results
+    : null;
 
   const [orderItems, setOrderItems] = useState<any[]>([]);
   const [isOrderVisible, setIsOrderVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderType, setOrderType] = useState<OrderType>("dining");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash"); // Added state for payment method
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDriver, setSelectedDriver] = useState<DeliveryDriver | null>(
+    null
+  );
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [openDriverSelect, setOpenDriverSelect] = useState(false);
+  const [error, setError] = useState("");
 
   const data = dishes?.results ? dishes.results : [];
 
@@ -67,21 +103,40 @@ const DishesPage: React.FC = () => {
   };
 
   const handleCheckout = () => {
-    const orderData: OrderFormData = {
-      items: orderItems.map((item) => ({
-        dish: item.id,
-        quantity: item.quantity,
-      })),
-      total_amount: total.toFixed(2),
-      status: "pending",
-      order_type: orderType,
-      payment_method: paymentMethod,
-    };
+    try {
+      if (orderType === "delivery") {
+        if (!deliveryAddress) {
+          setError("Delivery address is required for delivery orders.");
+          return;
+        }
+        if (!selectedDriver) {
+          setError("A delivery driver must be selected for delivery orders.");
+          return;
+        }
+      }
 
-    createOrder(orderData);
-    setShowSuccessModal(true);
-    setOrderItems([]);
-    setIsOrderVisible(false);
+      const orderData: OrderFormData = {
+        items: orderItems.map((item) => ({
+          dish: item.id,
+          quantity: item.quantity,
+        })),
+        total_amount: total.toFixed(2),
+        status: "pending",
+        order_type: orderType,
+        payment_method: paymentMethod,
+        address: orderType === "delivery" ? deliveryAddress : "",
+        delivery_driver_id:
+          orderType === "delivery" && selectedDriver ? selectedDriver.id : null,
+      };
+
+      createOrder(orderData);
+      setShowSuccessModal(true);
+      setOrderItems([]);
+      setIsOrderVisible(false);
+    } catch (error) {
+      console.log(`Error creating order: ${error}`);
+      setError("An error occurred while creating the order. Please try again.");
+    }
   };
 
   const handleCloseBtnClick = () => {
@@ -234,37 +289,113 @@ const DishesPage: React.FC = () => {
                 </div>
               </div>
               <div className="mt-8">
-                <label htmlFor="orderType" className="block mb-2">
-                  Order Type
-                </label>
-                <select
-                  id="orderType"
+                <RadioGroup
                   value={orderType}
-                  onChange={(e) => setOrderType(e.target.value as OrderType)} // Cast the value to OrderType
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  onValueChange={(value) => setOrderType(value as OrderType)}
                 >
-                  <option value="dining">Dining</option>
-                  <option value="takeaway">Takeaway</option>
-                  <option value="delivery">Delivery</option>
-                </select>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="dining" id="dining" />
+                    <Label htmlFor="dining">Dining</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="takeaway" id="takeaway" />
+                    <Label htmlFor="takeaway">Takeaway</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="delivery" id="delivery" />
+                    <Label htmlFor="delivery">Delivery</Label>
+                  </div>
+                </RadioGroup>
               </div>
+              {orderType === "delivery" && (
+                <>
+                  <div className="mt-4">
+                    <Label htmlFor="deliveryAddress">Delivery Address</Label>
+                    <Input
+                      id="deliveryAddress"
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                      placeholder="Enter delivery address"
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <Label>Select Delivery Driver</Label>
+                    <Popover
+                      open={openDriverSelect}
+                      onOpenChange={setOpenDriverSelect}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openDriverSelect}
+                          className="w-full justify-between"
+                        >
+                          {selectedDriver
+                            ? selectedDriver.username
+                            : "Select driver..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput placeholder="Search drivers..." />
+                          <CommandList>
+                            <CommandEmpty>No driver found.</CommandEmpty>
+                            <CommandGroup>
+                              {deliveryDrivers?.map(
+                                (driver: DeliveryDriver) => (
+                                  <CommandItem
+                                    key={driver.id}
+                                    value={driver.username}
+                                    onSelect={() => {
+                                      setSelectedDriver(driver);
+                                      setOpenDriverSelect(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={`mr-2 h-4 w-4 ${
+                                        selectedDriver?.id === driver.id
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      }`}
+                                    />
+                                    {driver.username}
+                                  </CommandItem>
+                                )
+                              )}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </>
+              )}
+
               <div className="mt-8">
-                <label htmlFor="paymentMethod" className="block mb-2">
-                  Payment Method
-                </label>
-                <select
-                  id="paymentMethod"
+                <RadioGroup
                   value={paymentMethod}
-                  onChange={(e) =>
-                    setPaymentMethod(e.target.value as PaymentMethod)
-                  } // Cast the value to PaymentMethod
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  onValueChange={(value) =>
+                    setPaymentMethod(value as PaymentMethod)
+                  }
                 >
-                  <option value="cash">Cash</option>
-                  {/* <option value="upi">UPI</option> */}
-                  <option value="card">Bank</option>
-                </select>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="cash" id="cash" />
+                    <Label htmlFor="cash">Cash</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="bank" id="bank" />
+                    <Label htmlFor="bank">Bank</Label>
+                  </div>
+                </RadioGroup>
               </div>
+              {error && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
               <button
                 className="w-full bg-red-500 text-white py-3 rounded-lg mt-6"
                 onClick={handleCheckout}

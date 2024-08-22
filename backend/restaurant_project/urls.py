@@ -14,6 +14,7 @@ from restaurant_app.views import (
     NotificationViewSet,
     BillViewSet,
     LoginViewSet,
+    PasscodeLoginView,
     LogoutView,
     FloorViewSet,
     TableViewSet,
@@ -53,6 +54,7 @@ router.register(r'delivery-orders', DeliveryOrderViewSet, basename='delivery_ord
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('api/login-passcode/', PasscodeLoginView.as_view(), name='login-passcode'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/logout/', LogoutView.as_view({'post': 'logout'}), name='logout'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

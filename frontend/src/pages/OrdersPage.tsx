@@ -2,6 +2,7 @@ import React, { lazy, useState, useEffect } from "react";
 import Layout from "../components/Layout/Layout";
 import { usePaginatedOrders } from "../hooks/useOrders";
 import { useDishes } from "../hooks/useDishes";
+import { SearchIcon } from "lucide-react";
 const OrderCard = lazy(() => import('../components/Orders/OrderCard'));
 const PaginationControls = lazy(() => import('../components/Layout/PaginationControls'));
 
@@ -72,13 +73,13 @@ const OrdersPage: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search orders by ID..."
-            className="border border-gray-300 rounded px-4 py-2 mr-2"
+            className="border border-gray-300 rounded px-4 py-2"
           />
           <button
             onClick={handleSearch}
-            className="bg-blue-500 text-white rounded px-4 py-2"
+            className="text-black rounded p-2"
           >
-            Search
+            <SearchIcon />
           </button>
         </div>
       </div>

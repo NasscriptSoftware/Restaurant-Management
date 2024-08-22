@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import update_last_login
 from django.contrib.auth import get_user_model
 from restaurant_app.models import *
@@ -37,6 +38,29 @@ class LoginSerializer(TokenObtainPairSerializer):
             update_last_login(None, self.user)
 
         return data
+
+
+class PasscodeLoginSerializer(serializers.Serializer):
+    passcode = serializers.CharField(max_length=6, min_length=6)
+
+    def validate(self, attrs):
+        passcode = attrs.get('passcode')
+        User = get_user_model()
+
+        try:
+            user = User.objects.get(passcode=passcode)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Invalid passcode")
+
+        if not user.is_active:
+            raise serializers.ValidationError("User account is disabled")
+
+        refresh = RefreshToken.for_user(user)
+        return {
+            'user': UserSerializer(user).data,
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -82,6 +106,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "items",
             "order_type",
             "payment_method",
+            "address",
+            "delivery_driver_id",
         ]
 
     def create(self, validated_data):

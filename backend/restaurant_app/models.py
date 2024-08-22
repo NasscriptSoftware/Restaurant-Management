@@ -18,6 +18,7 @@ class User(AbstractUser):
         ("other", "Other"),
     )
     role = models.CharField(max_length=10, choices=ROLES, default="staff")
+    passcode = models.CharField(max_length=6, blank=True, null=True)
     gender = models.CharField(max_length=10, choices=GENDERS, null=True, blank=True)
     mobile_number = models.CharField(max_length=15, blank=True)
 
@@ -104,12 +105,17 @@ class Order(models.Model):
     payment_method = models.CharField(
         max_length=20, choices=PAYMENT_METHOD_CHOICES, default="cash"
     )
+    address = models.TextField(blank=True)
+    delivery_driver_id = models.IntegerField(null=True, blank=True)
 
     class Meta:
         ordering = ("-created_at",)
 
     def __str__(self):
         return f"{self.id} - {self.created_at} - {self.order_type}"
+
+    def is_delivery_order(self):
+        return self.order_type == "delivery"
 
 
 class OrderItem(models.Model):

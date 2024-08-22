@@ -30,7 +30,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeliveryOrder, PaginatedResponse } from "@/types";
-import { deleteDeliveryOrder, fetchDriverOrders, updateDeliveryOrderStatus } from "@/services/api";
+import {
+  deleteDeliveryOrder,
+  fetchDriverOrders,
+  updateDeliveryOrderStatus,
+} from "@/services/api";
 import { DeliveryDriverHeader } from "@/components/Layout/DeliveryDriverHeader";
 import { UserRoundPenIcon } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
@@ -50,6 +54,7 @@ import {
 } from "@/components/ui/command";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 export const STATUS_CHOICES: [string, string][] = [
   ["pending", "Pending"],
@@ -92,10 +97,6 @@ const DeliveryOrdersPage: React.FC = () => {
       header: "Order ID",
     },
     {
-      accessorKey: "driver_name",
-      header: "Driver",
-    },
-    {
       accessorKey: "order.user.username",
       header: "Assigned by",
     },
@@ -109,10 +110,12 @@ const DeliveryOrdersPage: React.FC = () => {
       ),
     },
     {
-      accessorKey: "order.order_type",
-      header: "Order Type",
+      accessorKey: "order.address",
+      header: "Address",
       cell: ({ row }) => (
-        <div className="capitalize">{row.getValue("order_order_type")}</div>
+        <div className="capitalize max-w-[250px]">
+          {row.getValue("order_address")}
+        </div>
       ),
     },
     {
@@ -123,10 +126,19 @@ const DeliveryOrdersPage: React.FC = () => {
       ),
     },
     {
+      accessorKey: "created_at",
+      header: "Ordered at",
+      cell: ({ row }) =>
+        row.getValue("created_at")
+          ? format(new Date(row.getValue("created_at")), "PPpp")
+          : "N/A",
+    },
+    {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
         const [open, setOpen] = React.useState(false);
+        console.log(orders);
 
         return (
           <Popover open={open} onOpenChange={setOpen}>

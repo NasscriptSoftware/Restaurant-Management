@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EyeIcon, EyeOffIcon, RotateCcw } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const LoginSchema = Yup.object().shape({
   username: Yup.string().trim().required("Username is required"),
@@ -137,6 +138,11 @@ const LoginPage = () => {
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
+          <div className="mt-4 text-center">
+            <Link to="/login-passcode" className="hover:underline">
+              Login with Passcode
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

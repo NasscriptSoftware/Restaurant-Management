@@ -47,15 +47,17 @@ api.interceptors.response.use(
 
 export const login = (credentials: any) => api.post("/login/", credentials);
 
+export const loginWithPasscode = (passcode: { passcode: string }) => api.post("/login-passcode/", passcode);
+
 export const logout = async () => {
-  const refresh_token = localStorage.getItem('refresh');
+  const refresh_token = localStorage.getItem("refresh");
   try {
-      await api.post("/logout/", { refresh_token });
+    await api.post("/logout/", { refresh_token });
   } catch (error) {
-      console.error("Logout error:", error);
+    console.error("Logout error:", error);
   } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refresh');
+    localStorage.removeItem("token");
+    localStorage.removeItem("refresh");
   }
 };
 
@@ -152,6 +154,12 @@ export const fetchDashboardData = async (
 // Fetch driver orders
 export const fetchDriverOrders = () => {
   return api.get<PaginatedResponse<DeliveryOrder>>("/delivery-orders/");
+};
+
+// Fetch delivery drivers
+export const fetchDeliveryDrivers = async () => {
+  const response = await api.get<PaginatedResponse<DeliveryDriver>>(`/delivery-drivers/`);
+  return response.data;
 };
 
 // Fetch driver profile

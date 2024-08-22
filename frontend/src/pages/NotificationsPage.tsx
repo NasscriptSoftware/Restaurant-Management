@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import Layout from "../components/Layout/Layout";
 import { api } from "../services/api";
 import { X } from "lucide-react";
+import { Card, CardFooter, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface Notification {
   id: number;
@@ -54,40 +56,50 @@ const NotificationsPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-4">Notifications</h1>
+      <div className="container mx-auto px-4 py-6">
+        <h1 className="text-4xl font-semibold mb-6">Notifications</h1>
         {notifications.length === 0 ? (
-          <p>No notifications at the moment.</p>
+          <p className="text-lg text-gray-600">
+            No notifications at the moment.
+          </p>
         ) : (
           <div className="space-y-4">
             {notifications.map((notification) => (
-              <div
+              <Card
                 key={notification.id}
-                className="flex justify-between items-center bg-white shadow-md rounded-lg p-4"
+                className="shadow-lg border border-gray-200"
               >
-                <div>
-                  <p className="text-sm text-gray-800">
-                    {notification.message}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {new Date(notification.created_at).toLocaleString()}
-                  </p>
+                <CardHeader className="w-full flex justify-between">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteNotification(notification.id)}
+                    className="absolute right-20 text-gray-400 hover:text-red-500"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                  <div>
+                    <h2 className="text-base font-medium text-gray-800">
+                      {notification.message}
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {new Date(notification.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                </CardHeader>
+                <CardFooter className="flex justify-end">
                   {!notification.is_read && (
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => markAsRead(notification.id)}
-                      className="mt-2 text-xs text-blue-600 hover:text-blue-800"
+                      className="text-blue-600 hover:text-blue-800 border-blue-600 hover:border-blue-800"
                     >
                       Mark as read
-                    </button>
+                    </Button>
                   )}
-                </div>
-                <button
-                  onClick={() => handleDeleteNotification(notification.id)}
-                  className="hover:text-red-500 cursor-pointer"
-                >
-                  <X />
-                </button>
-              </div>
+                </CardFooter>
+              </Card>
             ))}
           </div>
         )}

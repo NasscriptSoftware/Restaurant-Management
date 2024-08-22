@@ -1,6 +1,7 @@
 from datetime import timedelta
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters, permissions, status
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -30,6 +31,15 @@ class LoginViewSet(viewsets.ModelViewSet, TokenObtainPairView):
         except TokenError as e:
             raise InvalidToken(e.args[0])
 
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+
+class PasscodeLoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = PasscodeLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
@@ -94,12 +104,11 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        order_type = self.request.query_params.get('order_type', None)
+        order_type = self.request.query_params.get("order_type", None)
         if order_type:
             queryset = queryset.filter(order_type=order_type)
         return queryset
 
-   
     def get_queryset_by_time_range(self, time_range):
         end_date = timezone.now()
         if time_range == "day":
@@ -121,7 +130,6 @@ class OrderViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset_by_time_range(time_range)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-
 
     @action(detail=False, methods=["get"])
     def dashboard_data(self, request):
@@ -186,9 +194,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         time_range = request.query_params.get("time_range", "month")
         current_queryset = self.get_queryset_by_time_range(time_range)
 
-        end_date = timezone.now() - timedelta(
-            days=1
-        )
+        end_date = timezone.now() - timedelta(days=1)
         if time_range == "day":
             start_date = end_date - timedelta(days=1)
             prev_start_date = start_date - timedelta(days=1)
@@ -271,15 +277,16 @@ class FloorViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
-        names = [item['name'] for item in serializer.data]
+        names = [item["name"] for item in serializer.data]
         return Response(names)
+
 
 class TableViewSet(viewsets.ModelViewSet):
     serializer_class = TableSerializer
 
-    def get_queryset(self): 
+    def get_queryset(self):
         queryset = Table.objects.all()
-        floor = self.request.query_params.get('floor')
+        floor = self.request.query_params.get("floor")
         if floor:
             queryset = queryset.filter(floor__name=floor)
         return queryset
@@ -304,10 +311,12 @@ class CouponViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
+        partial = kwargs.pop("partial", False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
@@ -332,14 +341,14 @@ class MenuViewSet(viewsets.ModelViewSet):
     queryset = Menu.objects.all()
     serializer_class = MenuSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['mess_type', 'is_custom', 'created_by']  
-    search_fields = ['name', 'created_by']  
+    filterset_fields = ["mess_type", "is_custom", "created_by"]
+    search_fields = ["name", "created_by"]
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        mess_type = self.request.query_params.get('mess_type')
-        is_custom = self.request.query_params.get('is_custom')
-        created_by = self.request.query_params.get('created_by')
+        mess_type = self.request.query_params.get("mess_type")
+        is_custom = self.request.query_params.get("is_custom")
+        created_by = self.request.query_params.get("created_by")
 
         if mess_type:
             try:
@@ -349,7 +358,7 @@ class MenuViewSet(viewsets.ModelViewSet):
                 raise ValueError("mess_type should be a number")
 
         if is_custom is not None:
-            is_custom_bool = is_custom.lower() == 'true'
+            is_custom_bool = is_custom.lower() == "true"
             queryset = queryset.filter(is_custom=is_custom_bool)
 
         if created_by:
@@ -357,9 +366,11 @@ class MenuViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+
 class MenuItemViewSet(viewsets.ModelViewSet):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
+
 
 class MessViewSet(viewsets.ModelViewSet):
     queryset = Mess.objects.all()
@@ -368,10 +379,12 @@ class MessViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         # Ensure no `id` is included in the creation data
         data = request.data.copy()
-        data.pop('id', None)  # Remove `id` if present
+        data.pop("id", None)  # Remove `id` if present
 
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )

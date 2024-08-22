@@ -14,6 +14,7 @@ import DeliveryDriverOrdersPage from "./pages/DeliveryDriver/DeliveryDriverOrder
 import DeliveryDriverProfile from "./pages/DeliveryDriver/DeliveryDriverProfile";
 import Loader from "./components/Layout/Loader";
 import TokenExpirationModal from "./components/modals/TokenExpirationModal";
+import PasscodeLoginPage from "./pages/PasscodeLoginPage";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,14 @@ function App() {
                   element={
                     <AuthenticatedRoute>
                       <LoginPage />
+                    </AuthenticatedRoute>
+                  }
+                />
+                <Route
+                  path="/login-passcode"
+                  element={
+                    <AuthenticatedRoute>
+                      <PasscodeLoginPage />
                     </AuthenticatedRoute>
                   }
                 />

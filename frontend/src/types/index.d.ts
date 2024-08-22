@@ -66,6 +66,8 @@ export interface OrderFormData {
   status: "pending" | "approved" | "cancelled" | "delivered";
   order_type: "dining" | "takeaway" | "delivery";
   payment_method: "cash" | "bank";
+  address: string;
+  delivery_driver_id: number | null;
 }
 
 // Analytics types
