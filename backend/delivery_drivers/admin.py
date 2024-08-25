@@ -1,5 +1,6 @@
-from restaurant_app.admin import admin_site
+from django.contrib import admin
+from unfold.admin import ModelAdmin as UnflodModelAdmin
 from .models import DeliveryDriver, DeliveryOrder
 
-admin_site.register(DeliveryDriver)
-admin_site.register(DeliveryOrder)
+admin.site.register(DeliveryDriver, UnflodModelAdmin)
+admin.site.register(DeliveryOrder, UnflodModelAdmin)

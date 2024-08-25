@@ -1,41 +1,26 @@
+from unfold.admin import ModelAdmin as UnflodModelAdmin
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from django.contrib import admin
-from django.contrib.admin import AdminSite
-from django.contrib import admin
-from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.models import Group
 from restaurant_app.models import *
 
+admin.site.unregister(Group)
+admin.site.unregister(BlacklistedToken)
+admin.site.unregister(OutstandingToken)
 
-class CustomAdminSite(AdminSite):
-    site_header = "Nasscript"
-    site_title = "Nasscript"
-    index_title = "Welcome to Nasscript Admin Panel"
-
-    def get_app_list(self, request):
-        app_list = super().get_app_list(request)
-        excluded_apps = ['token_blacklist', 'auth']
-        return [app for app in app_list if app['app_label'] not in excluded_apps]
-
-
-admin_site = CustomAdminSite()
-
-admin_site.site_header = "Nasscript"
-admin_site.site_title = "Nasscript"
-admin_site.index_title = "Welcome to Nasscript Admin Panel"
-
-
-admin_site.register(User)
-admin_site.register(Category)
-admin_site.register(Dish)
-admin_site.register(Order)
-admin_site.register(OrderItem)
-admin_site.register(Bill)
-admin_site.register(Notification)
-admin_site.register(Floor)
-admin_site.register(Table)
-admin_site.register(Coupon)
+admin.site.register(User, UnflodModelAdmin)
+admin.site.register(Category, UnflodModelAdmin)
+admin.site.register(Dish, UnflodModelAdmin)
+admin.site.register(Order, UnflodModelAdmin)
+admin.site.register(OrderItem, UnflodModelAdmin)
+admin.site.register(Bill, UnflodModelAdmin)
+admin.site.register(Notification, UnflodModelAdmin)
+admin.site.register(Floor, UnflodModelAdmin)
+admin.site.register(Table, UnflodModelAdmin)
+admin.site.register(Coupon, UnflodModelAdmin)
 
 @admin.register(Menu)
-class MenuAdmin(admin.ModelAdmin):
+class MenuAdmin(UnflodModelAdmin):
     list_display = (
         "id",
         "name",
@@ -56,9 +41,9 @@ class MenuAdmin(admin.ModelAdmin):
     )
     search_fields = ("name", "day_of_week", "mess_type__name", "created_by")
 
-admin_site.register(MenuItem)
-admin_site.register(Mess)
-admin_site.register(MessType)
+admin.site.register(MenuItem, UnflodModelAdmin)
+admin.site.register(Mess, UnflodModelAdmin)
+admin.site.register(MessType, UnflodModelAdmin)
 
-admin_site.register(CreditUser)
-admin_site.register(CreditOrder)
+admin.site.register(CreditUser, UnflodModelAdmin)
+admin.site.register(CreditOrder, UnflodModelAdmin)

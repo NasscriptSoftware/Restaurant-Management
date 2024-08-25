@@ -7,3 +7,4 @@ django-filter
 Pillow
 reportlab
 twilio
+django-unfold
