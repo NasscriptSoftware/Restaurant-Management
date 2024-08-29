@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { RotateCcw } from "lucide-react";
 import { api } from "@/services/api";
 
 interface CardDetailsProps {
@@ -16,119 +19,85 @@ interface Order {
   total_amount: string | number;
   status: string;
   order_type: "dining" | "takeaway" | "delivery";
+  billed_at: string;  // Assuming bill creation date is part of the order
   items: { dish: number; quantity: number }[];
 }
 
 const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
   const [activeStatus, setActiveStatus] = useState("delivered");
-  const [orders, setOrders] = useState<Order[] | null>(null);
+  const [allOrders, setAllOrders] = useState<Order[] | null>(null); // To store the fetched orders
+  const [filteredOrders, setFilteredOrders] = useState<Order[] | null>(null); // To store filtered results
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedStatus, setSelectedStatus] = useState<
-    "pending" | "cancelled" | "delivered" | null
-  >("delivered");
-  const [searchQuery, setSearchQuery] = useState(""); // State to track search query
+  const [fromDate, setFromDate] = useState<Date | null>(null);
+  const [toDate, setToDate] = useState<Date | null>(null);
   const ordersPerPage = 5;
 
   useEffect(() => {
-    if (selectedCard && !searchQuery) {  // Only fetch if not searching by ID
-      setIsLoading(true);
-      setIsError(false);
+    const fetchOrders = async () => {
+      if (selectedCard) {
+        setIsLoading(true);
+        setIsError(false);
 
-      const token = localStorage.getItem("token");
+        const token = localStorage.getItem("token");
 
-      api
-        .get(`http://127.0.0.1:8000/api/orders`, {
-          params: {
-            order_type: selectedCard.iconType.toLowerCase(),
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((response) => {
-          setOrders(response.data.results);
+        const params: any = {
+          order_type: selectedCard.iconType.toLowerCase(),
+          status: activeStatus,
+        };
+
+        try {
+          const response = await api.get(`http://127.0.0.1:8000/api/orders`, {
+            params,
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setAllOrders(response.data.results);
+          setFilteredOrders(response.data.results); // Initialize filtered orders with all fetched data
           setIsLoading(false);
-        })
-        .catch((error) => {
+        } catch (error) {
           console.error("Error fetching orders:", error);
           setIsError(true);
           setIsLoading(false);
-        });
-    }
-  }, [selectedCard, searchQuery]);  // Depend on searchQuery
+        }
+      }
+    };
 
-  const handlePreviousPage = () => {
-    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
-  };
-
-  const handleNextPage = () => {
-    setCurrentPage((prevPage) =>
-      orders && prevPage < Math.ceil(orders.length / ordersPerPage)
-        ? prevPage + 1
-        : prevPage
-    );
-  };
+    fetchOrders();
+  }, [selectedCard, activeStatus]);
 
   const handleStatusClick = (status: "pending" | "cancelled" | "delivered") => {
-    setSelectedStatus(status);
     setActiveStatus(status);
     setCurrentPage(1); // Reset to the first page when changing the status
   };
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const query = event.target.value;
-    setSearchQuery(query);
-    setCurrentPage(1); // Reset to the first page when changing the search query
-
-    if (query) {
-      // Fetch order by ID directly
-      const token = localStorage.getItem("token");
-      api
-        .get(`http://127.0.0.1:8000/api/orders/${query}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((response) => {
-          setOrders([response.data]);  // Set orders to an array with the single result
-        })
-        .catch((error) => {
-          console.error("Error fetching order by ID:", error);
-          setIsError(true);
-          setOrders([]);  // Clear orders if the search fails
-        });
-    } else if (selectedCard) {
-      // If no search query, fetch orders based on selectedCard as usual
-      const token = localStorage.getItem("token");
-
-      api
-        .get(`http://127.0.0.1:8000/api/orders`, {
-          params: {
-            order_type: selectedCard.iconType.toLowerCase(),
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((response) => {
-          setOrders(response.data.results);
-        })
-        .catch((error) => {
-          console.error("Error fetching orders:", error);
-          setIsError(true);
-          setOrders([]);
-        });
-    }
+  const handleReset = () => {
+    setFromDate(null);
+    setToDate(null);
+    setFilteredOrders(allOrders); // Reset filtered orders to all orders
+    setCurrentPage(1);
   };
 
-  // Filter orders based on status
-  const filteredOrders = orders
-    ? !searchQuery
-      ? orders.filter((order) => order.status === selectedStatus)
-      : orders
-    : [];
+  const handleDateFilter = () => {
+    if (allOrders) {
+      let filtered = allOrders;
+
+      if (fromDate && toDate) {
+        const from = new Date(fromDate).setHours(0, 0, 0, 0);
+        const to = new Date(toDate).setHours(23, 59, 59, 999);
+
+        filtered = filtered.filter((order) => {
+          const billDate = new Date(order.billed_at).getTime();
+          return billDate >= from && billDate <= to;
+        });
+      }
+
+      setFilteredOrders(filtered);
+      setCurrentPage(1); // Reset to the first page on new search/filter
+    }
+  };
 
   if (!selectedCard) {
     return (
@@ -136,35 +105,55 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
     );
   }
 
-  // if (isLoading) {
-  //   return <div className="p-4 bg-white shadow">Loading...</div>;
-  // }
-
   if (isError) {
     return <div className="p-4 bg-white shadow">Error loading orders.</div>;
   }
 
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = filteredOrders.slice(
-    indexOfFirstOrder,
-    indexOfLastOrder
-  );
+  const currentOrders = filteredOrders
+    ? filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder)
+    : [];
 
   return (
-    <div className="p-4  shadow h-screen">
+    <div className="p-4 shadow h-screen">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">{selectedCard.title}</h2>
-        <div className="flex items-center space-x-2">
-          <input
-            type="text"
-            placeholder="Search orders..."
-            className="p-2 border border-gray-300 rounded"
-            value={searchQuery} // Bind input value to state
-            onChange={handleSearchChange} // Handle input change
-          />
-          <button className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded">
+      </div>
+
+      {/* Date Filters */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex space-x-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">From Date</label>
+            <DatePicker
+              selected={fromDate}
+              onChange={(date) => setFromDate(date)}
+              dateFormat="yyyy-MM-dd"
+              className="mt-1 p-2 border rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">To Date</label>
+            <DatePicker
+              selected={toDate}
+              onChange={(date) => setToDate(date)}
+              dateFormat="yyyy-MM-dd"
+              className="mt-1 p-2 border rounded"
+            />
+          </div>
+          <button
+            onClick={handleDateFilter} // Apply the date filter
+            className="mt-7 p-2 bg-blue-500 text-white rounded"
+          >
             Search
+          </button>
+          <button
+            onClick={handleReset}
+            className="mt-7 p-2 rounded-full bg-red-500 text-white shadow-md"
+            title="Reset"
+          >
+            <RotateCcw size={20} />
           </button>
         </div>
       </div>
@@ -197,7 +186,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
       </div>
 
       <div>
-        {filteredOrders.length === 0 ? (
+        {currentOrders.length === 0 ? (
           <p>No orders found for the current search or filters.</p>
         ) : (
           <>
@@ -234,7 +223,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
                 </li>
               ))}
             </ul>
-            {filteredOrders.length > ordersPerPage && (
+            {filteredOrders && filteredOrders.length > ordersPerPage && (
               <div className="flex justify-between mt-4">
                 <button
                   className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded disabled:opacity-50"
