@@ -7,16 +7,9 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal, PlusCircle } from "lucide-react";
+import { ArrowUpDown, PlusCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -30,6 +23,7 @@ import { api } from "@/services/api";
 import { CreditUserModal } from "../modals/CreditUserModal";
 import ConfirmationModal from "../modals/ConfirmationModal";
 import { CreditPaymentModal } from "../modals/CreditPaymentModal";
+import CreditTransactionModal from "@/components/modals/CreditTransactionModal";
 
 interface CreditUser {
   id: number;
@@ -55,6 +49,9 @@ export function CreditUserTable() {
   const [creditUserToDelete, setCreditUserToDelete] = useState<number | null>(
     null
   );
+  const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
+  const [selectedUserTransactions, setSelectedUserTransactions] = useState([]);
+
 
   useEffect(() => {
     fetchCreditUsers();
@@ -69,12 +66,21 @@ export function CreditUserTable() {
     }
   };
 
+  const handleMobileNumberClick = async (creditUserId: number) => {
+    try {
+      const response = await api.get(`/credit-transactions/?credit_user=${creditUserId}`);
+      setSelectedUserTransactions(response.data.results);
+      setIsTransactionModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    }
+  };
+
   const filterFn = (row: any, columnId: string, value: string) => {
     const usernameMatch = row.getValue("username").toLowerCase().includes(value.toLowerCase());
     const mobileNumberMatch = row.getValue("mobile_number").includes(value);
     return usernameMatch || mobileNumberMatch;
   };
-
 
   const handleAddCreditUser = () => {
     setSelectedCreditUserId(null);
@@ -142,23 +148,30 @@ export function CreditUserTable() {
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }: any) => <div>{row.getValue("mobile_number")}</div>,
+      cell: ({ row }: any) => (
+        <div
+          onClick={() => handleMobileNumberClick(row.original.id)}
+          className="cursor-pointer text-blue-600 underline"
+        >
+          {row.getValue("mobile_number")}
+        </div>
+      ),
       filterFn,
     },
     {
-      accessorKey: "last_payment_date",
-      header: "Last Payment Date",
+      accessorKey: "bill_date",
+      header: "Bill Date",
       cell: ({ row }: any) => (
         <div>
-          {new Date(row.getValue("last_payment_date")).toLocaleDateString()}
+          {new Date(row.getValue("bill_date")).toLocaleDateString()}
         </div>
       ),
     },
     {
-      accessorKey: "time_period",
-      header: "End Date",
+      accessorKey: "due_date",
+      header: "Due Date",
       cell: ({ row }: any) => (
-        <div>{new Date(row.getValue("time_period")).toLocaleDateString()}</div>
+        <div>{new Date(row.getValue("due_date")).toLocaleDateString()}</div>
       ),
     },
     {
@@ -198,39 +211,44 @@ export function CreditUserTable() {
       ),
     },
     {
-      id: "actions",
-      enableHiding: false,
+      id: "make_payment",
+      header: "Make Payment",
       cell: ({ row }: any) => {
         const creditUser = row.original;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              {creditUser.total_due > 0 && (
-                <DropdownMenuItem
-                  onClick={() => handleMakePayment(creditUser.id)}
-                >
-                  Make Payment
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem
-                onClick={() => handleEditCreditUser(creditUser.id)}
-              >
-                Edit credit user
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleDeleteCreditUser(creditUser.id)}
-              >
-                Delete credit user
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleMakePayment(creditUser.id)}
+            disabled={creditUser.total_due <= 0}
+            className={`bg-green-500 ${creditUser.total_due <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            Make Payment
+          </Button>
+        );
+      },
+    },
+    {
+      id: "edit",
+      header: "Edit",
+      cell: ({ row }: any) => {
+        const creditUser = row.original;
+        return (
+          <Button variant="outline" size="sm" className="bg-[#6f42c1]" onClick={() => handleEditCreditUser(creditUser.id)}>
+            Edit
+          </Button>
+        );
+      },
+    },
+    {
+      id: "delete",
+      header: "Delete",
+      cell: ({ row }: any) => {
+        const creditUser = row.original;
+        return (
+          <Button variant="outline" size="sm" onClick={() => handleDeleteCreditUser(creditUser.id)}>
+            Delete
+          </Button>
         );
       },
     },
@@ -283,7 +301,7 @@ export function CreditUserTable() {
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="text-center">
+                  <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -303,21 +321,15 @@ export function CreditUserTable() {
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="text-center">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columns.length} className="h-24 text-center">
                   No results.
                 </TableCell>
               </TableRow>
@@ -325,48 +337,51 @@ export function CreditUserTable() {
           </TableBody>
         </Table>
       </div>
+
       <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          Previous
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Next
+        </Button>
       </div>
+
       <CreditUserModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         creditUserId={selectedCreditUserId}
         onCreditUserChange={handleCreditUserChange}
       />
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        message="Are you sure you want to delete this credit user?"
+      />
+
       <CreditPaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         creditUserId={selectedCreditUserId}
-        onPaymentSuccess={handleCreditUserChange}
+        onCreditUserChange={handleCreditUserChange}
       />
-      <ConfirmationModal
-        open={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={confirmDelete}
-        title="Confirm Deletion"
-        description="Are you sure you want to delete this credit user? This action cannot be undone."
+
+      <CreditTransactionModal
+        isOpen={isTransactionModalOpen}
+        onClose={() => setIsTransactionModalOpen(false)}
+        transactions={selectedUserTransactions}
       />
     </div>
   );

@@ -457,8 +457,8 @@ class CreditUserSerializer(serializers.ModelSerializer):
             "id",
             "username",
             "mobile_number",
-            "last_payment_date",
-            "time_period",
+            "bill_date",
+            "due_date",
             "total_due",
             "is_active",
             "credit_orders",
@@ -469,3 +469,9 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ['id', 'received_amount', 'status', 'cash_amount', 'bank_amount', 'payment_method', 'mess','date']
+
+class CreditTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CreditTransaction
+        fields = '__all__'
+        read_only_fields = ['status']
