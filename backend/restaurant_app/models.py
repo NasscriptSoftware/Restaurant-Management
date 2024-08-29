@@ -49,7 +49,6 @@ class LogoInfo(models.Model):
     location = models.CharField(max_length=255)
     office_number = models.CharField(max_length=20)
     main_logo = models.ImageField(upload_to='company_logos/')
-    side_logo = models.ImageField(upload_to='company_logos/')
     print_logo = models.ImageField(upload_to='company_logos/')
 
     def __str__(self):

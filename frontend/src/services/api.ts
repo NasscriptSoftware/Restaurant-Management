@@ -77,6 +77,22 @@ export const fetchDish = async (dishId: number) => {
   return response.data;
 };
 
+export const fetchDishDetails = async (dishId: any) => {
+  try {
+    const response = await api.get(`/dishes/${dishId}/`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data; // Axios automatically parses the JSON response
+  } catch (error) {
+    console.error("Error fetching dish details:");
+    return null;
+  }
+};
+
+
 export const getOrders = async () => {
   const response = await api.get("/orders/");
   return response.data;
