@@ -136,9 +136,9 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
     );
   }
 
-  if (isLoading) {
-    return <div className="p-4 bg-white shadow">Loading...</div>;
-  }
+  // if (isLoading) {
+  //   return <div className="p-4 bg-white shadow">Loading...</div>;
+  // }
 
   if (isError) {
     return <div className="p-4 bg-white shadow">Error loading orders.</div>;
