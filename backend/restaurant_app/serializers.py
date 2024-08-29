@@ -295,12 +295,51 @@ class OrderTypeChangeSerializer(serializers.ModelSerializer):
         return data 
 
     
+class BillOrderItemSerializer(serializers.ModelSerializer):
+    dish_name = serializers.CharField(source='dish.name', read_only=True)
+    item_total = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OrderItem
+        fields = ['dish_name', 'quantity', 'item_total']
+
+    def get_item_total(self, obj):
+        return obj.dish.price * obj.quantity
+    
+
+class BillOrderSerializer(serializers.ModelSerializer):
+    items = BillOrderItemSerializer(many=True, read_only=True)
+    sub_total = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = ['id', 'user', 'created_at', 'total_amount', 'status', 'bill_generated', 
+                  'bank_amount', 'cash_amount', 'invoice_number', 'items', 'order_type', 
+                  'payment_method', 'address', 'customer_name', 'customer_phone_number', 
+                  'delivery_charge', 'sub_total']
+
+    def get_sub_total(self, obj):
+        return sum(item.dish.price * item.quantity for item in obj.items.all())
+    
+
+    
 class BillSerializer(serializers.ModelSerializer):
+    order = BillOrderSerializer(read_only=True)
     user = UserSerializer(read_only=True)
+
+    # Add the order ID as a writable field for creating a bill
+    order_id = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all(), write_only=True)
 
     class Meta:
         model = Bill
-        fields = ["id", "order", "user", "total_amount", "paid", "billed_at"]
+        fields = ['id', 'order', 'order_id', 'user', 'total_amount', 'paid', 'billed_at']
+
+    def create(self, validated_data):
+        # Pop the order_id from the validated data
+        order = validated_data.pop('order_id')
+        bill = Bill.objects.create(order=order, user=order.user, **validated_data)
+        return bill
+
 
 
 class NotificationSerializer(serializers.ModelSerializer):

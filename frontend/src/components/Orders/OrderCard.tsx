@@ -287,10 +287,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
         // Ensure the API call was successful
         // Call the bills API after successful status update
         const billsResponse = await api.post("/bills/", {
-          order: order.id,
+          order_id: order.id, // Use order_id here
           total_amount: order.total_amount,
           paid: true,
         });
+        
 
         if (billsResponse && billsResponse.status === 201) {
           setShowPaymentModal(false);
