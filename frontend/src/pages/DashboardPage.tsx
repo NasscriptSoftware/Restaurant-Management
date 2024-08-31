@@ -54,6 +54,13 @@ const COLORS = [
   "#6f42c1",
 ];
 
+const timeRangeHeadings = {
+  day: "Daily",
+  week: "Weekly",
+  month: "Monthly",
+  year: "Yearly",
+};
+
 const RestaurantDashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState<string>("week");
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
@@ -159,7 +166,9 @@ const RestaurantDashboard: React.FC = () => {
           <ErrorBoundary fallback={<div>Error loading chart</div>}>
             <Card>
               <CardHeader>
-                <h3 className="text-lg font-semibold">Daily Sales</h3>
+                <h3 className="text-lg font-semibold">
+                  {`${timeRangeHeadings[timeRange]} Sales`}
+                </h3>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
