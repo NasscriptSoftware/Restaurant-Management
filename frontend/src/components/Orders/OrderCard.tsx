@@ -372,7 +372,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         setShowOrderTypeModal(false);
   
         // Perform a hard refresh to reload the page from the server
-        window.location.reload(true);
+        window.location.reload();
       } else {
         Swal.fire("Error", "Failed to update order type.", "error");
       }
