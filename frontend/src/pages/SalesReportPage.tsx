@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import Layout from "../components/Layout/Layout";
 import PaginationControls from "../components/Layout/PaginationControls";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css"; // Import the styles
-import { RotateCcw } from 'lucide-react';
+import "react-datepicker/dist/react-datepicker.css";
+import { RotateCcw, Eye, Pencil } from 'lucide-react';
 import SalesPrint from "@/components/SalesReport/SalesPrint";
 import { api } from "@/services/api";
 import TransactionsModal from "@/components/Mess/TransactionsModal";
@@ -11,7 +11,50 @@ import SalesHistoryModal from "@/components/SalesReport/SalesHistoryModal";
 import SalesEditModal from "@/components/SalesReport/SalesEditModal";
 import MessEditModal from "@/components/SalesReport/MessEditModal";
 import { format } from "date-fns";
-import { Eye, Pencil } from 'lucide-react';
+
+interface SalesReport {
+  id: number;
+  total_amount: number;
+  status: string;
+  order_type: string;
+  payment_method: string;
+  created_at: string;
+  invoice_number: string;
+  cash_amount: string;
+  bank_amount: string;
+  customer_phone_number: string;
+}
+
+interface MessType {
+  id: number;
+  name: string;
+}
+
+interface MessReport {
+  id: number;
+  customer_name: string;
+  mobile_number: string;
+  mess_type: MessType;
+  total_amount: number;
+  paid_amount: number;
+  pending_amount: number;
+  start_date: string;
+  end_date: string;
+  payment_method: string;
+  grand_total: string;
+  cash_amount: string;
+  bank_amount: string;
+}
+
+interface Transaction {
+  id: number;
+  received_amount: number;
+  cash_amount: number;
+  bank_amount: number;
+  payment_method: string;
+  status: string;
+  date: string;
+}
 
 const SalesReportPage: React.FC = () => {
   const [reportType, setReportType] = useState<"sales" | "mess">("sales");
@@ -21,13 +64,16 @@ const SalesReportPage: React.FC = () => {
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
   const [activeButton, setActiveButton] = useState<string | null>(null);
-  const [showCancelledOrders, setShowCancelledOrders] = useState(false);
-  const [currentReport, setCurrentReport] = useState(null);
-  const [isAllButtonActive, setIsAllButtonActive] = useState(true);
   const [isTransactionsModalOpen, setIsTransactionsModalOpen] = useState(false);
   const [isSalesHistoryModalOpen, setIsSalesHistoryModalOpen] = useState(false);
   const [isSalesEditModalOpen, setIsSalesEditModalOpen] = useState(false);
   const [isMessEditModalOpen, setIsMessEditModalOpen] = useState(false);
+  const [currentReport, setCurrentReport] = useState<SalesReport | MessReport | null>(null);
+  const [isAllButtonActive, setIsAllButtonActive] = useState(true);
+  const [showCancelledOrders, setShowCancelledOrders] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [orderHistory, setOrderHistory] = useState<Transaction[]>([]);
+  const [currentMember, setCurrentMember] = useState<MessReport | null>(null);
 
   const itemsPerPage = 10;
 
@@ -56,12 +102,13 @@ const SalesReportPage: React.FC = () => {
         url.searchParams.append("to_date", convertToUTCDate(toDate));
       }
 
-      // Only show delivered orders by default
+      // Default to delivered orders unless showCancelledOrders is true
       if (!showCancelledOrders) {
         url.searchParams.append("order_status", "delivered");
       } else {
         url.searchParams.append("order_status", "cancelled");
       }
+      
 
       Object.entries(filter).forEach(([key, value]) => {
         url.searchParams.append(key, value);
@@ -90,16 +137,44 @@ const SalesReportPage: React.FC = () => {
     }
   };
 
+  const fetchTransactions = async (memberId: number) => {
+    try {
+      const response = await api.get(`/transactions/?mess_id=${memberId}`);
+      if (response.data && Array.isArray(response.data.results)) {
+        setTransactions(response.data.results);
+      } else {
+        console.error("Unexpected response format:", response.data);
+      }
+    } catch (err) {
+      console.error("Error fetching transactions:", err);
+    }
+  };
+
+  const fetchOrderHistory = async (mobileNumber: string) => {
+    try {
+      const response = await api.get(`/orders/user_order_history/?customer_phone_number=${mobileNumber}`);
+      if (response.data && Array.isArray(response.data)) {
+        setOrderHistory(response.data);
+      } else {
+        console.error("Unexpected response format:", response.data);
+      }
+    } catch (err) {
+      console.error("Error fetching order history:", err);
+    }
+  };
+
   const handleShowCancelledOrdersClick = () => {
     setShowCancelledOrders(!showCancelledOrders);
   };
-
   const handleButtonClick = (buttonName: string) => {
-    let filter = {};
+    let filter: Record<string, string> = {};
     setActiveButton(buttonName);
 
     if (buttonName === "All") {
-      filter = {}; // No filter for "All" button
+      setFromDate(null);
+      setToDate(null);
+      setCurrentPage(1);
+      fetchDataWithFilter({});
     } else if (reportType === "sales") {
       switch (buttonName) {
         case "Dining":
@@ -123,8 +198,14 @@ const SalesReportPage: React.FC = () => {
         case "Credit":
           filter = { payment_method: "credit" };
           break;
+        case "Canceled":
+          filter = { order_status: "cancelled" };
+          break;
+        case "Delivered":
+          filter = { order_status: "delivered" };
+          break;
         default:
-          filter = {}; // No filter if the button name does not match
+          filter = {};
       }
     } else if (reportType === "mess") {
       switch (buttonName) {
@@ -153,11 +234,42 @@ const SalesReportPage: React.FC = () => {
           filter = { mess_type: "breakfast_lunch_dinner" };
           break;
         default:
-          filter = {}; // No filter if the button name does not match
+          filter = {};
       }
     }
 
     fetchDataWithFilter(filter);
+  };
+
+  const handleSalesMobileClick = async (report: SalesReport) => {
+    await fetchOrderHistory(report.customer_phone_number);
+    setCurrentMember(report);
+    setIsSalesHistoryModalOpen(true);
+  };
+
+  const handleMobileClick = async (report: MessReport) => {
+    await fetchTransactions(report.id);
+    setCurrentMember(report);
+    setIsTransactionsModalOpen(true);
+  };
+
+  const handleSalesEditClick = (report: SalesReport) => {
+    setCurrentReport(report);
+    setIsSalesEditModalOpen(true);
+  };
+
+  const handleMessEditClick = (report: MessReport) => {
+    setCurrentReport(report);
+    setIsMessEditModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsTransactionsModalOpen(false);
+    setIsSalesHistoryModalOpen(false);
+    setIsSalesEditModalOpen(false);
+    setIsMessEditModalOpen(false);
+    setCurrentReport(null);
+    setCurrentMember(null);
   };
 
   const handleReset = () => {
@@ -299,6 +411,12 @@ const SalesReportPage: React.FC = () => {
                 Credit
               </button>
               <button
+                onClick={() => handleButtonClick("Canceled")}
+                className={`p-2 rounded ${activeButton === "Canceled" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+              >
+                Canceled
+              </button>
+              <button
                 onClick={() => handleButtonClick("Delivered")}
                 className={`p-2 rounded ${activeButton === "Delivered" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
               >
@@ -365,7 +483,7 @@ const SalesReportPage: React.FC = () => {
               <tr>
                 {reportType === "sales" ? (
                   <>
-                    <th className="py-2 px-4 bg-gray-200">Invoice</th>
+                    <th className="py-2 px-4 bg-gray-200">Invoice </th>
                     <th className="py-2 px-4 bg-gray-200">Mobile</th>
                     <th className="py-2 px-4 bg-gray-200">Date</th>
                     <th className="py-2 px-4 bg-gray-200">Order Type</th>
@@ -380,11 +498,11 @@ const SalesReportPage: React.FC = () => {
                 ) : (
                   <>
                     <th className="py-2 px-4 bg-gray-200">Name</th>
-                    <th className="py-2 px-4 bg-gray-200">Mobile</th>
+                    <th className="py-2 px-4 bg-gray-200">Mobile </th>
                     <th className="py-2 px-4 bg-gray-200">Mess Type</th>
-                    <th className="py-2 px-4 bg-gray-200">Total</th>
-                    <th className="py-2 px-4 bg-gray-200">Paid</th>
-                    <th className="py-2 px-4 bg-gray-200">Pending</th>
+                    <th className="py-2 px-4 bg-gray-200">Total </th>
+                    <th className="py-2 px-4 bg-gray-200">Paid </th>
+                    <th className="py-2 px-4 bg-gray-200">Pending </th>
                     <th className="py-2 px-4 bg-gray-200">Start Date</th>
                     <th className="py-2 px-4 bg-gray-200">End Date</th>
                     <th className="py-2 px-4 bg-gray-200">Payment Method</th>
@@ -400,7 +518,7 @@ const SalesReportPage: React.FC = () => {
                 ? paginatedReports.map((report) => (
                   <tr key={report.id}>
                     <td className="border px-4 py-2">{report.invoice_number}</td>
-                    <td className="border px-4 py-2">{report.customer_phone_number || "N/A"}</td>
+                    <td className="border px-4 py-2">  {report.customer_phone_number ? report.customer_phone_number : "N/A"} </td>
                     <td className="border px-4 py-2">
                       {format(new Date(report.created_at), 'dd-MM-yyyy')}
                     </td>
@@ -438,6 +556,7 @@ const SalesReportPage: React.FC = () => {
                       {format(new Date(report.end_date), 'dd-MM-yyyy')}
                     </td>
                     <td className="border px-4 py-2">{report.payment_method}</td>
+                    <td className="border px-4 py-2">{report.status}</td>
                     <td className="border px-4 py-2">
                       <button
                         onClick={() => handleMobileClick(report)}
@@ -457,28 +576,16 @@ const SalesReportPage: React.FC = () => {
 
         <div className="mt-4 p-4 bg-gray-100 rounded-lg shadow-md">
           <div className="flex justify-end space-x-4">
-            <p className="font-bold text-lg">
-              Cash Amount:
-            </p>
-            <p className="font-bold text-lg">
-              ₹{totalCashAmount.toFixed(2)}
-            </p>
+            <p className="font-bold text-lg">Cash Amount:</p>
+            <p className="font-bold text-lg">₹{totalCashAmount.toFixed(2)}</p>
           </div>
           <div className="flex justify-end space-x-4 mt-2">
-            <p className="font-bold text-lg">
-              Card Amount:
-            </p>
-            <p className="font-bold text-lg">
-              ₹{totalCardAmount.toFixed(2)}
-            </p>
+            <p className="font-bold text-lg">Card Amount:</p>
+            <p className="font-bold text-lg">₹{totalCardAmount.toFixed(2)}</p>
           </div>
           <div className="flex justify-end space-x-4 mt-2">
-            <p className="font-bold text-lg">
-              Total Amount:
-            </p>
-            <p className="font-bold text-lg">
-              ₹{totalAmount.toFixed(2)}
-            </p>
+            <p className="font-bold text-lg">Total Amount:</p>
+            <p className="font-bold text-lg">₹{totalAmount.toFixed(2)}</p>
           </div>
         </div>
 
@@ -500,7 +607,7 @@ const SalesReportPage: React.FC = () => {
 
       {isSalesHistoryModalOpen && currentMember && (
         <SalesHistoryModal
-          orderhistory={orderHistiory}
+          orderhistory={orderHistory}
           isOpen={isSalesHistoryModalOpen}
           onClose={handleModalClose}
           member={currentMember}
