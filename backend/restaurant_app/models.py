@@ -491,14 +491,14 @@ def update_mess_on_transaction_save(sender, instance, **kwargs):
 class CreditUser(models.Model):
     username = models.CharField(max_length=100)
     mobile_number = models.CharField(max_length=10, unique=True)
-    last_payment_date = models.DateTimeField(default=timezone.now)
-    time_period = models.DateTimeField(default=default_time_period)
+    bill_date = models.DateTimeField(default=timezone.now)
+    due_date = models.DateTimeField(default=default_time_period)
     total_due = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     limit_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ("last_payment_date",)
+        ordering = ("bill_date",)
 
     def __str__(self):
         return self.username
@@ -511,11 +511,11 @@ class CreditUser(models.Model):
         if amount > self.total_due:
             amount = self.total_due
         self.total_due -= amount
-        self.last_payment_date = timezone.now()
+        self.due_date = timezone.now()
         self.save()
 
     def save(self, *args, **kwargs):
-        if self.last_payment_date > self.time_period:
+        if self.total_due > 0:
             self.is_active = False
         return super().save(*args, **kwargs)
 
@@ -531,6 +531,47 @@ class CreditOrder(models.Model):
 
     def __str__(self):
         return f"Credit Order for Order {self.order.id}"
+    
+
+class CreditTransaction(models.Model):
+    STATUS_CHOICES = [
+        ('due', 'Due'),
+        ('completed', 'Completed'),
+    ]
+    PAYMENT_METHOD_CHOICES = [
+        ("cash", "Cash"),
+        ("bank", "Bank"),
+        ("cash-bank", "Cash and Bank"),
+    ]
+
+
+    date = models.DateField(auto_now_add=True)
+    received_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    cash_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  
+    bank_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  
+    payment_method = models.CharField(
+        max_length=20, choices=PAYMENT_METHOD_CHOICES, default="cash"
+    )
+    credit_user = models.ForeignKey(
+        'CreditUser', related_name='credittransactions', on_delete=models.CASCADE, blank=True, null=True
+    )
+
+    def __str__(self):
+        return f"Transaction on {self.date} - {self.status}"
+
+    def save(self, *args, **kwargs):
+        if self.credit_user and self.credit_user.total_due > 0:
+            self.status = 'due'
+        else:
+            self.status = 'completed'
+
+        super().save(*args, **kwargs)
+
+        if self.credit_user:
+            self.credit_user.total_due -= self.received_amount
+            self.credit_user.save()
+
     
 
 

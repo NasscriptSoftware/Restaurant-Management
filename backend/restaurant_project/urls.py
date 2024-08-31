@@ -31,7 +31,8 @@ from restaurant_app.views import (
     TransactionViewSet,
    OrderTypeChangeViewSet,
     DishVariantViewSet,
-    CancelOrderByBillView
+    CancelOrderByBillView,
+    CreditTransactionViewSet
 
 )
 from delivery_drivers.views import (
@@ -61,6 +62,7 @@ router.register(r'transactions', TransactionViewSet, basename="transactions")
 # Credit User URLs
 router.register(r"credit-users", CreditUserViewSet, basename="credit_users")
 router.register(r"credit-orders", CreditOrderViewSet, basename="credit_orders")
+router.register(r'credit-transactions', CreditTransactionViewSet, basename="credit-transactions")
 
 # Delivery Driver URLs
 router.register(r"delivery-drivers", DeliveryDriverViewSet, basename="delivery_drivers")
@@ -90,7 +92,7 @@ urlpatterns = [
 
     # Register the new Cancel Order API
     path("api/bills/<int:bill_id>/cancel_order/", CancelOrderByBillView.as_view(), name="cancel-order-by-bill"),
-    
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

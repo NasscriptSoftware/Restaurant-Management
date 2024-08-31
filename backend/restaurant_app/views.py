@@ -660,3 +660,13 @@ class TransactionViewSet(viewsets.ModelViewSet):
         if mess_id is not None:
             queryset = queryset.filter(mess_id=mess_id)
         return queryset
+
+class CreditTransactionViewSet(viewsets.ModelViewSet):
+    serializer_class = CreditTransactionSerializer
+    
+    def get_queryset(self):
+        queryset = CreditTransaction.objects.all()
+        credit_user_id = self.request.query_params.get('credit_user', None)
+        if credit_user_id is not None:
+            queryset = queryset.filter(credit_user_id=credit_user_id)
+        return queryset
