@@ -79,27 +79,6 @@ const BillsPage: React.FC = () => {
     setFilteredBills(allBills);
   };
 
-  const handleCancelBill = async (billId: number) => {
-    try {
-      const response = await fetch(`http://127.0.0.1:8000/api/bills/${billId}/`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        // After successful cancellation, refresh the bills list
-        fetchBills();
-      } else {
-        console.error("Failed to cancel bill:", response.status);
-      }
-    } catch (error) {
-      console.error("Error canceling bill:", error);
-    }
-  };
-
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedBills = filteredBills.slice(
     startIndex,
@@ -170,7 +149,7 @@ const BillsPage: React.FC = () => {
       {paginatedBills.length ? (
         <>
           {paginatedBills.map((bill: Bill) => (
-            <BillCard key={bill.id} bill={bill} onCancel={handleCancelBill} />
+            <BillCard key={bill.id} bill={bill} onCancel={fetchBills} />
           ))}
           <PaginationControls
             currentPage={currentPage}
