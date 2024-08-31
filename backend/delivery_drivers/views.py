@@ -2,7 +2,9 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import DeliveryDriver, DeliveryOrder
-from .serializers import DeliveryDriverSerializer, DeliveryOrderSerializer
+from .serializers import DeliveryDriverSerializer, DeliveryOrderSerializer, DeliveryOrderUpdateSerializer
+from restaurant_app.models import Order
+from restaurant_app.serializers import OrderTypeChangeSerializer
 
 
 class DeliveryDriverViewSet(viewsets.ModelViewSet):
@@ -74,6 +76,36 @@ class DeliveryOrderViewSet(viewsets.ModelViewSet):
 
             return Response({"status": "Delivery order status updated"})
         return Response({"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=["patch"])
+    def change_type(self, request, pk=None):
+        """
+        Change the order type and update delivery order information.
+        """
+        try:
+            order = Order.objects.get(pk=pk)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = OrderTypeChangeSerializer(order, data=request.data, partial=True)
+        if serializer.is_valid():
+            # Save the order type change and related fields
+            order = serializer.save()
+
+            # Update or create the corresponding delivery order
+            delivery_data = request.data.get("delivery_order", {})
+            if delivery_data:
+                delivery_order, created = DeliveryOrder.objects.get_or_create(order=order)
+                delivery_order_serializer = DeliveryOrderUpdateSerializer(
+                    delivery_order, data=delivery_data, partial=True
+                )
+                if delivery_order_serializer.is_valid():
+                    delivery_order_serializer.save()
+                else:
+                    return Response(delivery_order_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update_driver_availability(self, driver, is_available):
         if driver:

@@ -272,11 +272,20 @@ class OrderStatusUpdateSerializer(serializers.Serializer):
     
 
 # serializer for updating the the order type
-
 class OrderTypeChangeSerializer(serializers.ModelSerializer):
+    delivery_driver = serializers.CharField(source="delivery_driver.user.username", read_only=True)
+
     class Meta:
         model = Order
-        fields = ['order_type', 'customer_name', 'address', 'customer_phone_number', 'delivery_charge', 'delivery_driver_id']
+        fields = [
+            'order_type', 
+            'customer_name', 
+            'address', 
+            'customer_phone_number', 
+            'delivery_charge', 
+            'delivery_driver_id',
+            'delivery_driver',  
+        ]
 
     def validate(self, data):
         if data['order_type'] == 'delivery':
@@ -288,7 +297,9 @@ class OrderTypeChangeSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Customer phone number is required for delivery orders.")
             if not data.get('delivery_driver_id'):
                 raise serializers.ValidationError("A delivery driver must be assigned for delivery orders.")
-        return data 
+        return data
+
+
 
     
 class BillOrderItemSerializer(serializers.ModelSerializer):
