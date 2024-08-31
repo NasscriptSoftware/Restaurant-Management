@@ -4,9 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
 
-from rest_framework_simplejwt.views import (
-    TokenRefreshView,
-)
+from rest_framework_simplejwt.views import TokenRefreshView
 from restaurant_app.views import (
     CategoryViewSet,
     DishViewSet,
@@ -33,7 +31,6 @@ from restaurant_app.views import (
     DishVariantViewSet,
     CancelOrderByBillView,
     CreditTransactionViewSet
-
 )
 from delivery_drivers.views import (
     DeliveryDriverViewSet,
@@ -47,14 +44,14 @@ from transactions_app.views import (NatureGroupViewSet,
  BalanceSheetViewSet
  )
 
-
 router = DefaultRouter()
 
 router.register(r"login", LoginViewSet, basename="login")
 router.register(r"dishes", DishViewSet, basename="dishes")
 router.register(r'variants', DishVariantViewSet, basename="variants")
 router.register(r"categories", CategoryViewSet, basename="categories")
-router.register(r"orders", OrderViewSet, basename="orders")
+router.register(r"orders", OrderViewSet, basename="orders")  # Primary Orders ViewSet
+router.register(r"order-type", OrderTypeChangeViewSet, basename="order_type")  # Separate route for changing order types
 router.register(r"bills", BillViewSet, basename="bills")
 router.register(r"notifications", NotificationViewSet, basename="notifications")
 router.register(r"floors", FloorViewSet, basename="floors")
@@ -78,12 +75,7 @@ router.register(r"delivery-orders", DeliveryOrderViewSet, basename="delivery_ord
 # for updating the status of the order
 router.register(r'order-status', OrderStatusUpdateViewSet, basename='order-status')
 
-# to change the type of the order   
-
-router.register(r'orders', OrderTypeChangeViewSet, basename='order')
-
 # to change the logo of the users
-
 router.register(r'logo-info', LogoInfoViewSet, basename='logoinfo')
 
 # Accounts Transactions
@@ -101,9 +93,7 @@ urlpatterns = [
     path("api/login-passcode/", PasscodeLoginView.as_view(), name="login-passcode"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/logout/", LogoutView.as_view({"post": "logout"}), name="logout"),
-    path(
-        "api/search-dishes/", SearchDishesAPIView.as_view(), name="search_dishes"
-    ),  # Include the search API endpoint
+    path("api/search-dishes/", SearchDishesAPIView.as_view(), name="search_dishes"),  # Include the search API endpoint
 
     # Register the new Cancel Order API
     path("api/bills/<int:bill_id>/cancel_order/", CancelOrderByBillView.as_view(), name="cancel-order-by-bill"),

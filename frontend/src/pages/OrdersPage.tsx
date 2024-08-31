@@ -3,7 +3,7 @@ import Layout from "../components/Layout/Layout";
 import { usePaginatedOrders } from "../hooks/useOrders";
 import { useDishes } from "../hooks/useDishes";
 import { SearchIcon } from "lucide-react";
-import { fetchActiveCreditUsers, updateOrderStatusNew } from "@/services/api";
+import { api, fetchActiveCreditUsers, updateOrderStatusNew } from "@/services/api";
 import KitchenPrint from "../components/Orders/KitchenPrint";
 import SalesPrint from "../components/Orders/SalesPrint";
 import { CreditUser } from "@/types";
@@ -115,24 +115,41 @@ const OrdersPage: React.FC = () => {
 
   const handlePrintSalesBills = async () => {
     try {
+      // First, update the status of each selected order to "delivered"
       await Promise.all(
-        selectedOrders.map((orderId) => {
+        selectedOrders.map(async (orderId) => {
           const order = filteredOrders.find((order) => order.id === orderId);
           if (!order) return null;
   
           const cashAmount = order.total_amount; // Set the total amount as cash amount
-          return updateOrderStatusNew(orderId, "delivered", {
+  
+          // Update order status to delivered
+          await updateOrderStatusNew(orderId, "delivered", {
             payment_method: "cash",
             cash_amount: cashAmount, // Set cash_amount to the total amount
             bank_amount: 0, // Explicitly set bank_amount to 0
           });
+  
+          // Create a bill for each order
+          const billsResponse = await api.post("/bills/", {
+            order_id: order.id, // Use order_id here
+            total_amount: order.total_amount,
+            paid: true,
+          });
+  
+          if (!billsResponse || billsResponse.status !== 201) {
+            throw new Error(`Failed to create the bill for order ID ${orderId}`);
+          }
         })
       );
+  
+      // Trigger the print for sales bills after updating all orders and creating the bills
       triggerPrint("sales");
     } catch (error) {
       console.error("Error printing sales bills:", error);
     }
   };
+  
   
 
   const triggerPrint = (type: "kitchen" | "sales") => {

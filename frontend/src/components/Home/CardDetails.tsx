@@ -99,6 +99,21 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
     }
   };
 
+  const handlePreviousPage = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1)); // Decrease the page number but not below 1
+  };
+  
+  const handleNextPage = () => {
+    if (filteredOrders) {
+      setCurrentPage((prevPage) =>
+        prevPage < Math.ceil(filteredOrders.length / ordersPerPage)
+          ? prevPage + 1
+          : prevPage
+      ); // Increase the page number but not beyond the total pages
+    }
+  };
+  
+
   if (!selectedCard) {
     return (
       <div className="p-4 bg-white shadow">Select a card to see details</div>
