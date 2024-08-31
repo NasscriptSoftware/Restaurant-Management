@@ -457,10 +457,10 @@ class CreditUserSerializer(serializers.ModelSerializer):
             "credit_orders",
             "limit_amount"
         ]
-class TransactionSerializer(serializers.ModelSerializer):
+class MessTransactionSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model = Transaction
+        model = MessTransaction
         fields = ['id', 'received_amount', 'status', 'cash_amount', 'bank_amount', 'payment_method', 'mess','date']
 
 class CreditTransactionSerializer(serializers.ModelSerializer):

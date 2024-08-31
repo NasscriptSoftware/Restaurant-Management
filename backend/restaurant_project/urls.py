@@ -28,8 +28,8 @@ from restaurant_app.views import (
     SearchDishesAPIView,
     CreditUserViewSet,
     CreditOrderViewSet,
-    TransactionViewSet,
-   OrderTypeChangeViewSet,
+    MessTransactionViewSet,
+    OrderTypeChangeViewSet,
     DishVariantViewSet,
     CancelOrderByBillView,
     CreditTransactionViewSet
@@ -39,6 +39,13 @@ from delivery_drivers.views import (
     DeliveryDriverViewSet,
     DeliveryOrderViewSet,
 )
+from transactions_app.views import (NatureGroupViewSet,
+ MainGroupViewSet, 
+ LedgerViewSet, 
+ TransactionViewSet, 
+ IncomeStatementViewSet, 
+ BalanceSheetViewSet
+ )
 
 
 router = DefaultRouter()
@@ -57,7 +64,7 @@ router.register(r"mess-types", MessTypeViewSet, basename="mess_types")
 router.register(r"menus", MenuViewSet, basename="menus")
 router.register(r"menu-items", MenuItemViewSet, basename="menu_items")
 router.register(r"messes", MessViewSet, basename="messes")
-router.register(r'transactions', TransactionViewSet, basename="transactions")
+router.register(r'mess-transactions', MessTransactionViewSet, basename="mess-transactions")
 
 # Credit User URLs
 router.register(r"credit-users", CreditUserViewSet, basename="credit_users")
@@ -79,6 +86,14 @@ router.register(r'orders', OrderTypeChangeViewSet, basename='order')
 
 router.register(r'logo-info', LogoInfoViewSet, basename='logoinfo')
 
+# Accounts Transactions
+
+router.register(r'nature-groups', NatureGroupViewSet)
+router.register(r'main-groups', MainGroupViewSet)
+router.register(r'ledgers', LedgerViewSet)
+router.register(r'transactions', TransactionViewSet)
+router.register(r'income-statements', IncomeStatementViewSet)
+router.register(r'balance-sheets', BalanceSheetViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),

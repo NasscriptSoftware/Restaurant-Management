@@ -650,9 +650,9 @@ class CreditOrderViewSet(viewsets.ModelViewSet):
     serializer_class = CreditOrderSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class TransactionViewSet(viewsets.ModelViewSet):
-    queryset = Transaction.objects.all()
-    serializer_class = TransactionSerializer
+class MessTransactionViewSet(viewsets.ModelViewSet):
+    queryset = MessTransaction.objects.all()
+    serializer_class = MessTransactionSerializer
 
     def get_queryset(self):
         queryset = super().get_queryset()
