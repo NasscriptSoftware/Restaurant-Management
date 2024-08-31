@@ -343,7 +343,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
   // for changing the order type
   const handleOrderTypeChange = async () => {
-    // Prepare the payload depending on the order type
+    if (order.status === "delivered") {
+      Swal.fire("Error", "You cannot change the order type after it is delivered.", "error");
+      return;
+    }
+  
     const deliveryData =
       newOrderType === "delivery"
         ? {
@@ -351,32 +355,38 @@ const OrderCard: React.FC<OrderCardProps> = ({
             address: deliveryAddress,
             customer_phone_number: customerMobileNumber,
             delivery_charge: parseFloat(deliveryCharge),
-            delivery_driver_id: selectedDriver?.id,
+            delivery_driver_id: selectedDriver?.id, // Ensure this is included
+            delivery_order_status: "pending", // Set the delivery order status
           }
-        : {}; // No additional data for "dining" or "takeaway"
-
+        : {};
+  
     try {
-      // Call the API to update the order type with the necessary data
-      const updatedOrder = await updateOrderType(
-        order.id,
-        newOrderType,
-        deliveryData
-      );
-
-      // Update the local state with the updated order data
-      setOrder(updatedOrder);
-
-      // Close the modal
-      setShowOrderTypeModal(false);
-
-      // Trigger a hard refresh
-      window.location.reload();
+      const response = await api.put(`/order-type/${order.id}/change-type/`, {
+        order_type: newOrderType,
+        ...deliveryData,
+      });
+  
+      if (response.status === 200) {
+        const updatedOrderData = response.data;
+        setOrder(updatedOrderData); // Update the order state with the new data
+        setShowOrderTypeModal(false);
+  
+        // Perform a hard refresh to reload the page from the server
+        window.location.reload();
+      } else {
+        Swal.fire("Error", "Failed to update order type.", "error");
+      }
     } catch (error) {
-      // Handle any errors that occur during the API call
       console.error("Failed to update order type:", error);
       Swal.fire("Error", "Failed to update order type.", "error");
     }
   };
+  
+
+
+
+  
+  
 
   return (
     <div

@@ -14,6 +14,8 @@ from django.db.models import Sum, Count, Avg, F
 from django.utils.dateparse import parse_date
 from django.db.models import Q
 from django.db.models.functions import TruncDate, TruncHour
+from delivery_drivers.models import DeliveryOrder
+from delivery_drivers.serializers import DeliveryOrderSerializer
 from restaurant_app.models import *
 from restaurant_app.serializers import *
 from rest_framework.decorators import api_view
@@ -372,6 +374,7 @@ class OrderStatusUpdateViewSet(viewsets.GenericViewSet):
 # view for changing the order type
 
 class OrderTypeChangeViewSet(viewsets.ViewSet):
+
     @action(detail=True, methods=['put'], url_path='change-type')
     def change_order_type(self, request, pk=None):
         try:
@@ -381,9 +384,26 @@ class OrderTypeChangeViewSet(viewsets.ViewSet):
 
         serializer = OrderTypeChangeSerializer(order, data=request.data, partial=True)
         if serializer.is_valid():
-            serializer.save()
+            order = serializer.save()
+
+            # Handle the creation or update of DeliveryOrder
+            if order.order_type == 'delivery':
+                delivery_order, created = DeliveryOrder.objects.get_or_create(order=order)
+                delivery_order.driver_id = serializer.validated_data.get('delivery_driver_id')
+                delivery_order.status = request.data.get('delivery_order_status', 'pending')
+                delivery_order.save()
+
+                # Include the DeliveryOrder details in the response
+                delivery_order_serializer = DeliveryOrderSerializer(delivery_order)
+                response_data = serializer.data
+                response_data['delivery_order'] = delivery_order_serializer.data
+
+                return Response(response_data, status=status.HTTP_200_OK)
+
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class BillViewSet(viewsets.ModelViewSet):
     queryset = Bill.objects.all()
