@@ -29,9 +29,9 @@ from restaurant_app.views import (
     CreditUserViewSet,
     CreditOrderViewSet,
     TransactionViewSet,
-   OrderTypeChangeViewSet,
-    DishVariantViewSet
-
+    OrderTypeChangeViewSet,
+    DishVariantViewSet,
+    CreditTransactionViewSet
 )
 from delivery_drivers.views import (
     DeliveryDriverViewSet,
@@ -60,6 +60,7 @@ router.register(r'transactions', TransactionViewSet, basename="transactions")
 # Credit User URLs
 router.register(r"credit-users", CreditUserViewSet, basename="credit_users")
 router.register(r"credit-orders", CreditOrderViewSet, basename="credit_orders")
+router.register(r'credit-transactions', CreditTransactionViewSet, basename="credit-transactions")
 
 # Delivery Driver URLs
 router.register(r"delivery-drivers", DeliveryDriverViewSet, basename="delivery_drivers")

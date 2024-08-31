@@ -51,3 +51,4 @@ admin.site.register(Transaction,UnflodModelAdmin)
 
 admin.site.register(LogoInfo)
 admin.site.register(DishVariant,UnflodModelAdmin)
+admin.site.register(CreditTransaction,UnflodModelAdmin)
