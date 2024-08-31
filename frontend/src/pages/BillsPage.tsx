@@ -14,6 +14,7 @@ const BillsPage: React.FC = () => {
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [showCancelled, setShowCancelled] = useState<boolean>(false);
 
   const itemsPerPage = 10;
 
@@ -43,7 +44,7 @@ const BillsPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Dynamically filter bills based on search term and date range
+    // Dynamically filter bills based on search term, date range, and canceled status
     let filtered = allBills;
 
     if (fromDate && toDate) {
@@ -62,14 +63,19 @@ const BillsPage: React.FC = () => {
       );
     }
 
+    if (showCancelled) {
+      filtered = filtered.filter((bill) => bill.order.status === "cancelled");
+    }
+
     setFilteredBills(filtered);
     setCurrentPage(1); // Reset to the first page on new search/filter
-  }, [fromDate, toDate, searchTerm]);
+  }, [fromDate, toDate, searchTerm, showCancelled]);
 
   const handleReset = () => {
     setFromDate(null);
     setToDate(null);
     setSearchTerm("");
+    setShowCancelled(false);
     setFilteredBills(allBills);
   };
 
@@ -129,6 +135,12 @@ const BillsPage: React.FC = () => {
             title="Reset"
           >
             <RotateCcw size={20} />
+          </button>
+          <button
+            onClick={() => setShowCancelled(!showCancelled)}
+            className={`mt-7 p-2 rounded-full ${showCancelled ? "bg-blue-500" : "bg-gray-500"} text-white shadow-md`}
+          >
+            {showCancelled ? "Show All Bills" : "Show Cancelled Bills"}
           </button>
         </div>
 

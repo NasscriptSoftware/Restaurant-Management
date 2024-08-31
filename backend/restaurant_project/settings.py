@@ -247,16 +247,26 @@ UNFOLD = {
                         ),
                     },
                     {
-                        "title": _("Dishes"),
-                        "icon": "lunch_dining",
-                        "link": reverse_lazy("admin:restaurant_app_dish_changelist"),
-                    },
-                    {
                         "title": _("Categories"),
                         "icon": "category",
                         "link": reverse_lazy(
                             "admin:restaurant_app_category_changelist"
                         ),
+                    },
+                    {
+                        "title": _("Dishes"),
+                        "icon": "lunch_dining",
+                        "link": reverse_lazy("admin:restaurant_app_dish_changelist"),
+                    },
+                    {
+                        "title": _("Dish Varients"),
+                        "icon": "format_list_bulleted",
+                        "link": reverse_lazy("admin:restaurant_app_dishvariant_changelist"),
+                    },
+                    {
+                        "title": _("Bills"),
+                        "icon": "receipt_long",
+                        "link": reverse_lazy("admin:restaurant_app_bill_changelist"),
                     },
                 ],
             },
@@ -313,7 +323,7 @@ UNFOLD = {
                 ],
             },
             {
-                "title": _("Menu"),
+                "title": _("Mess Menu"),
                 "separator": True,
                 "collapsible": True,
                 "items": [

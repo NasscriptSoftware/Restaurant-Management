@@ -212,10 +212,6 @@ class OrderStatusUpdateSerializer(serializers.Serializer):
         status = data.get('status')
         payment_method = data.get('payment_method')
 
-        # If status is "cancelled", skip further validation
-        if status == 'cancelled':
-            return data
-
         # If status is "delivered", validate the payment method and related fields
         if status == 'delivered':
             if not payment_method:
@@ -322,12 +318,9 @@ class BillOrderSerializer(serializers.ModelSerializer):
         return sum(item.dish.price * item.quantity for item in obj.items.all())
     
 
-    
 class BillSerializer(serializers.ModelSerializer):
     order = BillOrderSerializer(read_only=True)
     user = UserSerializer(read_only=True)
-
-    # Add the order ID as a writable field for creating a bill
     order_id = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all(), write_only=True)
 
     class Meta:
@@ -335,10 +328,10 @@ class BillSerializer(serializers.ModelSerializer):
         fields = ['id', 'order', 'order_id', 'user', 'total_amount', 'paid', 'billed_at']
 
     def create(self, validated_data):
-        # Pop the order_id from the validated data
         order = validated_data.pop('order_id')
         bill = Bill.objects.create(order=order, user=order.user, **validated_data)
         return bill
+
 
 
 

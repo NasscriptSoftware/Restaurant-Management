@@ -6,6 +6,9 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
 from .utils import default_time_period
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class User(AbstractUser):
@@ -184,14 +187,18 @@ class Bill(models.Model):
 
     def __str__(self):
         return f"Bill for order {self.order.id}"
+    
+    def delete(self, *args, **kwargs):
+        logger.error(f"Bill {self.pk} is being deleted!")
+        super().delete(*args, **kwargs)
 
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.user = self.order.user
-            self.order.bill_generated = True
-            self.paid = True
-            self.order.save()
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if not self.pk:
+    #         self.user = self.order.user
+    #         self.order.bill_generated = True
+    #         self.paid = True
+    #         self.order.save()
+    #     super().save(*args, **kwargs)
 
 
 class Notification(models.Model):

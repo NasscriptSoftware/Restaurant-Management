@@ -9,26 +9,38 @@ interface KitchenPrintProps {
 const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
   const formatDate = (datetime: string) => {
     const date = new Date(datetime);
-    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" };
     return date.toLocaleDateString(undefined, options);
   };
 
   const formatTime = (datetime: string) => {
     const date = new Date(datetime);
-    const options: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: 'numeric', second: 'numeric' };
+    const options: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "numeric", second: "numeric" };
     return date.toLocaleTimeString(undefined, options);
   };
 
-  const newlyAddedItems = order.items.filter(item => item.is_newly_added);
-  const regularItems = order.items.filter(item => !item.is_newly_added);
+  const newlyAddedItems = order.items.filter((item) => item.is_newly_added);
+  const regularItems = order.items.filter((item) => !item.is_newly_added);
 
   const renderItems = (items: any[]) => {
     return items.map((item, index) => {
-      const dish = dishes.find(dish => dish.id === item.dish);
-      const itemTotal = dish ? (dish.price * item.quantity).toFixed(2) : '0.00';
+      const dish = dishes.find((dish) => dish.id === item.dish);
+      const itemTotal = dish ? (dish.price * item.quantity).toFixed(2) : "0.00";
+
       return (
         <tr key={index} className="print-item">
-          <td className="print-item-name">{dish ? dish.name : 'Unknown Dish'}</td>
+          <td className="print-item-name">
+            {dish ? dish.name : "Unknown Dish"}
+            {item.variants.length > 0 && (
+              <ul className="text-xs text-gray-500 mt-1">
+                {item.variants.map((variant: any, variantIndex: number) => (
+                  <li key={variantIndex}>
+                    {variant.name} - Qty: {variant.quantity}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </td>
           <td className="print-item-quantity text-right">x {item.quantity}</td>
           <td className="print-item-total text-right">QAR {itemTotal}</td>
         </tr>
@@ -42,7 +54,7 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
       <div className="print-order-id mb-2">Order_id #{order.id}</div>
       <div className="print-date mb-2">Date: {formatDate(order.created_at)}</div>
       <div className="print-time mb-2">Time: {formatTime(order.created_at)}</div>
-      
+
       <div className="print-items">
         {regularItems.length > 0 && (
           <div>
@@ -55,9 +67,7 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
                   <th className="text-right">Amount</th>
                 </tr>
               </thead>
-              <tbody>
-                {renderItems(regularItems)}
-              </tbody>
+              <tbody>{renderItems(regularItems)}</tbody>
             </table>
           </div>
         )}
@@ -77,13 +87,18 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
                   <th className="text-right">Amount</th>
                 </tr>
               </thead>
-              <tbody>
-                {renderItems(newlyAddedItems)}
-              </tbody>
+              <tbody>{renderItems(newlyAddedItems)}</tbody>
             </table>
           </div>
         )}
       </div>
+
+      {order.kitchen_note && (
+        <div className="print-kitchen-note mt-4">
+          <hr className="border-gray-300 mb-2" />
+          <p className="font-bold italic">Note: {order.kitchen_note}</p>
+        </div>
+      )}
     </div>
   );
 };

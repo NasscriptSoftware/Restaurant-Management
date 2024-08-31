@@ -30,7 +30,8 @@ from restaurant_app.views import (
     CreditOrderViewSet,
     TransactionViewSet,
    OrderTypeChangeViewSet,
-    DishVariantViewSet
+    DishVariantViewSet,
+    CancelOrderByBillView
 
 )
 from delivery_drivers.views import (
@@ -86,6 +87,10 @@ urlpatterns = [
     path(
         "api/search-dishes/", SearchDishesAPIView.as_view(), name="search_dishes"
     ),  # Include the search API endpoint
+
+    # Register the new Cancel Order API
+    path("api/bills/<int:bill_id>/cancel_order/", CancelOrderByBillView.as_view(), name="cancel-order-by-bill"),
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
