@@ -18,28 +18,28 @@ const BillsPage: React.FC = () => {
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    // Fetch bills data from API only once
-    const fetchBills = async () => {
-      try {
-        const response = await fetch("http://127.0.0.1:8000/api/bills/?page=1", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setAllBills(data.results);
-          setFilteredBills(data.results);
-        } else {
-          console.error("Failed to fetch bills:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching bills:", error);
+  const fetchBills = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/bills/?page=1", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAllBills(data.results);
+        setFilteredBills(data.results);
+      } else {
+        console.error("Failed to fetch bills:", response.status);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching bills:", error);
+    }
+  };
 
+  useEffect(() => {
+    // Fetch bills data from API only once when the component mounts
     fetchBills();
   }, []);
 
@@ -69,7 +69,7 @@ const BillsPage: React.FC = () => {
 
     setFilteredBills(filtered);
     setCurrentPage(1); // Reset to the first page on new search/filter
-  }, [fromDate, toDate, searchTerm, showCancelled]);
+  }, [fromDate, toDate, searchTerm, showCancelled, allBills]);
 
   const handleReset = () => {
     setFromDate(null);
@@ -90,7 +90,8 @@ const BillsPage: React.FC = () => {
       });
 
       if (response.ok) {
-        setFilteredBills(filteredBills.filter((bill) => bill.id !== billId));
+        // After successful cancellation, refresh the bills list
+        fetchBills();
       } else {
         console.error("Failed to cancel bill:", response.status);
       }
