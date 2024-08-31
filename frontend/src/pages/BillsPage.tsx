@@ -14,36 +14,37 @@ const BillsPage: React.FC = () => {
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [showCancelled, setShowCancelled] = useState<boolean>(false);
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    // Fetch bills data from API only once
-    const fetchBills = async () => {
-      try {
-        const response = await fetch("http://127.0.0.1:8000/api/bills/?page=1", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setAllBills(data.results);
-          setFilteredBills(data.results);
-        } else {
-          console.error("Failed to fetch bills:", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching bills:", error);
+  const fetchBills = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/bills/?page=1", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAllBills(data.results);
+        setFilteredBills(data.results);
+      } else {
+        console.error("Failed to fetch bills:", response.status);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching bills:", error);
+    }
+  };
 
+  useEffect(() => {
+    // Fetch bills data from API only once when the component mounts
     fetchBills();
   }, []);
 
   useEffect(() => {
-    // Dynamically filter bills based on search term and date range
+    // Dynamically filter bills based on search term, date range, and canceled status
     let filtered = allBills;
 
     if (fromDate && toDate) {
@@ -62,14 +63,19 @@ const BillsPage: React.FC = () => {
       );
     }
 
+    if (showCancelled) {
+      filtered = filtered.filter((bill) => bill.order.status === "cancelled");
+    }
+
     setFilteredBills(filtered);
     setCurrentPage(1); // Reset to the first page on new search/filter
-  }, [fromDate, toDate, searchTerm]);
+  }, [fromDate, toDate, searchTerm, showCancelled, allBills]);
 
   const handleReset = () => {
     setFromDate(null);
     setToDate(null);
     setSearchTerm("");
+    setShowCancelled(false);
     setFilteredBills(allBills);
   };
 
@@ -84,7 +90,8 @@ const BillsPage: React.FC = () => {
       });
 
       if (response.ok) {
-        setFilteredBills(filteredBills.filter((bill) => bill.id !== billId));
+        // After successful cancellation, refresh the bills list
+        fetchBills();
       } else {
         console.error("Failed to cancel bill:", response.status);
       }
@@ -129,6 +136,12 @@ const BillsPage: React.FC = () => {
             title="Reset"
           >
             <RotateCcw size={20} />
+          </button>
+          <button
+            onClick={() => setShowCancelled(!showCancelled)}
+            className={`mt-7 p-2 rounded-full ${showCancelled ? "bg-blue-500" : "bg-gray-500"} text-white shadow-md`}
+          >
+            {showCancelled ? "Show All Bills" : "Show Cancelled Bills"}
           </button>
         </div>
 

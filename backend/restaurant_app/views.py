@@ -130,7 +130,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         order_type = self.request.query_params.get("order_type", None)
         if order_type:
             queryset = queryset.filter(order_type=order_type)
-        return queryset.exclude(status='cancelled')
+        return queryset
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def cancel_order(self, request, pk=None):
@@ -390,8 +390,44 @@ class BillViewSet(viewsets.ModelViewSet):
     serializer_class = BillSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def perform_create(self, serializer):
-        serializer.save()
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        status_param = self.request.query_params.get('status')  # Get the status from query params
+        if status_param:
+            queryset = queryset.filter(order__status=status_param)  # Filter based on order status
+        return queryset
+
+
+
+class CancelOrderByBillView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, bill_id=None):
+        try:
+            # Get the bill instance by primary key (bill_id)
+            bill = Bill.objects.get(pk=bill_id)
+            order = bill.order
+
+            # Check if the order is already canceled
+            if order.status == 'cancelled':
+                return Response({"detail": "Order is already cancelled."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Change the status of the order to 'cancelled'
+            order.status = "cancelled"
+            order.save()
+
+            # Ensure the bill remains unaffected by this change
+            bill.save()  # This might be redundant, ensure you don’t trigger a new save unintentionally.
+
+            # Return a response indicating the order was cancelled
+            return Response({"detail": "Order status updated to cancelled."}, status=status.HTTP_200_OK)
+
+        except Bill.DoesNotExist:
+            return Response({"detail": "Bill not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Order.DoesNotExist:
+            return Response({"detail": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
