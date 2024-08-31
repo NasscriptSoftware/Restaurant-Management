@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Layout from "../components/Layout/Layout";
 import PaginationControls from "../components/Layout/PaginationControls";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import "react-datepicker/dist/react-datepicker.css"; // Import the styles
 import { RotateCcw } from 'lucide-react';
 import SalesPrint from "@/components/SalesReport/SalesPrint";
 import { api } from "@/services/api";
@@ -20,15 +20,14 @@ const SalesReportPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [activeButton, setActiveButton] = useState<string | null>(null);
+  const [showCancelledOrders, setShowCancelledOrders] = useState(false);
+  const [currentReport, setCurrentReport] = useState(null);
+  const [isAllButtonActive, setIsAllButtonActive] = useState(true);
   const [isTransactionsModalOpen, setIsTransactionsModalOpen] = useState(false);
   const [isSalesHistoryModalOpen, setIsSalesHistoryModalOpen] = useState(false);
   const [isSalesEditModalOpen, setIsSalesEditModalOpen] = useState(false);
   const [isMessEditModalOpen, setIsMessEditModalOpen] = useState(false);
-  const [currentReport, setCurrentReport] = useState(null);
-  const [isAllButtonActive, setIsAllButtonActive] = useState(true);
-  const [showCancelledOrders, setShowCancelledOrders] = useState(false);
 
   const itemsPerPage = 10;
 
@@ -57,7 +56,10 @@ const SalesReportPage: React.FC = () => {
         url.searchParams.append("to_date", convertToUTCDate(toDate));
       }
 
-      if (showCancelledOrders) {
+      // Only show delivered orders by default
+      if (!showCancelledOrders) {
+        url.searchParams.append("order_status", "delivered");
+      } else {
         url.searchParams.append("order_status", "cancelled");
       }
 
@@ -121,9 +123,6 @@ const SalesReportPage: React.FC = () => {
         case "Credit":
           filter = { payment_method: "credit" };
           break;
-        case "Delivered":
-          filter = { order_status: "delivered" };
-          break;
         default:
           filter = {}; // No filter if the button name does not match
       }
@@ -161,11 +160,6 @@ const SalesReportPage: React.FC = () => {
     fetchDataWithFilter(filter);
   };
 
-  const handleSalesEditClick = (report) => {
-    setCurrentReport(report);
-    setIsSalesEditModalOpen(true);
-  };
-
   const handleReset = () => {
     setFromDate(null);
     setToDate(null);
@@ -178,6 +172,18 @@ const SalesReportPage: React.FC = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedReports = reports.slice(startIndex, startIndex + itemsPerPage);
   const paginatedMessReports = messReports.slice(startIndex, startIndex + itemsPerPage);
+
+  const totalAmount = reportType === "sales"
+    ? reports.reduce((acc, report) => acc + parseFloat(report.total_amount.toString()), 0)
+    : messReports.reduce((acc, report) => acc + parseFloat(report.grand_total.toString()), 0);
+
+  const totalCashAmount = reportType === "sales"
+    ? reports.reduce((acc, report) => acc + parseFloat(report.cash_amount.toString()), 0)
+    : messReports.reduce((acc, report) => acc + parseFloat(report.cash_amount.toString()), 0);
+
+  const totalCardAmount = reportType === "sales"
+    ? reports.reduce((acc, report) => acc + parseFloat(report.bank_amount.toString()), 0)
+    : messReports.reduce((acc, report) => acc + parseFloat(report.bank_amount.toString()), 0);
 
   return (
     <Layout>
@@ -204,7 +210,6 @@ const SalesReportPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Date Pickers and Reset Button */}
           <div className="flex space-x-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">From Date</label>
@@ -236,14 +241,16 @@ const SalesReportPage: React.FC = () => {
             reportType={reportType}
             reports={reports}
             messReports={messReports}
+            totalAmount={totalAmount}
+            totalCashAmount={totalCashAmount}
+            totalCardAmount={totalCardAmount}
           />
         </div>
 
-        {/* Filter Buttons */}
         <div className="flex flex-wrap space-x-2 mb-4">
           <button
             onClick={() => handleButtonClick("All")}
-            className={`p-2 rounded ${activeButton === "All" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+            className={`p-2 rounded ${activeButton === "All" ? "bg-blue-500 text-white" : "bg-gray-200"} ${isAllButtonActive ? 'bg-blue-500' : 'border border-transparent'}`}
           >
             All
           </button>
@@ -352,7 +359,6 @@ const SalesReportPage: React.FC = () => {
           )}
         </div>
 
-        {/* Report Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white shadow-md rounded-lg">
             <thead>
@@ -432,7 +438,6 @@ const SalesReportPage: React.FC = () => {
                       {format(new Date(report.end_date), 'dd-MM-yyyy')}
                     </td>
                     <td className="border px-4 py-2">{report.payment_method}</td>
-                    <td className="border px-4 py-2">{report.status}</td>
                     <td className="border px-4 py-2">
                       <button
                         onClick={() => handleMobileClick(report)}
@@ -450,16 +455,40 @@ const SalesReportPage: React.FC = () => {
           </table>
         </div>
 
-        {/* Pagination Controls */}
+        <div className="mt-4 p-4 bg-gray-100 rounded-lg shadow-md">
+          <div className="flex justify-end space-x-4">
+            <p className="font-bold text-lg">
+              Cash Amount:
+            </p>
+            <p className="font-bold text-lg">
+              ₹{totalCashAmount.toFixed(2)}
+            </p>
+          </div>
+          <div className="flex justify-end space-x-4 mt-2">
+            <p className="font-bold text-lg">
+              Card Amount:
+            </p>
+            <p className="font-bold text-lg">
+              ₹{totalCardAmount.toFixed(2)}
+            </p>
+          </div>
+          <div className="flex justify-end space-x-4 mt-2">
+            <p className="font-bold text-lg">
+              Total Amount:
+            </p>
+            <p className="font-bold text-lg">
+              ₹{totalAmount.toFixed(2)}
+            </p>
+          </div>
+        </div>
+
         <PaginationControls
           currentPage={currentPage}
           totalPages={Math.ceil((reportType === "sales" ? reports.length : messReports.length) / itemsPerPage)}
           onPageChange={setCurrentPage}
         />
-
       </div>
 
-      {/* Transactions Modal */}
       {isTransactionsModalOpen && currentMember && (
         <TransactionsModal
           transactions={transactions}
@@ -469,7 +498,6 @@ const SalesReportPage: React.FC = () => {
         />
       )}
 
-      {/* Sales History Modal */}
       {isSalesHistoryModalOpen && currentMember && (
         <SalesHistoryModal
           orderhistory={orderHistiory}
@@ -479,21 +507,19 @@ const SalesReportPage: React.FC = () => {
         />
       )}
 
-      {/* Sales Edit Modal */}
       {isSalesEditModalOpen && (
         <SalesEditModal
           isOpen={isSalesEditModalOpen}
           onClose={handleModalClose}
-          report={currentReport} 
+          report={currentReport}
         />
       )}
 
-      {/* Mess Edit Modal */}
       {isMessEditModalOpen && (
         <MessEditModal
           isOpen={isMessEditModalOpen}
           onClose={handleModalClose}
-          report={currentReport} 
+          report={currentReport}
         />
       )}
     </Layout>
