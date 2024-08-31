@@ -412,7 +412,7 @@ class Mess(models.Model):
 
 
 
-class Transaction(models.Model):
+class MessTransaction(models.Model):
     STATUS_CHOICES = [
         ('due', 'Due'),
         ('completed', 'Completed'),
@@ -451,7 +451,7 @@ def create_initial_transaction(sender, instance, created, **kwargs):
         try:
             with transaction.atomic():
                 # Create the initial Transaction entry
-                Transaction.objects.create(
+                MessTransaction.objects.create(
                     received_amount=instance.paid_amount,
                     status=status,
                     cash_amount=instance.cash_amount,
@@ -468,7 +468,7 @@ def create_initial_transaction(sender, instance, created, **kwargs):
             transaction_creation = False
 
 
-@receiver(post_save, sender=Transaction)
+@receiver(post_save, sender=MessTransaction)
 def update_mess_on_transaction_save(sender, instance, **kwargs):
     if transaction_creation:
         return  # Skip updating Mess if a transaction is being created

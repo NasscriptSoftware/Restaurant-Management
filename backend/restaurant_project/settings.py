@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "django_filters",
     "restaurant_app.apps.RestaurantAppConfig",
     "delivery_drivers.apps.DeliveryDriversConfig",
+    "transactions_app.apps.TransactionsAppConfig",
 ]
 
 REST_FRAMEWORK = {

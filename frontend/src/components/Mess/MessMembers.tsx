@@ -65,7 +65,7 @@ const MessMembers: React.FC = () => {
 
   const fetchTransactions = async (memberId: number) => {
     try {
-      const response = await api.get(`/transactions/?mess_id=${memberId}`);
+      const response = await api.get(`/mess-transactions/?mess_id=${memberId}`);
       if (response.data && Array.isArray(response.data.results)) {
         setTransactions(response.data.results);
       } else {

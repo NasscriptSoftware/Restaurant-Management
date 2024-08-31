@@ -30,6 +30,7 @@ const CouponPage = lazy(() => import("./pages/CouponPage"));
 const HomePage = lazy(() => import("./pages/HomePage"));
 const MessPage = lazy(() => import("./pages/MessPage"));
 const SalesReportPage = lazy(() => import("./pages/SalesReportPage"));
+const TransactionsPage = lazy(() => import("./pages/TransactionsPage"));
 
 function App() {
   return (
@@ -141,6 +142,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={["staff", "admin"]}>
                       <CreditUsersPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/transactions"
+                  element={
+                    <ProtectedRoute allowedRoles={["staff", "admin"]}>
+                      <TransactionsPage />
                     </ProtectedRoute>
                   }
                 />
