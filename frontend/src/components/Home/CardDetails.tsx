@@ -24,9 +24,9 @@ interface Order {
 }
 
 const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
-  const [activeStatus, setActiveStatus] = useState("delivered");
-  const [allOrders, setAllOrders] = useState<Order[] | null>(null); // To store the fetched orders
-  const [filteredOrders, setFilteredOrders] = useState<Order[] | null>(null); // To store filtered results
+  const [activeStatus, setActiveStatus] = useState<"pending" | "delivered" | "cancelled">("pending"); // Default to "pending"
+  const [allOrders, setAllOrders] = useState<Order[] | null>(null); // Store all orders
+  const [filteredOrders, setFilteredOrders] = useState<Order[] | null>(null); // Store filtered orders
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,7 +44,6 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
 
         const params: any = {
           order_type: selectedCard.iconType.toLowerCase(),
-          status: activeStatus,
         };
 
         try {
@@ -54,8 +53,12 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
               Authorization: `Bearer ${token}`,
             },
           });
-          setAllOrders(response.data.results);
-          setFilteredOrders(response.data.results); // Initialize filtered orders with all fetched data
+
+          const orders = response.data.results;
+          setAllOrders(orders);
+          // Initially filter orders with the default status
+          const initialFilteredOrders = orders.filter(order => order.status === activeStatus);
+          setFilteredOrders(initialFilteredOrders);
           setIsLoading(false);
         } catch (error) {
           console.error("Error fetching orders:", error);
@@ -66,23 +69,28 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
     };
 
     fetchOrders();
-  }, [selectedCard, activeStatus]);
+  }, [selectedCard]);
 
   const handleStatusClick = (status: "pending" | "cancelled" | "delivered") => {
     setActiveStatus(status);
     setCurrentPage(1); // Reset to the first page when changing the status
+
+    if (allOrders) {
+      const statusFilteredOrders = allOrders.filter(order => order.status === status);
+      setFilteredOrders(statusFilteredOrders);
+    }
   };
 
   const handleReset = () => {
     setFromDate(null);
     setToDate(null);
-    setFilteredOrders(allOrders); // Reset filtered orders to all orders
+    handleStatusClick(activeStatus); // Reset to the current active status
     setCurrentPage(1);
   };
 
   const handleDateFilter = () => {
     if (allOrders) {
-      let filtered = allOrders;
+      let filtered = allOrders.filter(order => order.status === activeStatus); // Apply status filter first
 
       if (fromDate && toDate) {
         const from = new Date(fromDate).setHours(0, 0, 0, 0);
@@ -102,7 +110,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
   const handlePreviousPage = () => {
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 1)); // Decrease the page number but not below 1
   };
-  
+
   const handleNextPage = () => {
     if (filteredOrders) {
       setCurrentPage((prevPage) =>
@@ -112,7 +120,6 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
       ); // Increase the page number but not beyond the total pages
     }
   };
-  
 
   if (!selectedCard) {
     return (
@@ -201,7 +208,9 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
       </div>
 
       <div>
-        {currentOrders.length === 0 ? (
+        {isLoading ? (
+          <p>Loading orders...</p>
+        ) : currentOrders.length === 0 ? (
           <p>No orders found for the current search or filters.</p>
         ) : (
           <>
