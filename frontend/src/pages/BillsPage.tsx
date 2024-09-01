@@ -6,6 +6,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { RotateCcw } from "lucide-react";
 import { Bill } from "../types";
+import Loader from "../components/Layout/Loader";
+import { api } from "@/services/api";
 
 const BillsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -15,36 +17,28 @@ const BillsPage: React.FC = () => {
   const [toDate, setToDate] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [showCancelled, setShowCancelled] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const itemsPerPage = 10;
 
   const fetchBills = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/bills/?page=1", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setAllBills(data.results);
-        setFilteredBills(data.results);
-      } else {
-        console.error("Failed to fetch bills:", response.status);
-      }
+      const response = await api.get("/bills/");
+      setAllBills(response.data.results); // `response.data` already contains the parsed JSON data
+      setIsLoading(false);
     } catch (error) {
       console.error("Error fetching bills:", error);
+      setIsLoading(false);
     }
   };
+  
 
   useEffect(() => {
-    // Fetch bills data from API only once when the component mounts
     fetchBills();
   }, []);
 
   useEffect(() => {
-    // Dynamically filter bills based on search term, date range, and canceled status
     let filtered = allBills;
 
     if (fromDate && toDate) {
@@ -64,11 +58,13 @@ const BillsPage: React.FC = () => {
     }
 
     if (showCancelled) {
-      filtered = filtered.filter((bill) => bill.order.status === "cancelled");
+      filtered = filtered.filter(
+        (bill) => bill.order.status === "cancelled" || bill.status === "cancelled"
+      );
     }
 
     setFilteredBills(filtered);
-    setCurrentPage(1); // Reset to the first page on new search/filter
+    setCurrentPage(1);
   }, [fromDate, toDate, searchTerm, showCancelled, allBills]);
 
   const handleReset = () => {
@@ -76,7 +72,6 @@ const BillsPage: React.FC = () => {
     setToDate(null);
     setSearchTerm("");
     setShowCancelled(false);
-    setFilteredBills(allBills);
   };
 
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -88,25 +83,31 @@ const BillsPage: React.FC = () => {
   return (
     <Layout>
       <h1 className="text-3xl font-bold mb-6">Generated Bills</h1>
-      <div className="flex justify-between items-center mb-4">
-        {/* Date Pickers */}
-        <div className="flex space-x-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+        {/* Date Pickers and Reset */}
+        <div className="flex flex-wrap space-x-4 mb-4 md:mb-0">
           <div>
-            <label className="block text-sm font-medium text-gray-700">From Date</label>
+            <label className="block text-sm font-medium text-gray-700">
+              From Date
+            </label>
             <DatePicker
               selected={fromDate}
               onChange={(date) => setFromDate(date)}
               dateFormat="yyyy-MM-dd"
-              className="mt-1 p-2 border rounded"
+              className="mt-1 p-2 border rounded w-full"
+              placeholderText="Select from date"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">To Date</label>
+            <label className="block text-sm font-medium text-gray-700">
+              To Date
+            </label>
             <DatePicker
               selected={toDate}
               onChange={(date) => setToDate(date)}
               dateFormat="yyyy-MM-dd"
-              className="mt-1 p-2 border rounded"
+              className="mt-1 p-2 border rounded w-full"
+              placeholderText="Select to date"
             />
           </div>
           <button
@@ -118,7 +119,9 @@ const BillsPage: React.FC = () => {
           </button>
           <button
             onClick={() => setShowCancelled(!showCancelled)}
-            className={`mt-7 p-2 rounded-full ${showCancelled ? "bg-blue-500" : "bg-gray-500"} text-white shadow-md`}
+            className={`mt-7 p-2 rounded-full ${
+              showCancelled ? "bg-blue-500" : "bg-gray-500"
+            } text-white shadow-md`}
           >
             {showCancelled ? "Show All Bills" : "Show Cancelled Bills"}
           </button>
@@ -127,26 +130,24 @@ const BillsPage: React.FC = () => {
         {/* Search Box */}
         <div className="flex space-x-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Search by Invoice Number</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Search by Invoice Number
+            </label>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="mt-1 p-2 border rounded"
+              className="mt-1 p-2 border rounded w-full"
               placeholder="Enter invoice number"
             />
           </div>
-          <button
-            onClick={() => {}}
-            className="mt-7 p-2 bg-blue-500 text-white rounded"
-          >
-            Search
-          </button>
         </div>
       </div>
 
       {/* Bills Display */}
-      {paginatedBills.length ? (
+      {isLoading ? (
+        <Loader />
+      ) : paginatedBills.length ? (
         <>
           {paginatedBills.map((bill: Bill) => (
             <BillCard key={bill.id} bill={bill} onCancel={fetchBills} />
