@@ -15,9 +15,12 @@ const PayIn: React.FC = () => {
   const [ledgerOptions, setLedgerOptions] = useState<Ledger[]>([]);
   const [selectedLedger, setSelectedLedger] = useState<string>("");
   const [date, setDate] = useState<string>("");
-  const [debitAmount, setDebitAmount] = useState<string>("");  
-  const [creditAmount, setCreditAmount] = useState<string>(""); 
+  const [debitAmount, setDebitAmount] = useState<string>("");
+  const [creditAmount, setCreditAmount] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("cash"); // Default payment method
+  const [cashAmount, setCashAmount] = useState<string>("");
+  const [bankAmount, setBankAmount] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,12 +42,15 @@ const PayIn: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const transactionData = {
-      ledger: selectedLedger,
+      ledger_id: selectedLedger,
       date,
       debit_amount: debitAmount ? parseFloat(debitAmount) : 0,
       credit_amount: creditAmount ? parseFloat(creditAmount) : 0,
+      cash_amount: paymentMethod === "cash" || paymentMethod === "cash-bank" ? parseFloat(cashAmount) : 0,
+      bank_amount: paymentMethod === "bank" || paymentMethod === "cash-bank" ? parseFloat(bankAmount) : 0,
       remarks,
       transaction_type: "Pay In",
+      payment_method: paymentMethod,
     };
 
     api.post("/transactions/", transactionData)
@@ -73,63 +79,105 @@ const PayIn: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block mb-2">Ledger</label>
-          <select
-            value={selectedLedger}
-            onChange={(e) => setSelectedLedger(e.target.value)}
-            className="border rounded p-2 w-full"
-            required
-          >
-            <option value="">Select a ledger</option>
-            {ledgerOptions.map((ledger) => (
-              <option key={ledger.id} value={ledger.id}>
-                {ledger.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-2">Ledger</label>
+            <select
+              value={selectedLedger}
+              onChange={(e) => setSelectedLedger(e.target.value)}
+              className="border rounded p-2 w-full"
+              required
+            >
+              <option value="">Select a ledger</option>
+              {ledgerOptions.map((ledger) => (
+                <option key={ledger.id} value={ledger.id}>
+                  {ledger.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label className="block mb-2">Date</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="border rounded p-2 w-full"
-            required
-          />
-        </div>
+          <div>
+            <label className="block mb-2">Date</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="border rounded p-2 w-full"
+              required
+            />
+          </div>
 
-        <div>
-          <label className="block mb-2">Debit Amount</label>
-          <input
-            type="number"
-            value={debitAmount}
-            onChange={(e) => setDebitAmount(e.target.value)}
-            className="border rounded p-2 w-full"
-            step="0.01"
-          />
-        </div>
+          <div>
+            <label className="block mb-2">Payment Method</label>
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="border rounded p-2 w-full"
+              required
+            >
+              <option value="cash">Cash</option>
+              <option value="bank">Bank</option>
+              <option value="cash-bank">Cash and Bank</option>
+            </select>
+          </div>
 
-        <div>
-          <label className="block mb-2">Credit Amount</label>
-          <input
-            type="number"
-            value={creditAmount}
-            onChange={(e) => setCreditAmount(e.target.value)}
-            className="border rounded p-2 w-full"
-            step="0.01"
-          />
-        </div>
+          {(paymentMethod === "cash" || paymentMethod === "cash-bank") && (
+            <div>
+              <label className="block mb-2">Cash Amount</label>
+              <input
+                type="number"
+                value={cashAmount}
+                onChange={(e) => setCashAmount(e.target.value)}
+                className="border rounded p-2 w-full"
+                step="0.01"
+              />
+            </div>
+          )}
 
-        <div>
-          <label className="block mb-2">Remarks</label>
-          <textarea
-            value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
-            className="border rounded p-2 w-full"
-          />
+          {(paymentMethod === "bank" || paymentMethod === "cash-bank") && (
+            <div>
+              <label className="block mb-2">Bank Amount</label>
+              <input
+                type="number"
+                value={bankAmount}
+                onChange={(e) => setBankAmount(e.target.value)}
+                className="border rounded p-2 w-full"
+                step="0.01"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block mb-2">Debit Amount</label>
+            <input
+              type="number"
+              value={debitAmount}
+              onChange={(e) => setDebitAmount(e.target.value)}
+              className="border rounded p-2 w-full"
+              step="0.01"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-2">Credit Amount</label>
+            <input
+              type="number"
+              value={creditAmount}
+              onChange={(e) => setCreditAmount(e.target.value)}
+              className="border rounded p-2 w-full"
+              step="0.01"
+            />
+          </div>
+
+          <div className="col-span-2">
+            <label className="block mb-2">Remarks</label>
+            <textarea
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              className="border rounded p-2 w-full"
+            />
+          </div>
         </div>
 
         {error && <p className="text-red-500">{error}</p>}
