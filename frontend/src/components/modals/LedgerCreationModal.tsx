@@ -1,5 +1,6 @@
 import { api } from "@/services/api";
 import React, { useState, useEffect } from "react";
+
 interface LedgerCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -10,35 +11,54 @@ const LedgerCreationModal: React.FC<LedgerCreationModalProps> = ({ isOpen, onClo
   const [mobileNo, setMobileNo] = useState<string>("");
   const [openingBalance, setOpeningBalance] = useState<string>("");
   const [group, setGroup] = useState<string>("");
-  const [debitCredit, setDebitCredit] = useState<string>("DEBIT");
+  const [debitCredit, setDebitCredit] = useState<string>("");
   const [groupOptions, setGroupOptions] = useState<{ id: number; name: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch groups for the dropdown
-    api.get("/main-groups/")
-      .then((response) => {
-        const data = response.data.results;
-        if (Array.isArray(data)) {
-          setGroupOptions(data);
-        } else {
-          console.error("Unexpected API response format for groups", data);
+    const fetchGroups = async (url: string | null) => {
+      if (url) {
+        try {
+          const response = await api.get(url);
+          const data = response.data;
+
+          if (Array.isArray(data.results)) {
+            setGroupOptions((prevOptions) => [...prevOptions, ...data.results]);
+          } else {
+            console.error("Unexpected API response format for groups", data);
+          }
+
+          // If there is a next page, fetch the next set of results
+          if (data.next) {
+            fetchGroups(data.next);
+          }
+        } catch (error) {
+          console.error("There was an error fetching the groups!", error);
         }
-      })
-      .catch((error) => {
-        console.error("There was an error fetching the groups!", error);
-      });
+      }
+    };
+
+    // Start fetching from the first page
+    fetchGroups("/main-groups/");
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const ledgerData = {
+    const ledgerData: any = {
       name,
-      mobile_no: mobileNo,
       opening_balance: openingBalance ? parseFloat(openingBalance) : 0,
-      group,
-      debit_credit: debitCredit,
+      group_id: group,
     };
+
+    // Only include mobile_no if it's not empty
+    if (mobileNo) {
+      ledgerData.mobile_no = mobileNo;
+    }
+
+    // Only include debit_credit if it's selected
+    if (debitCredit) {
+      ledgerData.debit_credit = debitCredit;
+    }
 
     api.post("/ledgers/", ledgerData)
       .then((response) => {
@@ -87,7 +107,6 @@ const LedgerCreationModal: React.FC<LedgerCreationModalProps> = ({ isOpen, onClo
               onChange={(e) => setOpeningBalance(e.target.value)}
               className="border rounded p-2 w-full"
               step="0.01"
-              required
             />
           </div>
 
@@ -114,8 +133,8 @@ const LedgerCreationModal: React.FC<LedgerCreationModalProps> = ({ isOpen, onClo
               value={debitCredit}
               onChange={(e) => setDebitCredit(e.target.value)}
               className="border rounded p-2 w-full"
-              required
             >
+              <option value="">Select an option</option>
               <option value="DEBIT">Debit</option>
               <option value="CREDIT">Credit</option>
             </select>
