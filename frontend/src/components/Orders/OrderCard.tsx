@@ -30,6 +30,7 @@ import {
 import { DeliveryDriver } from "@/types";
 import { useQuery } from "react-query";
 import { fetchDeliveryDrivers } from "@/services/api";
+import { object } from "yup";
 
 interface OrderCardProps {
   order: Order;
@@ -39,6 +40,12 @@ interface OrderCardProps {
   selectedOrders: number[];
   onOrderSelection: (selectedOrderIds: number[]) => void;
   onStatusUpdated: () => void;
+  logoInfo: {
+    logoUrl: string;
+    companyName: string;
+    phoneNumber: string;
+    location: string;
+  } | null;
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({
@@ -49,6 +56,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   onOrderSelection,
   onStatusUpdated,
   onCreditUserChange,
+  logoInfo,
 }) => {
   const [status, setStatus] = useState(initialOrder.status);
   const [showModal, setShowModal] = useState(false);
@@ -303,6 +311,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
           // Trigger the order list refresh after payment submission
           onStatusUpdated(); // Refresh orders after status change
+          window.location.reload()
         } else {
           throw new Error("Failed to create the bill");
         }
@@ -940,7 +949,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           <KitchenPrint order={order} dishes={dishes} />
         </div>
         <div ref={salesPrintRef}>
-          <SalesPrint order={order} dishes={dishes} />
+          <SalesPrint order={order} dishes={dishes} logoInfo={logoInfo} />
         </div>
       </div>
     </div>
