@@ -1,53 +1,20 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { Order, Dish } from "../../types";
 
 interface SalesPrintProps {
   order: Order;
   dishes: Dish[];
-}
-
-const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes }) => {
-  const [logoInfo, setLogoInfo] = useState<{
+  logoInfo: {
     logoUrl: string;
     companyName: string;
     phoneNumber: string;
     location: string;
-  } | null>(null);
+  } | null;
+}
 
-  useEffect(() => {
-    const fetchLogoInfo = async () => {
-      try {
-        const response = await axios.get("http://127.0.0.1:8000/api/logo-info/");
-        const results = response.data.results;
-        if (results && results.length > 0) {
-          setLogoInfo({
-            logoUrl: results[0].print_logo,
-            companyName: results[0].company_name,
-            phoneNumber: results[0].phone_number,
-            location: results[0].location,
-          });
-        } else {
-          setLogoInfo({
-            logoUrl: "/path/to/default/logo.png",
-            companyName: "Default Company",
-            phoneNumber: "000-000-0000",
-            location: "Default Location",
-          });
-        }
-      } catch (error) {
-        console.error("Failed to fetch logo info:", error);
-        setLogoInfo({
-          logoUrl: "/path/to/default/logo.png",
-          companyName: "Default Company",
-          phoneNumber: "000-000-0000",
-          location: "Default Location",
-        });
-      }
-    };
+const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes,logoInfo }) => {
+ 
 
-    fetchLogoInfo();
-  }, []);
 
   const formatDate = (datetime: string) => {
     const date = new Date(datetime);

@@ -131,7 +131,7 @@ const DishesPage: React.FC = () => {
         items: orderItems.map((item) => ({
           dish: item.id,
           quantity: item.quantity || 0,
-          variants: item.variants ? item.variants.map((variant) => ({
+          variants: item.variants ? item.variants.map((variant: { variantId: any; name: any; quantity: any; }) => ({
             variantId: variant.variantId,
             name: variant.name,
             quantity: variant.quantity,

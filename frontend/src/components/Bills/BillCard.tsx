@@ -47,18 +47,18 @@ const BillCard: React.FC<BillCardProps> = ({ bill, onCancel }) => {
       cancelButtonText: "No, keep it",
     }).then((result) => {
       if (result.isConfirmed) {
-        api.post(`/bills/${bill.id}/cancel_order/`)
+        api
+          .post(`/bills/${bill.id}/cancel_order/`)
           .then(() => {
             Swal.fire("Cancelled!", "The bill has been cancelled.", "success");
             onCancel(); // Trigger the refresh of bills
-            // window.location.reload();
           })
           .catch((error) => {
             console.error("Error cancelling the bill:", error);
             Swal.fire("Error", "Failed to cancel the bill. Please try again.", "error");
           });
       } else if (result.dismiss === Swal.DismissReason.cancel) {
-        Swal.fire("Cancelled", "The bill is safe :)", "error");
+        Swal.fire("Cancelled", "The bill is safe :)", "info");
       }
     });
   };
@@ -92,7 +92,9 @@ const BillCard: React.FC<BillCardProps> = ({ bill, onCancel }) => {
                 {dishes.map((item, index) => (
                   <tr key={index}>
                     <td className="py-2 px-4 border-b border-gray-200">{item.dish_name}</td>
-                    <td className="py-2 px-4 border-b border-gray-200 text-center">{item.quantity}</td>
+                    <td className="py-2 px-4 border-b border-gray-200 text-center">
+                      {item.quantity}
+                    </td>
                     <td className="py-2 px-4 border-b border-gray-200 text-right">
                       {item.item_total !== undefined && item.item_total !== null
                         ? item.item_total.toFixed(2)
@@ -107,13 +109,17 @@ const BillCard: React.FC<BillCardProps> = ({ bill, onCancel }) => {
           {order.order_type === "delivery" && order.delivery_charge && (
             <div className="mb-4">
               <h4 className="text-md font-semibold">Delivery Charge:</h4>
-              <p className="text-lg">QAR {parseFloat(order.delivery_charge).toFixed(2)}</p>
+              <p className="text-lg">
+                QAR {parseFloat(order.delivery_charge).toFixed(2)}
+              </p>
             </div>
           )}
 
           <div className="mb-4">
             <h4 className="text-md font-semibold">Total Bill:</h4>
-            <p className="text-lg font-bold">QAR {parseFloat(order.total_amount).toFixed(2)}</p>
+            <p className="text-lg font-bold">
+              QAR {parseFloat(order.total_amount).toFixed(2)}
+            </p>
           </div>
 
           <div className="mb-4">
@@ -141,7 +147,7 @@ const BillCard: React.FC<BillCardProps> = ({ bill, onCancel }) => {
         <span className="text-lg font-semibold">
           Total Amount: QAR {parseFloat(bill.total_amount).toFixed(2)}
         </span>
-        {order.status === "cancelled" ? (
+        {order.status === "cancelled" || bill.status === "cancelled" ? (
           <button
             disabled
             className="px-3 py-1 rounded bg-gray-500 text-white cursor-not-allowed"
@@ -151,7 +157,7 @@ const BillCard: React.FC<BillCardProps> = ({ bill, onCancel }) => {
         ) : (
           <button
             onClick={handleCancelClick}
-            className="px-3 py-1 rounded bg-red-500 text-white"
+            className="px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600"
           >
             Cancel Bill
           </button>

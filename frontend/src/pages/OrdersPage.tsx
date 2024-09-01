@@ -20,10 +20,45 @@ const OrdersPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [showActionButton, setShowActionButton] = useState<boolean>(false);
   const [printType, setPrintType] = useState<"kitchen" | "sales" | null>(null);
+  const [logoInfo, setLogoInfo] = useState<{
+    logoUrl: string;
+    companyName: string;
+    phoneNumber: string;
+    location: string;
+  } | null>(null);
 
   useEffect(() => {
     loadCreditCardUsers();
   }, []);
+
+ // Inside your component or useEffect hook where you fetch the data
+
+useEffect(() => {
+  const fetchLogoInfo = async () => {
+    try {
+      const response = await api.get("/logo-info/");
+      const results = response.data.results;
+      if (results && results.length > 0) {
+        const logoData = {
+          logoUrl: results[0].print_logo, // This is where the print logo is located
+          companyName: results[0].company_name,
+          phoneNumber: results[0].phone_number,
+          location: results[0].location,
+        };
+        setLogoInfo(logoData);
+      } else {
+        // Handle case when no logo info is available
+        setLogoInfo(null);
+      }
+    } catch (error) {
+      console.error("Failed to fetch logo info:", error);
+      setLogoInfo(null);
+    }
+  };
+
+  fetchLogoInfo();
+}, []);
+
 
   const loadCreditCardUsers = async () => {
     try {
@@ -288,6 +323,7 @@ const OrdersPage: React.FC = () => {
               selectedOrders={selectedOrders}
               onOrderSelection={setSelectedOrders}
               onStatusUpdated={refetchOrders}
+              logoInfo={logoInfo}
             />
           ))}
           <PaginationControls
@@ -307,9 +343,9 @@ const OrdersPage: React.FC = () => {
           .map((order: any, index) => (
             <div key={order.id} style={{ pageBreakAfter: "always" }}>
               {printType === "kitchen" ? (
-                <KitchenPrint order={order} dishes={dishes.results} />
+                <KitchenPrint order={order} dishes={dishes.results}  />
               ) : (
-                <SalesPrint order={order} dishes={dishes.results} />
+                <SalesPrint order={order} dishes={dishes.results} logoInfo={logoInfo}/>
               )}
             </div>
           ))}
