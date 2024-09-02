@@ -29,35 +29,30 @@ class Ledger(models.Model):
 
 
 class Transaction(models.Model):
-    PAY_IN = 'Pay In'
-    PAY_OUT = 'Pay Out'
-
-    TRANSACTION_TYPE_CHOICES = [
-        (PAY_IN, 'Pay In'),
-        (PAY_OUT, 'Pay Out'),
+    DEBIT = 'debit'
+    CREDIT = 'credit'
+    
+    DEBIT_CREDIT_CHOICES = [
+        (DEBIT, 'Debit'),
+        (CREDIT, 'Credit'),
     ]
-
+    
     ledger = models.ForeignKey(Ledger, on_delete=models.CASCADE, related_name='ledger_transactions')  
     particulars = models.ForeignKey(Ledger, on_delete=models.CASCADE, related_name='particulars_transactions') 
     date = models.DateField()
-    transaction_type = models.CharField(max_length=7, choices=TRANSACTION_TYPE_CHOICES)
     debit_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     credit_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    balance_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     remarks = models.TextField(blank=True, null=True)
-    voucher_no = models.PositiveIntegerField(unique=True, editable=False)  
-
-    def save(self, *args, **kwargs):
-        if not self.voucher_no:
-            last_voucher = Transaction.objects.all().order_by('voucher_no').last()
-            if last_voucher:
-                self.voucher_no = last_voucher.voucher_no + 1
-            else:
-                self.voucher_no = 1
-        super().save(*args, **kwargs)
+    voucher_no = models.PositiveIntegerField()  
+    ref_no = models.CharField(max_length=15, blank=True, null=True)
+    debit_credit = models.CharField(
+        max_length=10,
+        choices=DEBIT_CREDIT_CHOICES
+    )
 
     def __str__(self):
-        return f"{self.ledger.name} - {self.transaction_type} - {self.date} - Voucher No: {self.voucher_no}"
-
+        return f"{self.ledger.name} - {self.date} - Voucher No: {self.voucher_no}"
 
 
 class IncomeStatement(models.Model):

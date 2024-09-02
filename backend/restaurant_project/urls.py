@@ -83,7 +83,7 @@ router.register(r'logo-info', LogoInfoViewSet, basename='logoinfo')
 router.register(r'nature-groups', NatureGroupViewSet)
 router.register(r'main-groups', MainGroupViewSet)
 router.register(r'ledgers', LedgerViewSet)
-router.register(r'transactions', TransactionViewSet)
+router.register(r'transactions', TransactionViewSet, basename="transactions")
 router.register(r'income-statements', IncomeStatementViewSet)
 router.register(r'balance-sheets', BalanceSheetViewSet)
 
