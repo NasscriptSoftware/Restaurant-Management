@@ -22,6 +22,8 @@ export interface OrderItem {
 
 
     export interface Order {
+      kitchen_note: ReactNode;
+      kitchen_note: any;
       detail: Order;
       id: number;
       created_at: string;
@@ -82,7 +84,7 @@ export interface OrderItem {
       order_type: "dining" | "takeaway" | "delivery";
       payment_method?: "cash" | "bank" | "cash-bank" | "credit";
       bank_amount?: number;
-      cash_amount?: number;
+      cash_amount?: number | string;
       customer_name: string;
       address: string;
       customer_phone_number: string;

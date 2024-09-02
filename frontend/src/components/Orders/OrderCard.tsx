@@ -30,6 +30,7 @@ import {
 import { DeliveryDriver } from "@/types";
 import { useQuery } from "react-query";
 import { fetchDeliveryDrivers } from "@/services/api";
+// import { string } from "yup";
 // import { object } from "yup";
 
 interface OrderCardProps {
@@ -80,6 +81,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
   // for changing the order type
   // const orderTypeDisplay = order?.order_type || "N/A";
+  // type OrderType = "dining" | "takeaway" | "delivery";
+
   const [showOrderTypeModal, setShowOrderTypeModal] = useState(false);
   const [newOrderType, setNewOrderType] = useState<OrderType>(order.order_type);
   const [customerName, setCustomerName] = useState<string>("");
@@ -157,7 +160,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       });
     } else {
       try {
-        await updateOrderStatusNew(order.id, newStatus);
+        await updateOrderStatusNew(order.id, newStatus as "pending" | "approved" | "cancelled" | "delivered");
         onStatusUpdated(); // Refresh orders after status change
       } catch (error) {
         console.error("Error updating status:", error);

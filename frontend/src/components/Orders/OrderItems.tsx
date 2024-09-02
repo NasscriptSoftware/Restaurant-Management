@@ -5,6 +5,7 @@ interface OrderItemsProps {
   orderItem: OrderItem;
   dishes: Dish[];
   isNewlyAdded?: boolean; // Prop to check if the item is newly added
+  
 }
 
 const OrderItems: React.FC<OrderItemsProps> = ({ orderItem, dishes, isNewlyAdded }) => {
