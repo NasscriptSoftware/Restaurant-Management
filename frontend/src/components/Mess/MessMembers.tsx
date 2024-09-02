@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
 import EditMessModal from "./EditMessModal";
 import ReceivedModal from "./ReceivedModal";
-import TransactionsModal from "./TransactionsModal"; // Import the TransactionsModal
+import TransactionsModal from "./TransactionsModal";
+import RenewMessModal from "./RenewOrderModal";
 import { api } from "@/services/api";
 
 interface Member {
@@ -11,7 +12,10 @@ interface Member {
   mobile_number: string;
   start_date: string;
   end_date: string;
-  mess_type: string;
+  mess_type: {
+    id: number;
+    name: string;
+  };
   total_price: string;
   payment_method: string;
   paid_amount?: string;
@@ -38,7 +42,8 @@ const MessMembers: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isReceivedModalOpen, setIsReceivedModalOpen] = useState(false);
-  const [isTransactionsModalOpen, setIsTransactionsModalOpen] = useState(false); // For TransactionsModal
+  const [isTransactionsModalOpen, setIsTransactionsModalOpen] = useState(false);
+  const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
   const [currentMember, setCurrentMember] = useState<Member | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
@@ -94,10 +99,16 @@ const MessMembers: React.FC = () => {
     setIsTransactionsModalOpen(true);
   };
 
+  const handleRenewClick = (member: Member) => {
+    setCurrentMember(member);
+    setIsRenewModalOpen(true);
+  };
+
   const handleModalClose = () => {
     setIsEditModalOpen(false);
     setIsReceivedModalOpen(false);
-    setIsTransactionsModalOpen(false); // Close TransactionsModal
+    setIsTransactionsModalOpen(false);
+    setIsRenewModalOpen(false);
     setCurrentMember(null);
   };
 
@@ -113,6 +124,21 @@ const MessMembers: React.FC = () => {
     fetchMembers();
   };
 
+  const calculateRowClass = (endDate: string) => {
+    const today = new Date();
+    const end = new Date(endDate);
+    const diffTime = end.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return "bg-red-100";
+    } else if (diffDays <= 5) {
+      return "bg-yellow-100";
+    } else {
+      return "";
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -121,7 +147,6 @@ const MessMembers: React.FC = () => {
     return <div>{error}</div>;
   }
 
-  // Calculate totals
   const totalCashAmount = members.reduce(
     (sum, member) => sum + parseFloat(member.cash_amount || "0"),
     0
@@ -160,11 +185,15 @@ const MessMembers: React.FC = () => {
             <th className="py-2 px-4 border-b text-left">Total</th>
             <th className="py-2 px-4 border-b text-left">Edit</th>
             <th className="py-2 px-4 border-b text-left">Received</th>
+            <th className="py-2 px-4 border-b text-left">Renew Order</th>
           </tr>
         </thead>
         <tbody>
           {members.map((member) => (
-            <tr key={member.id} className="hover:bg-gray-100">
+            <tr
+              key={member.id}
+              className={`${calculateRowClass(member.end_date)}`}
+            >
               <td className="py-2 px-4 border-b">{member.customer_name}</td>
               <td className="py-2 px-4 border-b">
                 <button
@@ -203,9 +232,18 @@ const MessMembers: React.FC = () => {
                   Received
                 </button>
               </td>
+              <td className="py-2 px-4 border-b">
+                {new Date(member.end_date) < new Date() && (
+                  <button
+                    className="bg-blue-500 text-white py-1 px-2 rounded hover:bg-blue-700"
+                    onClick={() => handleRenewClick(member)}
+                  >
+                    Renew Order
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
-          {/* Totals Row */}
           <tr className="bg-gray-100 font-bold">
             <td className="py-2 px-4 border-b text-right" colSpan={5}>Totals</td>
             <td className="py-2 px-4 border-b">QR{totalCashAmount.toFixed(2)}</td>
@@ -213,10 +251,11 @@ const MessMembers: React.FC = () => {
             <td className="py-2 px-4 border-b">QR{totalPaidAmount.toFixed(2)}</td>
             <td className="py-2 px-4 border-b">QR{totalPendingAmount.toFixed(2)}</td>
             <td className="py-2 px-4 border-b">QR{totalGrandTotal.toFixed(2)}</td>
-            <td className="py-2 px-4 border-b" colSpan={2}></td>
+            <td className="py-2 px-4 border-b" colSpan={3}></td>
           </tr>
         </tbody>
       </table>
+
       {isEditModalOpen && currentMember && (
         <EditMessModal
           isOpen={isEditModalOpen}
@@ -242,6 +281,14 @@ const MessMembers: React.FC = () => {
       )}
       {isTransactionsModalOpen && transactions.length === 0 && (
         <div className="text-center py-4">No transactions available for this member.</div>
+      )}
+      {isRenewModalOpen && currentMember && (
+        <RenewMessModal
+          isOpen={isRenewModalOpen}
+          onClose={handleModalClose}
+          member={currentMember}
+          onRenew={fetchMembers}
+        />
       )}
     </div>
   );

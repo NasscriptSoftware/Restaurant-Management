@@ -567,7 +567,21 @@ class MenuViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(created_by=created_by)
 
         return queryset
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        mess = serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        mess = serializer.save()
+        return Response(serializer.data)
+    
 
 class MenuItemViewSet(viewsets.ModelViewSet):
     queryset = MenuItem.objects.all()
