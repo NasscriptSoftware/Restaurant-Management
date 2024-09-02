@@ -127,13 +127,13 @@ useEffect(() => {
     }
   };
 
-  const calculateCashAmount = (orderId: number) => {
-    const order = filteredOrders.find(order => order.id === orderId);
-    if (!order) return 0;
+  // const calculateCashAmount = (orderId: number) => {
+  //   const order = filteredOrders.find(order => order.id === orderId);
+  //   if (!order) return 0;
 
-    // Customize the calculation logic if necessary
-    return order.total_amount;
-  };
+  //   // Customize the calculation logic if necessary
+  //   return order.total_amount;
+  // };
 
   const handleGenerateKitchenBills = async () => {
     try {
@@ -340,7 +340,7 @@ useEffect(() => {
       <div ref={printRef} style={{ display: "none" }}>
         {filteredOrders
           .filter((order: any) => selectedOrders.includes(order.id))
-          .map((order: any, index) => (
+          .map((order: any) => (
             <div key={order.id} style={{ pageBreakAfter: "always" }}>
               {printType === "kitchen" ? (
                 <KitchenPrint order={order} dishes={dishes.results}  />

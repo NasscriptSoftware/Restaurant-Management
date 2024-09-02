@@ -11,20 +11,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/services/api";
-import { log } from "console";
+
 
 interface CreditPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   creditUserId: number | null;
-  onPaymentSuccess: () => void;
+  // onPaymentSuccess: () => void;
+  onCreditUserChange: () => void; 
 }
 
 export function CreditPaymentModal({
   isOpen,
   onClose,
   creditUserId,
-  onPaymentSuccess,
+  // onPaymentSuccess,
 }: CreditPaymentModalProps) {
   const [paymentAmount, setPaymentAmount] = useState<number | string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("cash");
@@ -59,7 +60,7 @@ export function CreditPaymentModal({
         payment_method: paymentMethod,
         credit_user: creditUserId, // Pass creditUserId as credit_user
       });
-      onPaymentSuccess();
+      // onPaymentSuccess();
       onClose();
     } catch (error) {
       console.error("Error making payment:", error);

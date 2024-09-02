@@ -78,6 +78,7 @@ export interface OrderItem {
     export interface OrderFormData {
       items: OrderItem[];
       total_amount: number;
+      is_newly_added: boolean;
       status: "pending" | "approved" | "cancelled" | "delivered";
       order_type: "dining" | "takeaway" | "delivery";
       payment_method?: "cash" | "bank" | "cash-bank" | "credit";

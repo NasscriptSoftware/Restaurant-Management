@@ -62,6 +62,8 @@ const MemoModal: React.FC<MemoModalProps> = ({ isOpen, onClose, orderItems, onUp
     }, [isOpen, orderItems, variantsCache]);
 
     const handleAddVariant = (itemId: number) => {
+        console.log(itemId);
+        
         if (selectedVariant !== null) {
             const selectedVariantName = variants.find(v => v.id === selectedVariant)?.name || '';
 

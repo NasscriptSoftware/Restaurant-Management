@@ -15,6 +15,8 @@ type ConfimationModalProps = {
     onConfirm: () => void,
     title: string,
     description: string,
+    isOpen :boolean,
+    message : string
 }
 
 const ConfirmationModal: React.FC<ConfimationModalProps> = ({

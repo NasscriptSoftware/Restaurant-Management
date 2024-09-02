@@ -13,7 +13,7 @@ const AddProductPage: React.FC = () => {
   const orderId = searchParams.get("orderId");
 
   const { order, isLoading: orderLoading } = useOrderById(orderId!); // Fetch the existing order
-  const { dishes, isLoading: dishesLoading, isError, page, setPage } = useDishes();
+  const { dishes, isLoading: dishesLoading, isError } = useDishes();
   const { updateOrder } = useUpdateOrder(); // Hook to update the order with new items
 
   const [orderItems, setOrderItems] = useState(order?.items || []);

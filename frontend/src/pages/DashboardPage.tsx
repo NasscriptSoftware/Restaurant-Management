@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, lazy } from "react";
 import {
   LineChart,
   Line,
@@ -41,9 +41,9 @@ import { formatHour } from "@/utils/formatters";
 import ErrorBoundary from "@/components/Layout/ErrorBoundary";
 
 const Layout = lazy(() => import("@/components/Layout/Layout"));
-const TopDishesSlider = lazy(
-  () => import("@/components/Dashboard/TopDishesSlider")
-);
+// const TopDishesSlider = lazy(
+//   () => import("@/components/Dashboard/TopDishesSlider")
+// );
 
 const COLORS = [
   "#0088FE",

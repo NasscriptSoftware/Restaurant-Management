@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {  useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "react-query";
 import { Check, ChevronsUpDown, CircleCheckBig, Search } from "lucide-react";
@@ -40,9 +40,10 @@ import {
 } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Loader from "@/components/Layout/Loader";
+
 type OrderType = "dining" | "takeaway" | "delivery";
 
-type OrderDish = Dish & { quantity: number };
+type OrderDish = Dish & { quantity: number; variants: any[] }; 
 
 const DishesPage: React.FC = () => {
   const navigate = useNavigate();

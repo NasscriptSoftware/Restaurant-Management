@@ -76,7 +76,7 @@ export function CreditUserTable() {
     }
   };
 
-  const filterFn = (row: any, columnId: string, value: string) => {
+  const filterFn = (row: any, value: string) => {
     const usernameMatch = row.getValue("username").toLowerCase().includes(value.toLowerCase());
     const mobileNumberMatch = row.getValue("mobile_number").includes(value);
     return usernameMatch || mobileNumberMatch;
@@ -365,10 +365,14 @@ export function CreditUserTable() {
       />
 
       <ConfirmationModal
+        open={isDeleteModalOpen}
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
         message="Are you sure you want to delete this credit user?"
+        title="Confirm Action"  // Provide a title for the modal
+        description="Are you sure you want to proceed with this action?"  // Provide a description for the modal
+  
       />
 
       <CreditPaymentModal

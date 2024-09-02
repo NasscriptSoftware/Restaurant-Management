@@ -7,7 +7,7 @@ import KitchenPrint from "./KitchenPrint";
 import SalesPrint from "./SalesPrint";
 import AddProductModal from "./AddProductModal";
 import PrintConfirmationModal from "./PrintConfirmationModal";
-import { api, updateOrderStatusNew, updateOrderType } from "../../services/api";
+import { api, updateOrderStatusNew} from "../../services/api";
 import ReactSelect from "react-select";
 import {
   HoverCard,
@@ -30,7 +30,7 @@ import {
 import { DeliveryDriver } from "@/types";
 import { useQuery } from "react-query";
 import { fetchDeliveryDrivers } from "@/services/api";
-import { object } from "yup";
+// import { object } from "yup";
 
 interface OrderCardProps {
   order: Order;
@@ -79,7 +79,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const [isCreditUserModalOpen, setIsCreditUserModalOpen] = useState(false);
 
   // for changing the order type
-  const orderTypeDisplay = order?.order_type || "N/A";
+  // const orderTypeDisplay = order?.order_type || "N/A";
   const [showOrderTypeModal, setShowOrderTypeModal] = useState(false);
   const [newOrderType, setNewOrderType] = useState<OrderType>(order.order_type);
   const [customerName, setCustomerName] = useState<string>("");
@@ -92,9 +92,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const [openDriverSelect, setOpenDriverSelect] = useState<boolean>(false);
 
   const {
-    data: deliveryDriversList,
-    isLoading,
-    isError,
+    data: deliveryDriversList
   } = useQuery<{ results: DeliveryDriver[] }>(
     "deliveryDrivers",
     fetchDeliveryDrivers

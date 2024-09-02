@@ -39,7 +39,7 @@ const TransactionsModal: React.FC<TransactionsModalProps> = ({ isOpen, onClose, 
   const totalReceivedAmount = transactions.reduce((sum, transaction) => sum + parseFloat(transaction.received_amount as string), 0);
   const totalCashAmount = transactions.reduce((sum, transaction) => sum + parseFloat(transaction.cash_amount as string), 0);
   const totalBankAmount = transactions.reduce((sum, transaction) => sum + parseFloat(transaction.bank_amount as string), 0);
-  const totalPendingAmount = totalReceivedAmount - (totalCashAmount + totalBankAmount);
+  // const totalPendingAmount = totalReceivedAmount - (totalCashAmount + totalBankAmount);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
