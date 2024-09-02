@@ -12,10 +12,7 @@ interface SalesPrintProps {
   } | null;
 }
 
-const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes,logoInfo }) => {
- 
-
-
+const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
   const formatDate = (datetime: string) => {
     const date = new Date(datetime);
     const options: Intl.DateTimeFormatOptions = {
@@ -36,10 +33,9 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes,logoInfo }) => {
     return date.toLocaleTimeString(undefined, options);
   };
 
-  const totalQuantity = order.items.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
+  const totalQuantity = Array.isArray(order.items)
+    ? order.items.reduce((total, item) => total + item.quantity, 0)
+    : 0;
 
   return (
     <div className="print-container w-64 p-4 text-sm bg-white border-2 border-dashed rounded-lg mx-auto">
@@ -66,8 +62,12 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes,logoInfo }) => {
           <div className="text-right font-bold text-red-500 ml-4">Credit</div>
         )}
       </div>
-      <div className="print-date mb-2">Date: {formatDate(order.created_at)}</div>
-      <div className="print-time mb-2">Time: {formatTime(order.created_at)}</div>
+      <div className="print-date mb-2">
+        Date: {formatDate(order.created_at)}
+      </div>
+      <div className="print-time mb-2">
+        Time: {formatTime(order.created_at)}
+      </div>
       <div className="print-items">
         <table className="w-full">
           <thead>
@@ -78,22 +78,30 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes,logoInfo }) => {
             </tr>
           </thead>
           <tbody>
-            {order.items.map((item, index) => {
-              const dish = dishes.find((dish) => dish.id === item.dish);
-              return (
-                <tr key={index} className="print-item">
-                  <td className="print-item-name">
-                    {dish ? dish.name : "Unknown Dish"}
-                  </td>
-                  <td className="print-item-quantity text-center">
-                    x{item.quantity}
-                  </td>
-                  <td className="print-item-price text-right">
-                    QAR {dish ? dish.price * item.quantity : 0}
-                  </td>
-                </tr>
-              );
-            })}
+            {Array.isArray(order.items) && order.items.length > 0 ? (
+              order.items.map((item, index) => {
+                const dish = dishes.find((dish) => dish.id === item.dish);
+                return (
+                  <tr key={index} className="print-item">
+                    <td className="print-item-name">
+                      {dish ? dish.name : "Unknown Dish"}
+                    </td>
+                    <td className="print-item-quantity text-center">
+                      x{item.quantity}
+                    </td>
+                    <td className="print-item-price text-right">
+                      QAR {dish ? dish.price * item.quantity : 0}
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="3" className="text-center">
+                  No items found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -19,8 +19,10 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
     return date.toLocaleTimeString(undefined, options);
   };
 
-  const newlyAddedItems = order.items.filter((item) => item.is_newly_added);
-  const regularItems = order.items.filter((item) => !item.is_newly_added);
+  const newlyAddedItems = Array.isArray(order.items) ? order.items.filter((item) => item.is_newly_added) : [];
+
+  const regularItems = Array.isArray(order.items) ? order.items.filter((item) => !item.is_newly_added) : [];
+
 
   const renderItems = (items: any[]) => {
     return items.map((item, index) => {

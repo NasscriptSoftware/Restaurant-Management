@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { api } from "@/services/api";
 
 interface ReceivedModalProps {
   isOpen: boolean;
@@ -18,7 +19,7 @@ const ReceivedModal: React.FC<ReceivedModalProps> = ({ isOpen, onClose, memberId
     e.preventDefault();
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/transactions/", {
+      const response = await api.post("/mess-transactions/", {
         mess: memberId,
         received_amount: parseFloat(receivedAmount) || 0,
         cash_amount: (paymentMethod === 'cash' || paymentMethod === 'cash-bank') ? parseFloat(cashAmount) || 0 : 0,
