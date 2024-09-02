@@ -120,7 +120,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       setShowModal(true);
       setStatus(newStatus);
       console.log(newStatus);
-      
+
       try {
         await updateOrderStatusNew(order.id, "approved");
         onStatusUpdated(); // Refresh orders after status change
@@ -299,7 +299,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
           total_amount: order.total_amount,
           paid: true,
         });
-        
 
         if (billsResponse && billsResponse.status === 201) {
           setShowPaymentModal(false);
@@ -311,7 +310,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
           // Trigger the order list refresh after payment submission
           onStatusUpdated(); // Refresh orders after status change
-          window.location.reload()
+          window.location.reload();
         } else {
           throw new Error("Failed to create the bill");
         }
@@ -353,10 +352,14 @@ const OrderCard: React.FC<OrderCardProps> = ({
   // for changing the order type
   const handleOrderTypeChange = async () => {
     if (order.status === "delivered") {
-      Swal.fire("Error", "You cannot change the order type after it is delivered.", "error");
+      Swal.fire(
+        "Error",
+        "You cannot change the order type after it is delivered.",
+        "error"
+      );
       return;
     }
-  
+
     const deliveryData =
       newOrderType === "delivery"
         ? {
@@ -364,23 +367,21 @@ const OrderCard: React.FC<OrderCardProps> = ({
             address: deliveryAddress,
             customer_phone_number: customerMobileNumber,
             delivery_charge: parseFloat(deliveryCharge),
-            delivery_driver_id: selectedDriver?.id, // Ensure this is included
-            delivery_order_status: "pending", // Set the delivery order status
+            delivery_driver_id: selectedDriver?.id,
+            delivery_order_status: "pending",
           }
         : {};
-  
+
     try {
       const response = await api.put(`/order-type/${order.id}/change-type/`, {
         order_type: newOrderType,
         ...deliveryData,
       });
-  
+
       if (response.status === 200) {
         const updatedOrderData = response.data;
-        setOrder(updatedOrderData); // Update the order state with the new data
+        setOrder(updatedOrderData);
         setShowOrderTypeModal(false);
-  
-        // Perform a hard refresh to reload the page from the server
         window.location.reload();
       } else {
         Swal.fire("Error", "Failed to update order type.", "error");
@@ -390,12 +391,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
       Swal.fire("Error", "Failed to update order type.", "error");
     }
   };
-  
-
-
-
-  
-  
 
   return (
     <div
@@ -512,14 +507,18 @@ const OrderCard: React.FC<OrderCardProps> = ({
       </p>
 
       <div className="space-y-3">
-        {order.items.map((item, index) => (
-          <OrderItems
-            key={index}
-            orderItem={item}
-            dishes={dishes}
-            isNewlyAdded={item.is_newly_added} // Pass the newly added status
-          />
-        ))}
+        {order.items && Array.isArray(order.items) && order.items.length > 0 ? (
+          order.items.map((item, index) => (
+            <OrderItems
+              key={index}
+              orderItem={item}
+              dishes={dishes}
+              isNewlyAdded={item.is_newly_added} // Pass the newly added status
+            />
+          ))
+        ) : (
+          <p>No items found for this order.</p> // You can display a message or handle it in another way
+        )}
       </div>
       <div className="mt-4 flex justify-between items-center">
         {order?.order_type === "delivery" && (
@@ -774,13 +773,14 @@ const OrderCard: React.FC<OrderCardProps> = ({
             </h3>
 
             <div className="space-y-4">
+              {/* Radio buttons to select order type */}
               <label className="flex items-center space-x-3 cursor-pointer">
                 <input
                   type="radio"
                   name="orderType"
                   value="dining"
                   checked={newOrderType === "dining"}
-                  onChange={(e) => setNewOrderType(e.target.value as OrderType)}
+                  onChange={(e) => setNewOrderType(e.target.value)}
                   className="h-5 w-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2 rounded-full transition duration-200 ease-in-out"
                 />
                 <span className="text-base text-gray-700">Dining</span>
@@ -792,7 +792,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                   name="orderType"
                   value="takeaway"
                   checked={newOrderType === "takeaway"}
-                  onChange={(e) => setNewOrderType(e.target.value as OrderType)}
+                  onChange={(e) => setNewOrderType(e.target.value)}
                   className="h-5 w-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2 rounded-full transition duration-200 ease-in-out"
                 />
                 <span className="text-base text-gray-700">Takeaway</span>
@@ -804,141 +804,146 @@ const OrderCard: React.FC<OrderCardProps> = ({
                   name="orderType"
                   value="delivery"
                   checked={newOrderType === "delivery"}
-                  onChange={(e) => setNewOrderType(e.target.value as OrderType)}
+                  onChange={(e) => setNewOrderType(e.target.value)}
                   className="h-5 w-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2 rounded-full transition duration-200 ease-in-out"
                 />
                 <span className="text-base text-gray-700">Delivery</span>
               </label>
-            </div>
 
-            {newOrderType === "delivery" && (
-              <div className="mt-6 space-y-4">
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="customerName"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Customer Name
-                  </label>
-                  <input
-                    id="customerName"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="Enter customer name"
-                    className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+              {/* If the selected order type is delivery, show additional fields */}
+              {newOrderType === "delivery" && (
+                <div className="mt-6 space-y-4">
+                  <div className="flex flex-col gap-2">
+                    <label
+                      htmlFor="customerName"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Customer Name
+                    </label>
+                    <input
+                      id="customerName"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Enter customer name"
+                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label
+                      htmlFor="deliveryAddress"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Delivery Address
+                    </label>
+                    <input
+                      id="deliveryAddress"
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                      placeholder="Enter delivery address"
+                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label
+                      htmlFor="customerMobileNumber"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Customer Number
+                    </label>
+                    <input
+                      id="customerMobileNumber"
+                      value={customerMobileNumber}
+                      onChange={(e) => setCustomerMobileNumber(e.target.value)}
+                      placeholder="Enter customer contact number"
+                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label
+                      htmlFor="deliveryCharge"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Delivery Charge
+                    </label>
+                    <input
+                      id="deliveryCharge"
+                      value={deliveryCharge}
+                      onChange={(e) => setDeliveryCharge(e.target.value)}
+                      placeholder="Enter delivery charge"
+                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Select Delivery Driver
+                    </label>
+                    <Popover
+                      open={openDriverSelect}
+                      onOpenChange={setOpenDriverSelect}
+                    >
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="p-2 border border-gray-300 rounded-md bg-white w-full text-left text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex justify-between items-center"
+                        >
+                          {selectedDriver
+                            ? selectedDriver.username
+                            : "Select driver..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full m-10">
+                        <Command>
+                          <CommandInput placeholder="Search drivers..." />
+                          <CommandList>
+                            <CommandEmpty>No driver found.</CommandEmpty>
+                            <CommandGroup>
+                              {deliveryDriversList?.results?.map((driver) => (
+                                <CommandItem
+                                  key={driver.id}
+                                  value={driver.username}
+                                  onSelect={() => {
+                                    setSelectedDriver(driver);
+                                    setOpenDriverSelect(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={`mr-2 h-4 w-4 ${
+                                      selectedDriver?.id === driver.id
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    }`}
+                                  />
+                                  {driver.username}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="deliveryAddress"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Delivery Address
-                  </label>
-                  <input
-                    id="deliveryAddress"
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                    placeholder="Enter delivery address"
-                    className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="customerMobileNumber"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Customer Number
-                  </label>
-                  <input
-                    id="customerMobileNumber"
-                    value={customerMobileNumber}
-                    onChange={(e) => setCustomerMobileNumber(e.target.value)}
-                    placeholder="Enter customer contact number"
-                    className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="deliveryCharge"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Delivery Charge
-                  </label>
-                  <input
-                    id="deliveryCharge"
-                    value={deliveryCharge}
-                    onChange={(e) => setDeliveryCharge(e.target.value)}
-                    placeholder="Enter delivery charge"
-                    className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Select Delivery Driver
-                  </label>
-                  <Popover
-                    open={openDriverSelect}
-                    onOpenChange={setOpenDriverSelect}
-                  >
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className="p-2 border border-gray-300 rounded-md bg-white w-full text-left text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex justify-between items-center"
-                      >
-                        {selectedDriver
-                          ? selectedDriver.username
-                          : "Select driver..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full m-10">
-                      <Command>
-                        <CommandInput placeholder="Search drivers..." />
-                        <CommandList>
-                          <CommandEmpty>No driver found.</CommandEmpty>
-                          <CommandGroup>
-                            {deliveryDriversList?.results.map((driver) => (
-                              <CommandItem
-                                key={driver.id}
-                                value={driver.username}
-                                onSelect={() => {
-                                  setSelectedDriver(driver);
-                                  setOpenDriverSelect(false);
-                                }}
-                              >
-                                <Check
-                                  className={`mr-2 h-4 w-4 ${
-                                    selectedDriver?.id === driver.id
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  }`}
-                                />
-                                {driver.username}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
+              )}
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => setShowOrderTypeModal(false)}
+                  className="px-5 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors duration-200 ease-in-out"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleOrderTypeChange}
+                  className="px-5 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 ease-in-out"
+                >
+                  Confirm
+                </button>
               </div>
-            )}
-
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setShowOrderTypeModal(false)}
-                className="px-5 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors duration-200 ease-in-out"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleOrderTypeChange}
-                className="px-5 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 ease-in-out"
-              >
-                Confirm
-              </button>
             </div>
           </div>
         </div>

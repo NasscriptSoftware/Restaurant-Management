@@ -420,10 +420,10 @@ class MenuSerializer(serializers.ModelSerializer):
 
 
 class MessSerializer(serializers.ModelSerializer):
-    mess_type = MessTypeSerializer(read_only=True) 
     mess_type_id = serializers.PrimaryKeyRelatedField(
         queryset=MessType.objects.all(), write_only=True, source='mess_type'
-    ) 
+    )
+
     class Meta:
         model = Mess
         fields = [
@@ -444,6 +444,35 @@ class MessSerializer(serializers.ModelSerializer):
             "discount_amount",
             "grand_total"
         ]
+
+    def validate(self, data):
+        # Ensure end_date is later than start_date
+        if data['end_date'] <= data['start_date']:
+            raise serializers.ValidationError("End date must be later than start date")
+
+        return data
+
+    def create(self, validated_data):
+        menus_data = validated_data.pop('menus', [])
+        mess = Mess.objects.create(**validated_data)
+        mess.menus.set(menus_data)  # Use set() to assign many-to-many field
+        weeks = (validated_data['end_date'] - validated_data['start_date']).days // 7
+        mess.total_amount = mess.calculate_total_amount(weeks)
+        mess.save()
+        return mess
+
+    def update(self, instance, validated_data):
+        menus_data = validated_data.pop('menus', [])
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        if menus_data:
+            instance.menus.set(menus_data)  # Use set() to assign many-to-many field
+
+        weeks = (instance.end_date - instance.start_date).days // 7
+        instance.total_amount = instance.calculate_total_amount(weeks)
+        instance.save()
+        return instance
 
 
 class CreditOrderSerializer(serializers.ModelSerializer):

@@ -404,12 +404,16 @@ class Mess(models.Model):
     grand_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     initial_transaction_created = models.BooleanField(default=False)
 
-    def __str__(self):
-        return f"{self.customer_name}'s Mess Selection"
+    def calculate_total_amount(self, weeks):
+        # Assuming the subtotal is the total for one week
+        weekly_total = sum(menu.sub_total for menu in self.menus.all())
+        return weekly_total * weeks
 
-    class Meta:
-        unique_together = ("mess_type", "customer_name")
-
+    def save(self, *args, **kwargs):
+        # Auto-calculate total amount before saving
+        weeks = (self.end_date - self.start_date).days // 7
+        self.total_amount = self.calculate_total_amount(weeks)
+        super().save(*args, **kwargs)
 
 
 class MessTransaction(models.Model):
