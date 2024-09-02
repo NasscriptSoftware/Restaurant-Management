@@ -6,9 +6,10 @@ interface OrderItemProps {
   orderItem: {
     id: number;
     name: string;
-    price: number;
+    price: number | string;
     image: string;
     quantity: number;
+    category: string | number;
   };
   incrementQuantity: (id: number) => void;
   decrementQuantity: (id: number) => void;
@@ -65,7 +66,7 @@ const OrderItem: React.FC<OrderItemProps> = ({
           </Button>
         </div>
         <span className="font-semibold text-lg text-green-600">
-          QAR {(orderItem.price * orderItem.quantity).toFixed(2)}
+          QAR {(Number(orderItem.price) * orderItem.quantity).toFixed(2)}
         </span>
       </div>
     </div>

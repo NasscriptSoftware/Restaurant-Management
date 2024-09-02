@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import  { useState, useEffect } from "react";
+// import axios from "axios";
 import { api } from "@/services/api";
+// const RenewMessModalProps ={}
 
 const RenewMessModal = ({ isOpen, onClose, member, onRenew }) => {
   const [selectedWeek, setSelectedWeek] = useState(1);

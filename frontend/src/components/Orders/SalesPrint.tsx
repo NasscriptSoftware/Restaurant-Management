@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Order, Dish } from "../../types";
 
 interface SalesPrintProps {
@@ -97,7 +97,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
               })
             ) : (
               <tr>
-                <td colSpan="3" className="text-center">
+                <td colSpan={3} className="text-center">
                   No items found
                 </td>
               </tr>

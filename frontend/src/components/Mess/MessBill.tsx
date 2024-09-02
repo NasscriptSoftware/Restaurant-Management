@@ -11,11 +11,11 @@ const MessBill: React.FC<MessBillProps> = ({ data }) => {
     return date.toLocaleDateString(undefined, options);
   };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
-    return date.toLocaleTimeString(undefined, options);
-  };
+  // const formatTime = (dateString: string) => {
+  //   const date = new Date(dateString);
+  //   const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
+  //   return date.toLocaleTimeString(undefined, options);
+  // };
 
   return (
     <div className="mess-bill p-4 text-sm bg-white border border-dashed border-gray-300 rounded-lg mx-auto w-64">

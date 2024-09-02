@@ -32,7 +32,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ menus, mobile_number, onMenuAdd
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [currentMenu, setCurrentMenu] = useState<Menu | null>(null);
   const [updatedMenus, setUpdatedMenus] = useState<Menu[]>(menus); // Local state for menus
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Filter menus based on the mobile_number
@@ -51,7 +51,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ menus, mobile_number, onMenuAdd
   const closeItemModal = () => setIsItemModalOpen(false);
 
   const fetchUpdatedMenus = async () => {
-    setLoading(true);
+    // setLoading(true);
     try {
       const response = await axios.get("http://127.0.0.1:8000/api/menus/");
       if (response.data && Array.isArray(response.data)) {
@@ -62,7 +62,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ menus, mobile_number, onMenuAdd
     } catch (error) {
       console.error("Error fetching updated menus:", error);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
