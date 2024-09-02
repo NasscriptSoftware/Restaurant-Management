@@ -3,7 +3,7 @@ import Layout from "../components/Layout/Layout";
 import PayIn from "@/components/Transactions/PayIn";
 import PayOut from "@/components/Transactions/PayOut";
 import Ledger from "@/components/Transactions/Ledger";
-import Transactions from "@/components/Transactions/Transactions"; //
+import LedgerReport from "@/components/Transactions/LedgerReport";
 
 const TransactionsPage: React.FC = () => {
   const [activeButton, setActiveButton] = useState("Ledger");
@@ -21,7 +21,7 @@ const TransactionsPage: React.FC = () => {
       case "Ledger":
         return <Ledger />;
       case "Transactions": // Add case for Transactions
-        return <Transactions />;
+        return <LedgerReport />;
       default:
         return null;
     }
@@ -62,7 +62,7 @@ const TransactionsPage: React.FC = () => {
               }`}
               onClick={() => handleButtonClick("Transactions")}
             >
-              Transactions
+              Ledger Reports
             </button>
           </div>
         </header>
