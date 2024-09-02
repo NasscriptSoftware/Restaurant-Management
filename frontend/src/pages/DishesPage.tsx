@@ -1,4 +1,4 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "react-query";
 import { Check, ChevronsUpDown, CircleCheckBig, Search } from "lucide-react";
@@ -10,12 +10,7 @@ import { useDishes } from "../hooks/useDishes";
 import { useOrders } from "../hooks/useOrders";
 import MemoModal from "@/components/modals/MemoModal";
 import KitchenNoteModal from "@/components/modals/KitchenNoteModal";
-import {
-  Dish,
-  Category,
-  OrderFormData,
-  DeliveryDriver,
-} from "../types";
+import { Dish, Category, OrderFormData, DeliveryDriver } from "../types";
 import {
   fetchDeliveryDrivers,
   fetchUnreadCount,
@@ -43,7 +38,7 @@ import Loader from "@/components/Layout/Loader";
 
 type OrderType = "dining" | "takeaway" | "delivery";
 
-type OrderDish = Dish & { quantity: number; variants: any[] }; 
+type OrderDish = Dish & { quantity: number; variants: any[] };
 
 const DishesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -77,10 +72,9 @@ const DishesPage: React.FC = () => {
   const [error, setError] = useState("");
   const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
   const [isKitchenNoteModalOpen, setIsKitchenNoteModalOpen] = useState(false);
-  const [kitchenNote, setKitchenNote] = useState('');
+  const [kitchenNote, setKitchenNote] = useState("");
 
   const data = dishes?.results || [];
-  
 
   const handleAddDish = (dish: Dish) => {
     addDishToOrder(dish.id, 1);
@@ -94,7 +88,7 @@ const DishesPage: React.FC = () => {
         )
       );
     } else {
-      setOrderItems([...orderItems, { ...dish, quantity: 1 }]);
+      setOrderItems([...orderItems, { ...dish, quantity: 1, variants: [] }]);
     }
     setIsOrderVisible(true);
   };
@@ -132,21 +126,28 @@ const DishesPage: React.FC = () => {
         items: orderItems.map((item) => ({
           dish: item.id,
           quantity: item.quantity || 0,
-          variants: item.variants ? item.variants.map((variant: { variantId: any; name: any; quantity: any; }) => ({
-            variantId: variant.variantId,
-            name: variant.name,
-            quantity: variant.quantity,
-          })) : []
+          variants: item.variants
+            ? item.variants.map(
+                (variant: { variantId: any; name: any; quantity: any }) => ({
+                  variantId: variant.variantId,
+                  name: variant.name,
+                  quantity: variant.quantity,
+                })
+              )
+            : [],
+          is_newly_added: false, // or set this value based on your logic
         })),
         total_amount: parseFloat(total.toFixed(2)),
         status: "pending",
         order_type: orderType,
         address: orderType === "delivery" ? deliveryAddress : "",
         customer_name: orderType === "delivery" ? customerName : "",
-        customer_phone_number: orderType === "delivery" ? customerMobileNumber : "",
-        delivery_charge: orderType === "delivery" ? parseFloat(deliveryCharge) : 0,
+        customer_phone_number:
+          orderType === "delivery" ? customerMobileNumber : "",
+        delivery_charge:
+          orderType === "delivery" ? parseFloat(deliveryCharge) : 0,
         delivery_driver_id:
-        orderType === "delivery" && selectedDriver ? selectedDriver.id : null,
+          orderType === "delivery" && selectedDriver ? selectedDriver.id : null,
         kitchen_note: kitchenNote,
       };
 
@@ -181,7 +182,6 @@ const DishesPage: React.FC = () => {
   const handleCloseMemoModal = () => {
     setIsMemoModalOpen(false);
   };
-
 
   const handleCloseBtnClick = () => {
     fetchUnreadCount();
@@ -300,8 +300,9 @@ const DishesPage: React.FC = () => {
         </div>
         {orderItems.length > 0 && (
           <div
-            className={`w-full lg:w-[550px] bg-white p-8 mt-2 ${isOrderVisible ? "block" : "hidden lg:block"
-              }`}
+            className={`w-full lg:w-[550px] bg-white p-8 mt-2 ${
+              isOrderVisible ? "block" : "hidden lg:block"
+            }`}
           >
             <div className="sticky top-0">
               <h2 className="text-2xl font-bold mb-4">New Order</h2>
@@ -334,16 +335,34 @@ const DishesPage: React.FC = () => {
                   onValueChange={(value) => setOrderType(value as OrderType)}
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="dining" id="dining" className="h-5 w-5" />
-                    <Label htmlFor="dining" className="text-sm">Dining</Label>
+                    <RadioGroupItem
+                      value="dining"
+                      id="dining"
+                      className="h-5 w-5"
+                    />
+                    <Label htmlFor="dining" className="text-sm">
+                      Dining
+                    </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="takeaway" id="takeaway" className="h-5 w-5" />
-                    <Label htmlFor="takeaway" className="text-sm">Takeaway</Label>
+                    <RadioGroupItem
+                      value="takeaway"
+                      id="takeaway"
+                      className="h-5 w-5"
+                    />
+                    <Label htmlFor="takeaway" className="text-sm">
+                      Takeaway
+                    </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="delivery" id="delivery" className="h-5 w-5" />
-                    <Label htmlFor="delivery" className="text-sm">Delivery</Label>
+                    <RadioGroupItem
+                      value="delivery"
+                      id="delivery"
+                      className="h-5 w-5"
+                    />
+                    <Label htmlFor="delivery" className="text-sm">
+                      Delivery
+                    </Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -368,7 +387,9 @@ const DishesPage: React.FC = () => {
                     />
                   </div>
                   <div className="mt-4 flex flex-col gap-2">
-                    <Label htmlFor="customerMobileNumber">Customer Number</Label>
+                    <Label htmlFor="customerMobileNumber">
+                      Customer Number
+                    </Label>
                     <Input
                       id="customerMobileNumber"
                       value={customerMobileNumber}
@@ -420,10 +441,11 @@ const DishesPage: React.FC = () => {
                                   }}
                                 >
                                   <Check
-                                    className={`mr-2 h-4 w-4 ${selectedDriver?.id === driver.id
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                      }`}
+                                    className={`mr-2 h-4 w-4 ${
+                                      selectedDriver?.id === driver.id
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    }`}
                                   />
                                   {driver.username}
                                 </CommandItem>
