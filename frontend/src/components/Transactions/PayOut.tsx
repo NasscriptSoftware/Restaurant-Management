@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import LedgerCreationModal from "@/components/modals/LedgerCreationModal";
 import { api } from "@/services/api";
-import { ToastContainer, toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
 
 interface Ledger {
   id: number;
@@ -13,18 +11,34 @@ interface Ledger {
   group: { name: string };
 }
 
+interface TransactionData {
+  ledger_id: string;
+  particulars_id: string;
+  date: string;
+  debit_amount: number;
+  credit_amount: number;
+  remarks: string;
+  ref_no?: string;
+  debit_credit: string;
+}
+
+type PayOutRequest = {
+  transaction1: TransactionData;
+  transaction2: TransactionData;
+};
+
 const PayOut: React.FC = () => {
   const [ledgerOptions, setLedgerOptions] = useState<Ledger[]>([]);
-  const [selectedLedger, setSelectedLedger] = useState<string>("");
+  const [selectedCashBank, setSelectedCashBank] = useState<string>("");
+  const [selectedParticulars, setSelectedParticulars] = useState<string>("");
   const [date, setDate] = useState<string>("");
   const [debitAmount, setDebitAmount] = useState<string>("");
   const [creditAmount, setCreditAmount] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");
-  const [paymentMethod, setPaymentMethod] = useState<string>("cash"); // Default payment method
-  const [cashAmount, setCashAmount] = useState<string>("");
-  const [bankAmount, setBankAmount] = useState<string>("");
+  const [refNo, setRefNo] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     api.get("/ledgers/")
@@ -41,29 +55,62 @@ const PayOut: React.FC = () => {
       });
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const transactionData = {
-      ledger_id: selectedLedger,
+    if (isSubmitting) return; // Prevent further submissions during ongoing request
+
+    setIsSubmitting(true); // Set submitting state to true
+    setError(null); // Reset error state
+
+    const transactionData1: TransactionData = {
+      ledger_id: selectedCashBank!,
+      particulars_id: selectedParticulars!,
       date,
       debit_amount: debitAmount ? parseFloat(debitAmount) : 0,
-      credit_amount: creditAmount ? parseFloat(creditAmount) : 0,
-      cash_amount: paymentMethod === "cash" || paymentMethod === "cash-bank" ? parseFloat(cashAmount) : 0,
-      bank_amount: paymentMethod === "bank" || paymentMethod === "cash-bank" ? parseFloat(bankAmount) : 0,
+      credit_amount: 0,
       remarks,
-      transaction_type: "Pay Out",
-      payment_method: paymentMethod,
+      debit_credit:"debit",
     };
 
-    api.post("/transactions/", transactionData)
-      .then((response) => {
-        toast.success("Transaction created successfully!");
-        console.log("Transaction successful:", response.data);
-      })
-      .catch((error) => {
-        console.error("There was an error posting the transaction!", error);
-        setError("There was an error submitting the transaction. Please try again.");
-      });
+    const transactionData2: TransactionData = {
+      ledger_id: selectedParticulars!,
+      particulars_id: selectedCashBank!,
+      date,
+      debit_amount: 0,
+      credit_amount: creditAmount ? parseFloat(creditAmount) : 0,
+      remarks,
+      debit_credit:"credit",
+    };
+
+    if (refNo.trim() !== "") {
+      transactionData1.ref_no = refNo;
+      transactionData2.ref_no = refNo;
+    }
+
+    const requestData: PayOutRequest = {
+      transaction1: transactionData1,
+      transaction2: transactionData2,
+    };
+
+    try {
+      // Post both transactions in a single request
+      await api.post("/transactions/", requestData);
+      console.log("Transactions successful");
+      // Reset form fields
+      setSelectedCashBank("");
+      setSelectedParticulars("");
+      setDate("");
+      setDebitAmount("");
+      setCreditAmount("");
+      setRemarks("");
+      setRefNo("");
+    } catch (error) {
+      console.error("There was an error posting the transaction!", error);
+      setError("There was an error submitting the transaction. Please try again.");
+    } finally {
+      setIsSubmitting(false); // Reset submitting state to false after the request completes
+    }
   };
 
   const handleOpenModal = () => setIsModalOpen(true);
@@ -84,23 +131,6 @@ const PayOut: React.FC = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block mb-2">Ledger</label>
-            <select
-              value={selectedLedger}
-              onChange={(e) => setSelectedLedger(e.target.value)}
-              className="border rounded p-2 w-full"
-              required
-            >
-              <option value="">Select a ledger</option>
-              {ledgerOptions.map((ledger) => (
-                <option key={ledger.id} value={ledger.id}>
-                  {ledger.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
             <label className="block mb-2">Date</label>
             <input
               type="date"
@@ -112,44 +142,31 @@ const PayOut: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2">Payment Method</label>
+            <label className="block mb-2">Reference No.</label>
+            <input
+              type="text"
+              value={refNo}
+              onChange={(e) => setRefNo(e.target.value)}
+              className="border rounded p-2 w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-2">Expense/Payables</label>
             <select
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
+              value={selectedCashBank}
+              onChange={(e) => setSelectedCashBank(e.target.value)}
               className="border rounded p-2 w-full"
               required
             >
-              <option value="cash">Cash</option>
-              <option value="bank">Bank</option>
-              <option value="cash-bank">Cash and Bank</option>
+              <option value="">Select an account</option>
+              {ledgerOptions.map((ledger) => (
+                <option key={ledger.id} value={ledger.id}>
+                  {ledger.name}
+                </option>
+              ))}
             </select>
           </div>
-
-          {(paymentMethod === "cash" || paymentMethod === "cash-bank") && (
-            <div>
-              <label className="block mb-2">Cash Amount</label>
-              <input
-                type="number"
-                value={cashAmount}
-                onChange={(e) => setCashAmount(e.target.value)}
-                className="border rounded p-2 w-full"
-                step="0.01"
-              />
-            </div>
-          )}
-
-          {(paymentMethod === "bank" || paymentMethod === "cash-bank") && (
-            <div>
-              <label className="block mb-2">Bank Amount</label>
-              <input
-                type="number"
-                value={bankAmount}
-                onChange={(e) => setBankAmount(e.target.value)}
-                className="border rounded p-2 w-full"
-                step="0.01"
-              />
-            </div>
-          )}
 
           <div>
             <label className="block mb-2">Debit Amount</label>
@@ -160,6 +177,23 @@ const PayOut: React.FC = () => {
               className="border rounded p-2 w-full"
               step="0.01"
             />
+          </div>
+
+          <div>
+            <label className="block mb-2">Cash/Bank/Creditors</label>
+            <select
+              value={selectedParticulars}
+              onChange={(e) => setSelectedParticulars(e.target.value)}
+              className="border rounded p-2 w-full"
+              required
+            >
+              <option value="">Select an account</option>
+              {ledgerOptions.map((ledger) => (
+                <option key={ledger.id} value={ledger.id}>
+                  {ledger.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -189,17 +223,14 @@ const PayOut: React.FC = () => {
           <button
             type="submit"
             className="bg-[#6f42c1] text-white py-2 px-4 rounded"
+            disabled={isSubmitting}  // Disable the button when submitting
           >
             Submit
           </button>
         </div>
       </form>
 
-      {/* Ledger Creation Modal */}
       <LedgerCreationModal isOpen={isModalOpen} onClose={handleCloseModal} />
-
-      {/* Toast Notification Container */}
-      <ToastContainer />
     </div>
   );
 };

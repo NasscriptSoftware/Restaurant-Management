@@ -11,6 +11,8 @@ interface Transaction {
   debit_amount: string;
   credit_amount: string;
   remarks: string | null;
+  balance_amount: string;
+  debit_credit: string;
 }
 
 interface Ledger {
@@ -64,7 +66,7 @@ const LedgerReport: React.FC = () => {
       <div className="bg-white p-4 shadow-md rounded-md mb-4">
         <div className="flex space-x-4 mb-4">
           <div className="flex-1">
-            <label className="block mb-2 text-sm font-medium text-gray-700">Select Ledger</label>
+            <label className="block mb-2 text-sm font-medium text-gray-700">Select Account</label>
             <select
               value={selectedLedger}
               onChange={(e) => setSelectedLedger(e.target.value)}
@@ -118,7 +120,8 @@ const LedgerReport: React.FC = () => {
                 <th className="py-2 px-4 bg-gray-200 text-left whitespace-nowrap">Particulars</th>
                 <th className="py-2 px-4 bg-gray-200 text-right whitespace-nowrap">Debit Amount</th>
                 <th className="py-2 px-4 bg-gray-200 text-right whitespace-nowrap">Credit Amount</th>
-                <th className="py-2 px-4 bg-gray-200 text-left whitespace-nowrap">Remarks</th>
+                <th className="py-2 px-4 bg-gray-200 text-left whitespace-nowrap">Balance</th>
+                <th className="py-2 px-4 bg-gray-200 text-left whitespace-nowrap">Dr/Cr</th>
               </tr>
             </thead>
             <tbody>
@@ -129,7 +132,8 @@ const LedgerReport: React.FC = () => {
                   <td className="py-2 px-4 border-b text-left whitespace-nowrap">{transaction.particulars.name}</td>
                   <td className="py-2 px-4 border-b text-right whitespace-nowrap">{transaction.debit_amount}</td>
                   <td className="py-2 px-4 border-b text-right whitespace-nowrap">{transaction.credit_amount}</td>
-                  <td className="py-2 px-4 border-b text-left whitespace-nowrap">{transaction.remarks || "N/A"}</td>
+                  <td className="py-2 px-4 border-b text-left whitespace-nowrap">{transaction.balance_amount}</td>
+                  <td className="py-2 px-4 border-b text-left whitespace-nowrap">{transaction.debit_credit}</td>
                 </tr>
               ))}
             </tbody>

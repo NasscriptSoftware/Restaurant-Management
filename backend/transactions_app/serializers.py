@@ -31,6 +31,8 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = '__all__'
 
+
+
 class IncomeStatementSerializer(serializers.ModelSerializer):
     class Meta:
         model = IncomeStatement
