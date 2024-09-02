@@ -126,16 +126,12 @@ const DishesPage: React.FC = () => {
         items: orderItems.map((item) => ({
           dish: item.id,
           quantity: item.quantity || 0,
-          variants: item.variants
-            ? item.variants.map(
-                (variant: { variantId: any; name: any; quantity: any }) => ({
-                  variantId: variant.variantId,
-                  name: variant.name,
-                  quantity: variant.quantity,
-                })
-              )
-            : [],
-          is_newly_added: false, // or set this value based on your logic
+          variants: item.variants.map((variant) => ({
+            variantId: variant.variantId,
+            name: variant.name,
+            quantity: variant.quantity,
+          })),
+          is_newly_added: false,
         })),
         total_amount: parseFloat(total.toFixed(2)),
         status: "pending",
@@ -167,13 +163,11 @@ const DishesPage: React.FC = () => {
 
   const handleSaveKitchenNote = (note: string) => {
     setKitchenNote(note);
-    // Pass the note to the parent component or handle it as needed
   };
 
   const handleUpdateOrderItems = (updatedItems: OrderDish[]) => {
-    setOrderItems(updatedItems); // Update the orderItems state with the new data
+    setOrderItems(updatedItems);
   };
-  console.log("kitchennote", kitchenNote);
 
   const handleOpenMemoModal = () => {
     setIsMemoModalOpen(true);
@@ -310,7 +304,14 @@ const DishesPage: React.FC = () => {
                 {orderItems.map((item) => (
                   <OrderItem
                     key={item.id}
-                    orderItem={item}
+                    orderItem={{
+                      ...item,
+                      category:
+                        typeof item.category === "number"
+                          ? item.category
+                          : item.category.id,
+                      price: item.price.toString(),
+                    }}
                     incrementQuantity={() => updateQuantity(item.id, 1)}
                     decrementQuantity={() => updateQuantity(item.id, -1)}
                     removeItem={() =>
@@ -470,13 +471,27 @@ const DishesPage: React.FC = () => {
             </div>
           </div>
         )}
-        {/* Memo Modal */}
         <MemoModal
           isOpen={isMemoModalOpen}
           onClose={handleCloseMemoModal}
-          orderItems={orderItems}
-          onUpdateOrderItems={handleUpdateOrderItems} // Pass the callback function to MemoModal
+          orderItems={orderItems.map((item) => ({
+            ...item,
+            category:
+              typeof item.category === "number"
+                ? item.category
+                : item.category.id,
+            price: item.price.toString(), // Convert price to string
+          }))}
+          onUpdateOrderItems={(updatedItems) => {
+            handleUpdateOrderItems(
+              updatedItems.map((item) => ({
+                ...item,
+                price: Number(item.price), // Convert price back to number
+              }))
+            );
+          }}
         />
+
         <KitchenNoteModal
           isOpen={isKitchenNoteModalOpen}
           onClose={() => setIsKitchenNoteModalOpen(false)}
