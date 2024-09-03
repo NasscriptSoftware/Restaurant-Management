@@ -1,7 +1,5 @@
-import  { useState, useEffect } from "react";
-// import axios from "axios";
+import { useState, useEffect } from "react";
 import { api } from "@/services/api";
-// const RenewMessModalProps ={}
 
 const RenewMessModal = ({ isOpen, onClose, member, onRenew }) => {
   const [selectedWeek, setSelectedWeek] = useState(1);
@@ -19,8 +17,9 @@ const RenewMessModal = ({ isOpen, onClose, member, onRenew }) => {
 
   useEffect(() => {
     if (member && member.mess_type) {
+      // Correctly pass the ID of the mess_type to the API
       api
-        .get(`/menus/?mess_type=${member.mess_type}`)
+        .get(`/menus/?mess_type=${member.mess_type.id}`) // Assuming member.mess_type is an object with an id
         .then((response) => {
           setMenus(response.data.results || []);
         })
@@ -66,7 +65,7 @@ const RenewMessModal = ({ isOpen, onClose, member, onRenew }) => {
       ...member,
       start_date: startDate,
       end_date: endDate,
-      mess_type_id: member.mess_type,
+      mess_type_id: member.mess_type.id, // Ensure you're sending the ID of the mess_type
       total_amount: totalAmount.toFixed(2),
       grand_total: grandTotal.toFixed(2),
       discount_amount: discountAmount,
