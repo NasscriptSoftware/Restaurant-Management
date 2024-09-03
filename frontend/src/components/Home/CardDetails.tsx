@@ -49,7 +49,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
         };
 
         try {
-          const response = await api.get(`http://127.0.0.1:8000/api/orders`, {
+          const response = await api.get(`/orders`, {
             params,
             headers: {
               Authorization: `Bearer ${token}`,

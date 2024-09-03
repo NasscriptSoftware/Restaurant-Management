@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "@/services/api";
 
 interface ModalProps {
   onClose: () => void;
@@ -14,8 +14,8 @@ const AddMenuModal: React.FC<ModalProps> = ({ onClose, onMenuAdded }) => {
   const [messTypes, setMessTypes] = useState<{ id: number; name: string }[]>([]);
 
   useEffect(() => {
-    axios
-      .get<{ results: { id: number; name: string }[] }>("http://127.0.0.1:8000/api/mess-types/")
+    api
+      .get<{ results: { id: number; name: string }[] }>("/mess-types/")
       .then((response) => {
         if (Array.isArray(response.data.results)) {
           setMessTypes(response.data.results);
@@ -30,7 +30,7 @@ const AddMenuModal: React.FC<ModalProps> = ({ onClose, onMenuAdded }) => {
     e.preventDefault();
     
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/menus/', {
+      const response = await api.post('/menus/', {
         name: name,
         day_of_week: dayOfWeek.toLowerCase(),
         mess_type: messType,

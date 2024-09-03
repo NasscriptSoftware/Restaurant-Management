@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { api } from "@/services/api";
 
 interface ModalProps {
   isOpen: boolean;
@@ -24,7 +24,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, table, onUpdate }) => {
 
   const handleSave = async () => {
     try {
-      await axios.patch(`http://127.0.0.1:8000/api/tables/${table.id}/`, {
+      await api.patch(`/tables/${table.id}/`, {
         start_time: startTime,
         end_time: endTime,
         seats_count: seatsCount,

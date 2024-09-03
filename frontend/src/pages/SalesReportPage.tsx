@@ -99,8 +99,8 @@ const SalesReportPage: React.FC = () => {
   const fetchDataWithFilter = async (filter: Record<string, string>) => {
     try {
       const baseUrl = reportType === "sales"
-        ? "http://127.0.0.1:8000/api/orders/sales_report/"
-        : "http://127.0.0.1:8000/api/messes/mess_report/";
+        ? `${import.meta.env.VITE_APP_API_URL}/orders/sales_report/`
+        : `${import.meta.env.VITE_APP_API_URL}/messes/mess_report/`;
 
       const url = new URL(baseUrl);
       const token = localStorage.getItem("token");
