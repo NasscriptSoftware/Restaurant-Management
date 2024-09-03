@@ -54,7 +54,7 @@ const COLORS = [
   "#6f42c1",
 ];
 
-const timeRangeHeadings = {
+const timeRangeHeadings : { day: string, week: string, month: string, year: string } = {
   day: "Daily",
   week: "Weekly",
   month: "Monthly",
@@ -63,6 +63,7 @@ const timeRangeHeadings = {
 
 const RestaurantDashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState<string>("week");
+  const heading = timeRangeHeadings[timeRange as keyof typeof timeRangeHeadings];
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null
   );
@@ -167,7 +168,7 @@ const RestaurantDashboard: React.FC = () => {
             <Card>
               <CardHeader>
                 <h3 className="text-lg font-semibold">
-                  {`${timeRangeHeadings[timeRange]} Sales`}
+                  {`${heading} Sales`}
                 </h3>
               </CardHeader>
               <CardContent>

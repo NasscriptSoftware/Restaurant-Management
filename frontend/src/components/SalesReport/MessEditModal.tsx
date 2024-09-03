@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '@/services/api';
+import { MessType } from '@/types';
 
 interface MessReport {
     id: number;
     customer_name: string;
     mobile_number: string;
-    mess_type: string; // Assuming MessType is a string; adjust if it's an enum or different type
+    mess_type: MessType; // Assuming MessType is a string; adjust if it's an enum or different type
     total_amount: number;
     paid_amount: number;
     pending_amount: number;
@@ -18,11 +19,12 @@ interface MessReport {
 }
 
 interface MessEditModalProps {
+    isOpen: boolean;
     report: MessReport | null;
     onClose: () => void;
 }
 
-const MessEditModal: React.FC<MessEditModalProps> = ({ report, onClose }) => {
+const MessEditModal: React.FC<MessEditModalProps> = ({ isOpen, report, onClose }) => {
     const [formData, setFormData] = useState<MessReport | null>(report);
 
     useEffect(() => {
@@ -49,6 +51,8 @@ const MessEditModal: React.FC<MessEditModalProps> = ({ report, onClose }) => {
             console.error("Failed to update mess report:", error);
         }
     };
+    
+    if (!isOpen) return null;
 
     if (!report) return null;
 

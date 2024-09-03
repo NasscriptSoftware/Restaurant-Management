@@ -28,7 +28,7 @@ import { api } from "@/services/api";
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
-  const [mainLogoUrl, setMainLogoUrl] = useState<string>("/images/default_logo.png"); // Default logo
+  const [mainLogoUrl, setMainLogoUrl] = useState<string>("/images/nasscript_full_banner_logo.png"); // Default logo
 
   useEffect(() => {
     // Fetch the logo information from the API

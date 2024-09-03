@@ -23,8 +23,10 @@ interface Order {
   items: { dish: number; quantity: number }[];
 }
 
+type StatusType = "pending" | "delivered" | "cancelled";
+
 const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
-  const [activeStatus, setActiveStatus] = useState<"pending" | "delivered" | "cancelled">("pending"); // Default to "pending"
+  const [activeStatus, setActiveStatus] = useState<StatusType>("pending"); // Default to "pending"
   const [allOrders, setAllOrders] = useState<Order[] | null>(null); // Store all orders
   const [filteredOrders, setFilteredOrders] = useState<Order[] | null>(null); // Store filtered orders
   const [isLoading, setIsLoading] = useState(false);
@@ -57,7 +59,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
           const orders = response.data.results;
           setAllOrders(orders);
           // Initially filter orders with the default status
-          const initialFilteredOrders = orders.filter(order => order.status === activeStatus);
+          const initialFilteredOrders = orders.filter((order: Order) => order.status === activeStatus);
           setFilteredOrders(initialFilteredOrders);
           setIsLoading(false);
         } catch (error) {

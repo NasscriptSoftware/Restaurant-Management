@@ -23,6 +23,7 @@ interface SalesReport {
   cash_amount: string;
   bank_amount: string;
   customer_phone_number: string;
+  customer_name: string;
 }
 
 interface MessType {
@@ -44,9 +45,10 @@ interface MessReport {
   grand_total: string;
   cash_amount: string;
   bank_amount: string;
+  status: string;
 }
 
-interface Transaction {
+export interface Transaction {
   id: number;
   received_amount: number;
   cash_amount: number;
@@ -54,6 +56,19 @@ interface Transaction {
   payment_method: string;
   status: string;
   date: string;
+}
+
+interface Sales {
+  id: number;
+  total_amount: number | string;
+  status: string;
+  order_type: string;
+  payment_method: string;
+  created_at: string;
+  invoice_number: string;
+  cash_amount: string | number;
+  bank_amount: string | number;
+  customer_phone_number: string;
 }
 
 const SalesReportPage: React.FC = () => {
@@ -72,8 +87,8 @@ const SalesReportPage: React.FC = () => {
   const [isAllButtonActive, setIsAllButtonActive] = useState(true);
   const [showCancelledOrders, setShowCancelledOrders] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [orderHistory, setOrderHistory] = useState<Transaction[]>([]);
-  const [currentMember, setCurrentMember] = useState<MessReport | null>(null);
+  const [orderHistory, setOrderHistory] = useState<Sales[]>([]);
+  const [currentMember, setCurrentMember] = useState<SalesReport | MessReport | null>(null);
 
   const itemsPerPage = 10;
 
@@ -601,7 +616,6 @@ const SalesReportPage: React.FC = () => {
           transactions={transactions}
           isOpen={isTransactionsModalOpen}
           onClose={handleModalClose}
-          member={currentMember}
         />
       )}
 
@@ -610,7 +624,6 @@ const SalesReportPage: React.FC = () => {
           orderhistory={orderHistory}
           isOpen={isSalesHistoryModalOpen}
           onClose={handleModalClose}
-          member={currentMember}
         />
       )}
 
@@ -618,7 +631,7 @@ const SalesReportPage: React.FC = () => {
         <SalesEditModal
           isOpen={isSalesEditModalOpen}
           onClose={handleModalClose}
-          report={currentReport}
+          report={currentReport as SalesReport}
         />
       )}
 
@@ -626,7 +639,7 @@ const SalesReportPage: React.FC = () => {
         <MessEditModal
           isOpen={isMessEditModalOpen}
           onClose={handleModalClose}
-          report={currentReport}
+          report={currentReport as MessReport}
         />
       )}
     </Layout>

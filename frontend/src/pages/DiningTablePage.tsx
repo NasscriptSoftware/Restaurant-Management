@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { api } from "@/services/api";
 import Layout from "../components/Layout/Layout";
 import Table from "../components/DiningTable/Table";
-import FloorSelector from "../components/DiningTable/FloorSelector";
+import FloorSelector, { FloorName } from "../components/DiningTable/FloorSelector";
 import RealTimeClock from "../components/DiningTable/RealTimeClock";
 
 interface Table {
@@ -15,18 +15,18 @@ interface Table {
   is_ready: boolean;
 }
 
-interface Floor {
+export interface Floor {
   id: number;
-  name: string;
+  name: FloorName;
 }
 
 const DiningTablePage: React.FC = () => {
-  const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
+  const [selectedFloor, setSelectedFloor] = useState<FloorName | null>(null);
   const [floors, setFloors] = useState<Floor[]>([]);
   const [tables, setTables] = useState<Table[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchFloors = async () => {
@@ -34,7 +34,7 @@ const DiningTablePage: React.FC = () => {
         const response = await api.get<Floor[]>('/floors');
         setFloors(response.data);
         if (response.data.length > 0) {
-          setSelectedFloor(response.data[0].id);
+          setSelectedFloor(response.data[0].name);
         }
       } catch (error) {
         console.error("Error fetching floors:", error);
@@ -49,9 +49,12 @@ const DiningTablePage: React.FC = () => {
     if (selectedFloor !== null) {
       setLoading(true);
       try {
-        const response = await api.get<{ results: Table[] }>(`/tables?floor=${selectedFloor}`);
-        setTables(response.data.results);
-        setError(null);
+        const floorId = floors.find(floor => floor.name === selectedFloor)?.id;
+        if (floorId) {
+          const response = await api.get<{ results: Table[] }>(`/tables?floor=${floorId}`);
+          setTables(response.data.results);
+          setError(null);
+        }
       } catch (error) {
         console.error("Error fetching tables:", error);
         setError("Error fetching tables.");
@@ -65,8 +68,8 @@ const DiningTablePage: React.FC = () => {
     fetchTables();
   }, [selectedFloor]);
 
-  const handleFloorChange = (floorId: number) => {
-    setSelectedFloor(floorId);
+  const handleFloorChange = (floorName: FloorName) => {
+    setSelectedFloor(floorName);
   };
 
   const handleModalOpen = () => {

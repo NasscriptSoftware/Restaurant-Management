@@ -6,7 +6,7 @@ interface Transaction {
   ledger: { name: string };
   date: string;
   transaction_type: string;
-  particulars: { name: string }[];
+  particulars: { name: string };
   voucher_no: string;
   debit_amount: string;
   credit_amount: string;

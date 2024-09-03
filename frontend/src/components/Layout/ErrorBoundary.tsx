@@ -30,13 +30,13 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     if (this.state.hasError) {
       return (
         this.props.fallback || (
-          <div className="error-boundary min-h-screen flex justify-center items-center p-4 border border-red-500 rounded-md bg-red-100 text-red-700">
+          <div className="flex-col error-boundary min-h-screen flex justify-center items-center p-4 border border-red-500 rounded-md bg-red-100 text-red-700">
             <h2 className="text-lg font-semibold mb-2">Something went wrong</h2>
             <details className="whitespace-pre-wrap">
               <summary>Error details</summary>
               {this.state.error && this.state.error.toString()}
             </details>
-        </div>
+          </div>
         )
       );
     }
