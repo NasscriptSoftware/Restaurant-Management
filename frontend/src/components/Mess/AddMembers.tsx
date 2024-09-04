@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import MenuCards from "./MenuCard";
 import CustomMenu from "./CustomMenu";
 import SuccessModal from "./SucessModal";
+import { api } from "@/services/api";
 interface MessType {
   id: number;
   name: string;
@@ -49,8 +49,8 @@ const AddMembers: React.FC = () => {
   const [isPendingManuallyEdited, setIsPendingManuallyEdited] = useState(false);
 
   useEffect(() => {
-    axios
-      .get<{ results: MessType[] }>("http://127.0.0.1:8000/api/mess-types/")
+    api
+      .get<{ results: MessType[] }>("/mess-types/")
       .then((response) => {
         if (Array.isArray(response.data.results)) {
           setMessTypes(response.data.results);
@@ -65,8 +65,8 @@ const AddMembers: React.FC = () => {
     if (menuType && messType !== null) {
       const createdBy = menuType === "custom_menu" ? mobileNumber : "admin";
 
-      axios
-        .get<{ results: Menu[] }>(`http://127.0.0.1:8000/api/menus/?mess_type=${messType}&is_custom=${menuType === "custom_menu"}&created_by=${createdBy}`)
+      api
+        .get<{ results: Menu[] }>(`/menus/?mess_type=${messType}&is_custom=${menuType === "custom_menu"}&created_by=${createdBy}`)
         .then((response) => {
           setMenus(response.data.results);
         })
@@ -146,8 +146,8 @@ const AddMembers: React.FC = () => {
       menus: menuIds,
     };
 
-    axios
-      .post("http://127.0.0.1:8000/api/messes/", newMember)
+    api
+      .post("/messes/", newMember)
       .then((response) => {
         console.log("Member added:", response.data);
         setResponseData(response.data); // Set the response data
@@ -448,8 +448,8 @@ const AddMembers: React.FC = () => {
       {menuType === "own_menu" && <MenuCards menus={menus} totalAmount={totalAmount} />}
       {menuType === "custom_menu" && (
         <CustomMenu menus={menus} mobile_number={mobileNumber} onMenuAdded={() => {
-          axios
-            .get<{ results: Menu[] }>(`http://127.0.0.1:8000/api/menus/?mess_type=${messType}&is_custom=${menuType === "custom_menu"}&created_by=${mobileNumber}`)
+          api
+            .get<{ results: Menu[] }>(`/menus/?mess_type=${messType}&is_custom=${menuType === "custom_menu"}&created_by=${mobileNumber}`)
             .then((response) => {
               setMenus(response.data.results);
             })

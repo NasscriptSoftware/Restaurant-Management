@@ -49,6 +49,10 @@ interface OrderCardProps {
   } | null;
 }
 
+type OrderType = "dining" | "takeaway" | "delivery" | string;
+
+type PaymentType = "cash" | "bank" | "cash-bank" | "credit" | string;
+
 const OrderCard: React.FC<OrderCardProps> = ({
   order: initialOrder,
   dishes,
@@ -66,9 +70,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const [showPrintConfirmationModal, setShowPrintConfirmationModal] =
     useState(false);
   const [billType, setBillType] = useState<"kitchen" | "sales">("kitchen");
-  const [paymentMethod, setPaymentMethod] = useState(
-    initialOrder.payment_method || "cash"
-  );
+  const [paymentMethod, setPaymentMethod] = useState<PaymentType>("cash");
   const [cashAmount, setCashAmount] = useState(0);
   const [bankAmount, setBankAmount] = useState(0);
   const [order, setOrder] = useState<Order>(initialOrder);
@@ -199,7 +201,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           total_amount: product.quantity * product.dish.price,
           is_newly_added: true, // Mark as newly added
         })),
-        total_amount: parseFloat(newTotalAmount).toFixed(2),
+        total_amount: newTotalAmount.toFixed(2),
       });
 
       if (response.status === 200) {
@@ -228,7 +230,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
     onStatusUpdated(); // Refresh orders after status change
   };
 
-  const handlePaymentMethodChange = (method: string) => {
+  const handlePaymentMethodChange = (method: PaymentType) => {
     setPaymentMethod(method);
     if (method === "cash-bank") {
       setCashAmount(order.total_amount / 2);
@@ -291,7 +293,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         "delivered",
         additionalData
       );
-      console.log("order", order);
+
       if (response && response.detail) {
         // Ensure the API call was successful
         // Call the bills API after successful status update

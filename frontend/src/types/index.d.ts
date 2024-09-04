@@ -38,7 +38,10 @@ export interface OrderItem {
         mobile_number: number;
         email: string;
       };
-      payment_method: "cash" | "bank" | "cash-bank" | "credit";
+      payment_method: "cash" | "bank" | "cash-bank" | "credit" | string;
+      cash_amount: number;
+      bank_amount: number;
+      credit_user_id: number;
       customer_phone_number: number;
       customer_name: number;
       address: string;
@@ -47,7 +50,7 @@ export interface OrderItem {
 
     export interface Bill {
       id: number;
-      order: number;
+      order: Order;
       total_amount: number;
       paid: boolean;
       billed_at: string;

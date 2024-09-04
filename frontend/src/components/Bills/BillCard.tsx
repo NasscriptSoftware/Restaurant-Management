@@ -18,7 +18,7 @@ const BillCard: React.FC<BillCardProps> = ({ bill, onCancel }) => {
     const fetchDishes = async () => {
       if (order && order.items) {
         const fetchedDishes = await Promise.all(
-          order.items.map(async (item) => {
+          order.items.map(async (item: any) => {
             const dishDetails = await fetchDishDetails(item.dish);
             return {
               ...item,
@@ -145,9 +145,9 @@ const BillCard: React.FC<BillCardProps> = ({ bill, onCancel }) => {
           {bill.paid ? "Paid" : "Unpaid"}
         </span>
         <span className="text-lg font-semibold">
-          Total Amount: QAR {parseFloat(bill.total_amount).toFixed(2)}
+          Total Amount: QAR {bill.total_amount}
         </span>
-        {order.status === "cancelled" || bill.status === "cancelled" ? (
+        {order.status === "cancelled" || bill.order.status === "cancelled" ? (
           <button
             disabled
             className="px-3 py-1 rounded bg-gray-500 text-white cursor-not-allowed"
