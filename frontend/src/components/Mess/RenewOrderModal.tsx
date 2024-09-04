@@ -1,12 +1,26 @@
 import { useState, useEffect } from "react";
 import { api } from "@/services/api";
-import { Menu } from "@/types";
-// const RenewMessModalProps ={}
 
+// Define the Menu type
+interface Menu {
+  id: number;
+  sub_total: string; // Assuming sub_total is stored as a string, adjust if needed
+}
+
+// Define the Member type
+interface Member {
+  id: number;
+  customer_name: string;
+  mess_type: {
+    id: number;
+  };
+}
+
+// Define the prop types for the RenewMessModal component
 interface RenewMessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  member: any;
+  member: Member;
   onRenew: () => void;
 }
 
@@ -26,9 +40,8 @@ const RenewMessModal: React.FC<RenewMessModalProps> = ({ isOpen, onClose, member
 
   useEffect(() => {
     if (member && member.mess_type) {
-      // Correctly pass the ID of the mess_type to the API
       api
-        .get(`/menus/?mess_type=${member.mess_type.id}`) // Assuming member.mess_type is an object with an id
+        .get(`/menus/?mess_type=${member.mess_type.id}`)
         .then((response) => {
           setMenus(response.data.results || []);
         })
@@ -44,7 +57,7 @@ const RenewMessModal: React.FC<RenewMessModalProps> = ({ isOpen, onClose, member
   }, [selectedWeek, startDate]);
 
   useEffect(() => {
-    const weeklyTotal = menus.reduce((sum, menu) => sum + menu.sub_total, 0);
+    const weeklyTotal = menus.reduce((sum, menu) => sum + parseFloat(menu.sub_total || "0"), 0);
     const total = weeklyTotal * selectedWeek;
     setTotalAmount(total);
   }, [menus, selectedWeek]);
@@ -67,7 +80,7 @@ const RenewMessModal: React.FC<RenewMessModalProps> = ({ isOpen, onClose, member
       setCashAmount(paidAmount);
       setBankAmount("0.00");
     }
-  }, [cashAmount, grandTotal, paymentMethod]);
+  }, [cashAmount, grandTotal, paymentMethod, paidAmount]);
 
   const handleRenew = () => {
     const updatedMember = {
