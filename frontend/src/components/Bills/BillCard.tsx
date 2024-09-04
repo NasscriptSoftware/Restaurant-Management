@@ -64,62 +64,59 @@ const BillCard: React.FC<BillCardProps> = ({ bill, onCancel }) => {
   };
 
   return (
-    <div key={bill.id} className="bg-white p-6 rounded-lg shadow mb-6">
-      <h2 className="text-xl font-semibold">Bill #{bill.id}</h2>
+    <div key={bill.id} className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-4">
+      <h2 className="text-xl font-semibold mb-2">Bill #{bill.id}</h2>
       <p className="text-sm text-gray-600 mb-4">
         Billed on: {new Date(bill.billed_at).toLocaleString()}
       </p>
 
       {order && (
         <>
-          <h3 className="text-lg text-gray-700 font-semibold">Order Details</h3>
+          <h3 className="text-lg font-semibold text-gray-700">Order Details</h3>
           <p className="text-sm text-gray-600 mb-4">
-            Order #{order.id} - Ordered on:{" "}
-            {new Date(order.created_at).toLocaleString()}
+            Order #{order.id} - Ordered on: {new Date(order.created_at).toLocaleString()}
           </p>
 
           <div className="mb-4">
             <h4 className="text-md font-semibold">Ordered Items:</h4>
-            <table className="min-w-full bg-white">
-              <thead>
-                <tr>
-                  <th className="py-2 px-4 bg-gray-200 text-left">Item</th>
-                  <th className="py-2 px-4 bg-gray-200 text-center">Quantity</th>
-                  <th className="py-2 px-4 bg-gray-200 text-right">Amount (QAR)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dishes.map((item, index) => (
-                  <tr key={index}>
-                    <td className="py-2 px-4 border-b border-gray-200">{item.dish_name}</td>
-                    <td className="py-2 px-4 border-b border-gray-200 text-center">
-                      {item.quantity}
-                    </td>
-                    <td className="py-2 px-4 border-b border-gray-200 text-right">
-                      {item.item_total !== undefined && item.item_total !== null
-                        ? item.item_total.toFixed(2)
-                        : "N/A"}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white">
+                <thead>
+                  <tr>
+                    <th className="py-2 px-4 bg-gray-200 text-left">Item</th>
+                    <th className="py-2 px-4 bg-gray-200 text-center">Quantity</th>
+                    <th className="py-2 px-4 bg-gray-200 text-right">Amount (QAR)</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {dishes.map((item, index) => (
+                    <tr key={index}>
+                      <td className="py-2 px-4 border-b border-gray-200">{item.dish_name}</td>
+                      <td className="py-2 px-4 border-b border-gray-200 text-center">
+                        {item.quantity}
+                      </td>
+                      <td className="py-2 px-4 border-b border-gray-200 text-right">
+                        {item.item_total !== undefined && item.item_total !== null
+                          ? item.item_total.toFixed(2)
+                          : "N/A"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {order.order_type === "delivery" && order.delivery_charge && (
             <div className="mb-4">
               <h4 className="text-md font-semibold">Delivery Charge:</h4>
-              <p className="text-lg">
-                QAR {parseFloat(order.delivery_charge).toFixed(2)}
-              </p>
+              <p className="text-lg">QAR {parseFloat(order.delivery_charge).toFixed(2)}</p>
             </div>
           )}
 
           <div className="mb-4">
             <h4 className="text-md font-semibold">Total Bill:</h4>
-            <p className="text-lg font-bold">
-              QAR {parseFloat(order.total_amount).toFixed(2)}
-            </p>
+            <p className="text-lg font-bold">QAR {parseFloat(order.total_amount).toFixed(2)}</p>
           </div>
 
           <div className="mb-4">
@@ -136,7 +133,7 @@ const BillCard: React.FC<BillCardProps> = ({ bill, onCancel }) => {
         </>
       )}
 
-      <div className="mt-4 flex justify-between items-center">
+      <div className="mt-4 flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 sm:space-x-4">
         <span
           className={`px-3 py-1 rounded ${
             bill.paid ? "bg-green-500" : "bg-red-500"
@@ -144,9 +141,7 @@ const BillCard: React.FC<BillCardProps> = ({ bill, onCancel }) => {
         >
           {bill.paid ? "Paid" : "Unpaid"}
         </span>
-        <span className="text-lg font-semibold">
-          Total Amount: QAR {bill.total_amount}
-        </span>
+        {/* <span className="text-lg font-semibold">Total Amount: QAR {bill.total_amount}</span> */}
         {order.status === "cancelled" || bill.order.status === "cancelled" ? (
           <button
             disabled

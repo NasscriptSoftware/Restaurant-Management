@@ -3,7 +3,7 @@ import Layout from "../components/Layout/Layout";
 import PaginationControls from "../components/Layout/PaginationControls";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { RotateCcw, Eye, Pencil } from 'lucide-react';
+import { RotateCcw, Eye, Pencil } from "lucide-react";
 import SalesPrint from "@/components/SalesReport/SalesPrint";
 import { api } from "@/services/api";
 import TransactionsModal from "@/components/Mess/TransactionsModal";
@@ -83,12 +83,16 @@ const SalesReportPage: React.FC = () => {
   const [isSalesHistoryModalOpen, setIsSalesHistoryModalOpen] = useState(false);
   const [isSalesEditModalOpen, setIsSalesEditModalOpen] = useState(false);
   const [isMessEditModalOpen, setIsMessEditModalOpen] = useState(false);
-  const [currentReport, setCurrentReport] = useState<SalesReport | MessReport | null>(null);
+  const [currentReport, setCurrentReport] = useState<
+    SalesReport | MessReport | null
+  >(null);
   const [isAllButtonActive, setIsAllButtonActive] = useState(true);
   const [showCancelledOrders, setShowCancelledOrders] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [orderHistory, setOrderHistory] = useState<Sales[]>([]);
-  const [currentMember, setCurrentMember] = useState<SalesReport | MessReport | null>(null);
+  const [currentMember, setCurrentMember] = useState<
+    SalesReport | MessReport | null
+  >(null);
 
   const itemsPerPage = 10;
 
@@ -98,15 +102,18 @@ const SalesReportPage: React.FC = () => {
 
   const fetchDataWithFilter = async (filter: Record<string, string>) => {
     try {
-      const baseUrl = reportType === "sales"
-        ? `${import.meta.env.VITE_APP_API_URL}/orders/sales_report/`
-        : `${import.meta.env.VITE_APP_API_URL}/messes/mess_report/`;
+      const baseUrl =
+        reportType === "sales"
+          ? `${import.meta.env.VITE_APP_API_URL}/orders/sales_report/`
+          : `${import.meta.env.VITE_APP_API_URL}/messes/mess_report/`;
 
       const url = new URL(baseUrl);
       const token = localStorage.getItem("token");
 
       const convertToUTCDate = (date: Date) => {
-        const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const utcDate = new Date(
+          Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+        );
         return utcDate.toISOString().split("T")[0];
       };
 
@@ -123,7 +130,6 @@ const SalesReportPage: React.FC = () => {
       } else {
         url.searchParams.append("order_status", "cancelled");
       }
-      
 
       Object.entries(filter).forEach(([key, value]) => {
         url.searchParams.append(key, value);
@@ -167,7 +173,9 @@ const SalesReportPage: React.FC = () => {
 
   const fetchOrderHistory = async (mobileNumber: string) => {
     try {
-      const response = await api.get(`/orders/user_order_history/?customer_phone_number=${mobileNumber}`);
+      const response = await api.get(
+        `/orders/user_order_history/?customer_phone_number=${mobileNumber}`
+      );
       if (response.data && Array.isArray(response.data)) {
         setOrderHistory(response.data);
       } else {
@@ -298,207 +306,202 @@ const SalesReportPage: React.FC = () => {
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedReports = reports.slice(startIndex, startIndex + itemsPerPage);
-  const paginatedMessReports = messReports.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedMessReports = messReports.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
-  const totalAmount = reportType === "sales"
-    ? reports.reduce((acc, report) => acc + parseFloat(report.total_amount.toString()), 0)
-    : messReports.reduce((acc, report) => acc + parseFloat(report.grand_total.toString()), 0);
+  const totalAmount =
+    reportType === "sales"
+      ? reports.reduce(
+          (acc, report) => acc + parseFloat(report.total_amount.toString()),
+          0
+        )
+      : messReports.reduce(
+          (acc, report) => acc + parseFloat(report.grand_total.toString()),
+          0
+        );
 
-  const totalCashAmount = reportType === "sales"
-    ? reports.reduce((acc, report) => acc + parseFloat(report.cash_amount.toString()), 0)
-    : messReports.reduce((acc, report) => acc + parseFloat(report.cash_amount.toString()), 0);
+  const totalCashAmount =
+    reportType === "sales"
+      ? reports.reduce(
+          (acc, report) => acc + parseFloat(report.cash_amount.toString()),
+          0
+        )
+      : messReports.reduce(
+          (acc, report) => acc + parseFloat(report.cash_amount.toString()),
+          0
+        );
 
-  const totalCardAmount = reportType === "sales"
-    ? reports.reduce((acc, report) => acc + parseFloat(report.bank_amount.toString()), 0)
-    : messReports.reduce((acc, report) => acc + parseFloat(report.bank_amount.toString()), 0);
+  const totalCardAmount =
+    reportType === "sales"
+      ? reports.reduce(
+          (acc, report) => acc + parseFloat(report.bank_amount.toString()),
+          0
+        )
+      : messReports.reduce(
+          (acc, report) => acc + parseFloat(report.bank_amount.toString()),
+          0
+        );
 
   return (
     <Layout>
       <div className="p-4">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex space-x-4">
+        <div className="flex flex-col space-y-4 mb-4">
+          {/* Report Buttons */}
+          <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 w-full md:w-auto">
             <button
               onClick={() => setReportType("sales")}
-              className={`p-4 rounded-lg shadow-md cursor-pointer ${reportType === "sales" ? "bg-purple-500 text-white" : "bg-gray-200"}`}
+              className={`w-full md:w-auto p-4 rounded-lg shadow-md cursor-pointer ${
+                reportType === "sales"
+                  ? "bg-purple-500 text-white"
+                  : "bg-gray-200"
+              }`}
             >
               Sales Report
             </button>
             <button
               onClick={() => setReportType("mess")}
-              className={`p-4 rounded-lg shadow-md cursor-pointer ${reportType === "mess" ? "bg-purple-500 text-white" : "bg-gray-200"}`}
+              className={`w-full md:w-auto p-4 rounded-lg shadow-md cursor-pointer ${
+                reportType === "mess"
+                  ? "bg-purple-500 text-white"
+                  : "bg-gray-200"
+              }`}
             >
               Mess Report
             </button>
             <button
               onClick={handleShowCancelledOrdersClick}
-              className={`p-4 rounded-lg shadow-md cursor-pointer ${showCancelledOrders ? "bg-red-500 text-white" : "bg-gray-200"}`}
+              className={`w-full md:w-auto p-4 rounded-lg shadow-md cursor-pointer ${
+                showCancelledOrders ? "bg-red-500 text-white" : "bg-gray-200"
+              }`}
             >
-              {showCancelledOrders ? "Show All Orders" : "Show Cancelled Orders"}
+              {showCancelledOrders
+                ? "Show All Orders"
+                : "Show Cancelled Orders"}
             </button>
           </div>
 
-          <div className="flex space-x-4">
+          {/* Date Inputs and Reset Button */}
+          <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0 items-center">
             <div>
-              <label className="block text-sm font-medium text-gray-700">From Date</label>
+              <label className="block text-sm font-medium text-gray-700">
+                From Date
+              </label>
               <DatePicker
                 selected={fromDate}
                 onChange={(date) => setFromDate(date)}
                 dateFormat="yyyy-MM-dd"
-                className="mt-1 p-2 border rounded"
+                className="w-full mt-1 p-2 border rounded"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">To Date</label>
+              <label className="block text-sm font-medium text-gray-700">
+                To Date
+              </label>
               <DatePicker
                 selected={toDate}
                 onChange={(date) => setToDate(date)}
                 dateFormat="yyyy-MM-dd"
-                className="mt-1 p-2 border rounded"
+                className="w-full mt-1 p-2 border rounded"
               />
             </div>
             <button
               onClick={handleReset}
-              className="mt-7 p-2 rounded-full bg-red-500 text-white shadow-md"
+              className="p-2 mt-2 md:mt-6 rounded-full bg-red-500 text-white shadow-md"
               title="Reset"
             >
               <RotateCcw size={20} />
             </button>
           </div>
-          <SalesPrint
-            reportType={reportType}
-            reports={reports}
-            messReports={messReports}
-            totalAmount={totalAmount}
-            totalCashAmount={totalCashAmount}
-            totalCardAmount={totalCardAmount}
-          />
+
+          {/* Print Button */}
+          <div className="flex justify-end md:justify-start">
+            <SalesPrint
+              reportType={reportType}
+              reports={reports}
+              messReports={messReports}
+              totalAmount={totalAmount}
+              totalCashAmount={totalCashAmount}
+              totalCardAmount={totalCardAmount}
+            />
+          </div>
         </div>
 
-        <div className="flex flex-wrap space-x-2 mb-4">
+        {/* Filter Buttons */}
+        <div className="flex flex-wrap gap-2 mb-4">
           <button
             onClick={() => handleButtonClick("All")}
-            className={`p-2 rounded ${activeButton === "All" ? "bg-blue-500 text-white" : "bg-gray-200"} ${isAllButtonActive ? 'bg-blue-500' : 'border border-transparent'}`}
+            className={`p-2 rounded w-full md:auto sm:w-1/3 ${
+              activeButton === "All" ? "bg-blue-500 text-white" : "bg-gray-200"
+            } ${
+              isAllButtonActive ? "bg-blue-500" : "border border-transparent"
+            }`}
           >
             All
           </button>
           {reportType === "sales" ? (
             <>
-              <button
-                onClick={() => handleButtonClick("Dining")}
-                className={`p-2 rounded ${activeButton === "Dining" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Dining
-              </button>
-              <button
-                onClick={() => handleButtonClick("Takeaway")}
-                className={`p-2 rounded ${activeButton === "Takeaway" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Takeaway
-              </button>
-              <button
-                onClick={() => handleButtonClick("Delivery")}
-                className={`p-2 rounded ${activeButton === "Delivery" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Delivery
-              </button>
-              <button
-                onClick={() => handleButtonClick("Cash")}
-                className={`p-2 rounded ${activeButton === "Cash" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Cash
-              </button>
-              <button
-                onClick={() => handleButtonClick("Bank")}
-                className={`p-2 rounded ${activeButton === "Bank" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Bank
-              </button>
-              <button
-                onClick={() => handleButtonClick("Cash-Bank")}
-                className={`p-2 rounded ${activeButton === "Cash-Bank" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Cash-Bank
-              </button>
-              <button
-                onClick={() => handleButtonClick("Credit")}
-                className={`p-2 rounded ${activeButton === "Credit" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Credit
-              </button>
-              <button
-                onClick={() => handleButtonClick("Canceled")}
-                className={`p-2 rounded ${activeButton === "Canceled" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Canceled
-              </button>
-              <button
-                onClick={() => handleButtonClick("Delivered")}
-                className={`p-2 rounded ${activeButton === "Delivered" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Delivered
-              </button>
+              {[
+                "Dining",
+                "Takeaway",
+                "Delivery",
+                "Cash",
+                "Bank",
+                "Cash-Bank",
+                "Credit",
+                "Canceled",
+                "Delivered",
+              ].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => handleButtonClick(type)}
+                  className={`p-2 rounded w-auto md:w-auto sm:w-1/2 ${
+                    activeButton === type
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200"
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
             </>
           ) : (
             <>
-              <button
-                onClick={() => handleButtonClick("Cash")}
-                className={`p-2 rounded ${activeButton === "Cash" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Cash
-              </button>
-              <button
-                onClick={() => handleButtonClick("Bank")}
-                className={`p-2 rounded ${activeButton === "Bank" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Bank
-              </button>
-              <button
-                onClick={() => handleButtonClick("Cash-Bank")}
-                className={`p-2 rounded ${activeButton === "Cash-Bank" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Cash-Bank
-              </button>
-              <button
-                onClick={() => handleButtonClick("Credit")}
-                className={`p-2 rounded ${activeButton === "Credit" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Credit
-              </button>
-              <button
-                onClick={() => handleButtonClick("Breakfast and Lunch")}
-                className={`p-2 rounded ${activeButton === "Breakfast and Lunch" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Breakfast and Lunch
-              </button>
-              <button
-                onClick={() => handleButtonClick("Breakfast and Dinner")}
-                className={`p-2 rounded ${activeButton === "Breakfast and Dinner" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Breakfast and Dinner
-              </button>
-              <button
-                onClick={() => handleButtonClick("Lunch and Dinner")}
-                className={`p-2 rounded ${activeButton === "Lunch and Dinner" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Lunch and Dinner
-              </button>
-              <button
-                onClick={() => handleButtonClick("Breakfast and Lunch and Dinner")}
-                className={`p-2 rounded ${activeButton === "Breakfast and Lunch and Dinner" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
-              >
-                Breakfast and Lunch and Dinner
-              </button>
+              {[
+                "Cash",
+                "Bank",
+                "Cash-Bank",
+                "Credit",
+                "Breakfast and Lunch",
+                "Breakfast and Dinner",
+                "Lunch and Dinner",
+                "Breakfast and Lunch and Dinner",
+              ].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => handleButtonClick(type)}
+                  className={`p-2 rounded w-full md:w-auto sm:w-1/3 ${
+                    activeButton === type
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200"
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
             </>
           )}
         </div>
 
+        {/* Data Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white shadow-md rounded-lg">
             <thead>
               <tr>
                 {reportType === "sales" ? (
                   <>
-                    <th className="py-2 px-4 bg-gray-200">Invoice </th>
+                    <th className="py-2 px-4 bg-gray-200">Invoice</th>
                     <th className="py-2 px-4 bg-gray-200">Mobile</th>
                     <th className="py-2 px-4 bg-gray-200">Date</th>
                     <th className="py-2 px-4 bg-gray-200">Order Type</th>
@@ -513,11 +516,11 @@ const SalesReportPage: React.FC = () => {
                 ) : (
                   <>
                     <th className="py-2 px-4 bg-gray-200">Name</th>
-                    <th className="py-2 px-4 bg-gray-200">Mobile </th>
+                    <th className="py-2 px-4 bg-gray-200">Mobile</th>
                     <th className="py-2 px-4 bg-gray-200">Mess Type</th>
-                    <th className="py-2 px-4 bg-gray-200">Total </th>
-                    <th className="py-2 px-4 bg-gray-200">Paid </th>
-                    <th className="py-2 px-4 bg-gray-200">Pending </th>
+                    <th className="py-2 px-4 bg-gray-200">Total</th>
+                    <th className="py-2 px-4 bg-gray-200">Paid</th>
+                    <th className="py-2 px-4 bg-gray-200">Pending</th>
                     <th className="py-2 px-4 bg-gray-200">Start Date</th>
                     <th className="py-2 px-4 bg-gray-200">End Date</th>
                     <th className="py-2 px-4 bg-gray-200">Payment Method</th>
@@ -531,60 +534,82 @@ const SalesReportPage: React.FC = () => {
             <tbody>
               {reportType === "sales"
                 ? paginatedReports.map((report) => (
-                  <tr key={report.id}>
-                    <td className="border px-4 py-2">{report.invoice_number}</td>
-                    <td className="border px-4 py-2">  {report.customer_phone_number ? report.customer_phone_number : "N/A"} </td>
-                    <td className="border px-4 py-2">
-                      {format(new Date(report.created_at), 'dd-MM-yyyy')}
-                    </td>
-                    <td className="border px-4 py-2">{report.order_type}</td>
-                    <td className="border px-4 py-2">{report.payment_method}</td>
-                    <td className="border px-4 py-2">{report.status}</td>
-                    <td className="border px-4 py-2">{report.total_amount}</td>
-                    <td className="border px-4 py-2">{report.cash_amount}</td>
-                    <td className="border px-4 py-2">{report.bank_amount}</td>
-                    <td className="border px-4 py-2">
-                      <button
-                        onClick={() => handleSalesMobileClick(report)}
-                        className="text-blue-500 hover:underline"
-                      >
-                        <Eye />
-                      </button>
-                    </td>
-                    <td className="border px-4 py-2">
-                      <button onClick={() => handleSalesEditClick(report)}><Pencil /></button>
-                    </td>
-                  </tr>
-                ))
+                    <tr key={report.id}>
+                      <td className="border px-4 py-2">
+                        {report.invoice_number}
+                      </td>
+                      <td className="border px-4 py-2">
+                        {report.customer_phone_number || "N/A"}
+                      </td>
+                      <td className="border px-4 py-2">
+                        {format(new Date(report.created_at), "dd-MM-yyyy")}
+                      </td>
+                      <td className="border px-4 py-2">{report.order_type}</td>
+                      <td className="border px-4 py-2">
+                        {report.payment_method}
+                      </td>
+                      <td className="border px-4 py-2">{report.status}</td>
+                      <td className="border px-4 py-2">
+                        {report.total_amount}
+                      </td>
+                      <td className="border px-4 py-2">{report.cash_amount}</td>
+                      <td className="border px-4 py-2">{report.bank_amount}</td>
+                      <td className="border px-4 py-2">
+                        <button
+                          onClick={() => handleSalesMobileClick(report)}
+                          className="text-blue-500 hover:underline"
+                        >
+                          <Eye />
+                        </button>
+                      </td>
+                      <td className="border px-4 py-2">
+                        <button onClick={() => handleSalesEditClick(report)}>
+                          <Pencil />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
                 : paginatedMessReports.map((report) => (
-                  <tr key={report.id}>
-                    <td className="border px-4 py-2">{report.customer_name}</td>
-                    <td className="border px-4 py-2">{report.mobile_number}</td>
-                    <td className="border px-4 py-2">{report.mess_type.name}</td>
-                    <td className="border px-4 py-2">{report.grand_total}</td>
-                    <td className="border px-4 py-2">{report.paid_amount}</td>
-                    <td className="border px-4 py-2">{report.pending_amount}</td>
-                    <td className="border px-4 py-2">
-                      {format(new Date(report.start_date), 'dd-MM-yyyy')}
-                    </td>
-                    <td className="border px-4 py-2">
-                      {format(new Date(report.end_date), 'dd-MM-yyyy')}
-                    </td>
-                    <td className="border px-4 py-2">{report.payment_method}</td>
-                    <td className="border px-4 py-2">{report.status}</td>
-                    <td className="border px-4 py-2">
-                      <button
-                        onClick={() => handleMobileClick(report)}
-                        className="text-blue-500 hover:underline"
-                      >
-                        <Eye />
-                      </button>
-                    </td>
-                    <td className="border px-4 py-2">
-                      <button onClick={() => handleMessEditClick(report)}><Pencil /></button>
-                    </td>
-                  </tr>
-                ))}
+                    <tr key={report.id}>
+                      <td className="border px-4 py-2">
+                        {report.customer_name}
+                      </td>
+                      <td className="border px-4 py-2">
+                        {report.mobile_number}
+                      </td>
+                      <td className="border px-4 py-2">
+                        {report.mess_type.name}
+                      </td>
+                      <td className="border px-4 py-2">{report.grand_total}</td>
+                      <td className="border px-4 py-2">{report.paid_amount}</td>
+                      <td className="border px-4 py-2">
+                        {report.pending_amount}
+                      </td>
+                      <td className="border px-4 py-2">
+                        {format(new Date(report.start_date), "dd-MM-yyyy")}
+                      </td>
+                      <td className="border px-4 py-2">
+                        {format(new Date(report.end_date), "dd-MM-yyyy")}
+                      </td>
+                      <td className="border px-4 py-2">
+                        {report.payment_method}
+                      </td>
+                      <td className="border px-4 py-2">{report.status}</td>
+                      <td className="border px-4 py-2">
+                        <button
+                          onClick={() => handleMobileClick(report)}
+                          className="text-blue-500 hover:underline"
+                        >
+                          <Eye />
+                        </button>
+                      </td>
+                      <td className="border px-4 py-2">
+                        <button onClick={() => handleMessEditClick(report)}>
+                          <Pencil />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
             </tbody>
           </table>
         </div>
@@ -606,42 +631,45 @@ const SalesReportPage: React.FC = () => {
 
         <PaginationControls
           currentPage={currentPage}
-          totalPages={Math.ceil((reportType === "sales" ? reports.length : messReports.length) / itemsPerPage)}
+          totalPages={Math.ceil(
+            (reportType === "sales" ? reports.length : messReports.length) /
+              itemsPerPage
+          )}
           onPageChange={setCurrentPage}
         />
+
+        {isTransactionsModalOpen && currentMember && (
+          <TransactionsModal
+            transactions={transactions}
+            isOpen={isTransactionsModalOpen}
+            onClose={handleModalClose}
+          />
+        )}
+
+        {isSalesHistoryModalOpen && currentMember && (
+          <SalesHistoryModal
+            orderhistory={orderHistory}
+            isOpen={isSalesHistoryModalOpen}
+            onClose={handleModalClose}
+          />
+        )}
+
+        {isSalesEditModalOpen && (
+          <SalesEditModal
+            isOpen={isSalesEditModalOpen}
+            onClose={handleModalClose}
+            report={currentReport as SalesReport}
+          />
+        )}
+
+        {isMessEditModalOpen && (
+          <MessEditModal
+            isOpen={isMessEditModalOpen}
+            onClose={handleModalClose}
+            report={currentReport as MessReport}
+          />
+        )}
       </div>
-
-      {isTransactionsModalOpen && currentMember && (
-        <TransactionsModal
-          transactions={transactions}
-          isOpen={isTransactionsModalOpen}
-          onClose={handleModalClose}
-        />
-      )}
-
-      {isSalesHistoryModalOpen && currentMember && (
-        <SalesHistoryModal
-          orderhistory={orderHistory}
-          isOpen={isSalesHistoryModalOpen}
-          onClose={handleModalClose}
-        />
-      )}
-
-      {isSalesEditModalOpen && (
-        <SalesEditModal
-          isOpen={isSalesEditModalOpen}
-          onClose={handleModalClose}
-          report={currentReport as SalesReport}
-        />
-      )}
-
-      {isMessEditModalOpen && (
-        <MessEditModal
-          isOpen={isMessEditModalOpen}
-          onClose={handleModalClose}
-          report={currentReport as MessReport}
-        />
-      )}
     </Layout>
   );
 };

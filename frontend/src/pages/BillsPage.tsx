@@ -32,7 +32,6 @@ const BillsPage: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
 
   useEffect(() => {
     fetchBills();
@@ -58,9 +57,7 @@ const BillsPage: React.FC = () => {
     }
 
     if (showCancelled) {
-      filtered = filtered.filter(
-        (bill) => bill.order.status === "cancelled"
-      );
+      filtered = filtered.filter((bill) => bill.order.status === "cancelled");
     }
 
     setFilteredBills(filtered);
@@ -83,10 +80,11 @@ const BillsPage: React.FC = () => {
   return (
     <Layout>
       <h1 className="text-3xl font-bold mb-6">Generated Bills</h1>
-      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4 space-y-4 md:space-y-0">
         {/* Date Pickers and Reset */}
-        <div className="flex flex-wrap space-x-4 mb-4 md:mb-0">
-          <div>
+        <div className="flex flex-col md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4 w-full md:w-auto">
+          {/* From Date */}
+          <div className="w-full md:w-auto">
             <label className="block text-sm font-medium text-gray-700">
               From Date
             </label>
@@ -98,7 +96,9 @@ const BillsPage: React.FC = () => {
               placeholderText="Select from date"
             />
           </div>
-          <div>
+
+          {/* To Date */}
+          <div className="w-full md:w-auto">
             <label className="block text-sm font-medium text-gray-700">
               To Date
             </label>
@@ -110,37 +110,29 @@ const BillsPage: React.FC = () => {
               placeholderText="Select to date"
             />
           </div>
-          <button
-            onClick={handleReset}
-            className="mt-7 p-2 rounded-full bg-red-500 text-white shadow-md"
-            title="Reset"
-          >
-            <RotateCcw size={20} />
-          </button>
+
+          {/* Reset Button */}
+          <div className="flex items-center justify-center md:items-end">
+            <button
+              onClick={handleReset}
+              className="p-2 rounded-full bg-red-500 text-white shadow-md ml-0 md:ml-4 mt-4"
+              title="Reset"
+            >
+              <RotateCcw size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Show Cancelled Bills Button */}
+        <div className="flex justify-center w-full md:w-auto">
           <button
             onClick={() => setShowCancelled(!showCancelled)}
-            className={`mt-7 p-2 rounded-full ${
+            className={`p-3 rounded-full ${
               showCancelled ? "bg-blue-500" : "bg-gray-500"
-            } text-white shadow-md`}
+            } text-white shadow-md ml-0 md:ml-4`}
           >
             {showCancelled ? "Show All Bills" : "Show Cancelled Bills"}
           </button>
-        </div>
-
-        {/* Search Box */}
-        <div className="flex space-x-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Search by Invoice Number
-            </label>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="mt-1 p-2 border rounded w-full"
-              placeholder="Enter invoice number"
-            />
-          </div>
         </div>
       </div>
 
