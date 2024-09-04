@@ -59,7 +59,7 @@ const BillsPage: React.FC = () => {
 
     if (showCancelled) {
       filtered = filtered.filter(
-        (bill) => bill.order.status === "cancelled" || bill.status === "cancelled"
+        (bill) => bill.order.status === "cancelled"
       );
     }
 

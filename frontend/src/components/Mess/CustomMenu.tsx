@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import AddMenuModal from "./AddMenuModal";
 import AddItemModal from "./AddItemModal";
-import axios from "axios";
+import { api } from "@/services/api";
 
 interface MenuItem {
   id: number;
@@ -53,7 +53,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ menus, mobile_number, onMenuAdd
   const fetchUpdatedMenus = async () => {
     // setLoading(true);
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/menus/");
+      const response = await api.get("/menus/");
       if (response.data && Array.isArray(response.data)) {
         setUpdatedMenus(response.data);
       } else {

@@ -4,9 +4,6 @@ import React from "react";
 interface PaginationControlsProps {
   currentPage: number;
   totalPages: number;
-  totalItems: number; 
-  itemsPerPage: number;
-
   onPageChange: (page: number) => void;
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "@/services/api";
 
 interface EditMessModalProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ const EditMessModal: React.FC<EditMessModalProps> = ({ isOpen, onClose, member, 
 
   const handleSave = async () => {
     try {
-      const response = await axios.patch(`http://127.0.0.1:8000/api/messes/${member.id}/`, formData);
+      const response = await api.patch(`/messes/${member.id}/`, formData);
       onSave(response.data);
       onClose();
     } catch (error) {

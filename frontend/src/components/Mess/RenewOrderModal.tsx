@@ -1,13 +1,21 @@
 import  { useState, useEffect } from "react";
 // import axios from "axios";
 import { api } from "@/services/api";
+import { Menu } from "@/types";
 // const RenewMessModalProps ={}
 
-const RenewMessModal = ({ isOpen, onClose, member, onRenew }) => {
+interface RenewMessModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  member: any;
+  onRenew: () => void;
+}
+
+const RenewMessModal: React.FC<RenewMessModalProps> = ({ isOpen, onClose, member, onRenew }) => {
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState("");
-  const [menus, setMenus] = useState([]);
+  const [menus, setMenus] = useState<Menu[]>([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
   const [discountAmount, setDiscountAmount] = useState("0");
@@ -36,7 +44,7 @@ const RenewMessModal = ({ isOpen, onClose, member, onRenew }) => {
   }, [selectedWeek, startDate]);
 
   useEffect(() => {
-    const weeklyTotal = menus.reduce((sum, menu) => sum + parseFloat(menu.sub_total || 0), 0);
+    const weeklyTotal = menus.reduce((sum, menu) => sum + menu.sub_total, 0);
     const total = weeklyTotal * selectedWeek;
     setTotalAmount(total);
   }, [menus, selectedWeek]);

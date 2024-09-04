@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import Layout from '../components/Layout/Layout';
 import CouponCard from '../components/Coupon/CouponCard';
+import { api } from '@/services/api';
 
 interface Coupon {
   id: number;
@@ -24,7 +24,7 @@ const CouponPage: React.FC = () => {
   useEffect(() => {
     const fetchCoupons = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/coupons/');
+        const response = await api.get('/coupons/');
         setCoupons(response.data);
       } catch (error) {
         console.error('Error fetching coupons:', error);

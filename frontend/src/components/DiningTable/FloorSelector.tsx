@@ -1,3 +1,4 @@
+import { Floor } from "@/pages/DiningTablePage";
 import React from "react";
 
 export type FloorName = "Ground floor" | "1st Floor" | "2nd floor" | "3rd floor";
@@ -5,16 +6,16 @@ export type FloorName = "Ground floor" | "1st Floor" | "2nd floor" | "3rd floor"
 export const initialFloors: FloorName[] = ["Ground floor", "1st Floor", "2nd floor", "3rd floor"];
 
 interface FloorSelectorProps {
-  floors: FloorName[];
+  floors: Floor[];
   onFloorChange: (floor: FloorName) => void;
 }
 
 const FloorSelector: React.FC<FloorSelectorProps> = ({ floors, onFloorChange }) => {
-  const [selectedFloor, setSelectedFloor] = React.useState<FloorName>(floors[0]);
+  const [selectedFloor, setSelectedFloor] = React.useState<Floor>();
 
-  const handleFloorClick = (floor: FloorName) => {
-    setSelectedFloor(floor);
-    onFloorChange(floor);
+  const handleFloorClick = (floor: Floor) => {
+    setSelectedFloor(selectedFloor);
+    onFloorChange(floor.name);
   };
 
   return (
@@ -28,11 +29,11 @@ const FloorSelector: React.FC<FloorSelectorProps> = ({ floors, onFloorChange }) 
       <ul className="space-y-2">
         {floors.map((floor) => (
           <li
-            key={floor}
+            key={floor.id}
             className={`cursor-pointer p-2 rounded ${selectedFloor === floor ? 'bg-purple-900' : 'bg-purple-700'}`}
             onClick={() => handleFloorClick(floor)}
           >
-            {floor}
+            {floor.name}
           </li>
         ))}
       </ul>
