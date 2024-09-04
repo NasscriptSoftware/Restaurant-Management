@@ -33,7 +33,6 @@ const Menus: React.FC = () => {
     4: { name: 'Lunch Dinner', type: 'lunch_dinner' }
   };
 
-
   useEffect(() => {
     const fetchMenus = async () => {
       try {
@@ -70,28 +69,33 @@ const Menus: React.FC = () => {
 
   return (
     <div className="space-y-4 min-h-screen">
-      <div className="mb-4 flex justify-around">
+      {/* Filter Buttons */}
+      <div className="mb-4 flex flex-wrap justify-around gap-4">
         {Object.entries(messTypeMap).map(([key, value]) => (
           <button
             key={key}
             onClick={() => handleFilterChange(Number(key))}
-            className={`py-2 px-4 rounded-md ${filter === Number(key) ? 'bg-[#6f42c1] text-white transition-all' : 'bg-gray-200'
-              }`}
+            className={`py-2 px-4 rounded-md w-full md:w-auto ${
+              filter === Number(key) ? 'bg-[#6f42c1] text-white transition-all' : 'bg-gray-200'
+            }`}
           >
             {value.name}
           </button>
         ))}
       </div>
 
-
+      {/* Display Menu Items */}
       {filteredMenus.length === 0 && <div>No menus available for this filter.</div>}
       {filteredMenus.map((menu, index) => (
         <div key={index} className="bg-gray-100 p-4 rounded-md shadow-md">
+          {/* Day and Subtotal */}
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">{menu.day_of_week}</h2>
-            <p className="text-lg font-semibold">QAR{menu.sub_total}</p>
+            <p className="text-lg font-semibold">QAR {menu.sub_total}</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          {/* Menu Items Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {menu.menu_items.map((meal, mealIndex) => (
               <div
                 key={mealIndex}
@@ -111,15 +115,15 @@ const Menus: React.FC = () => {
                     <p>No Image Available</p>
                   </div>
                 )}
+                {/* Dish Name and Price */}
                 <div className="flex justify-between w-full">
                   <p className="text-lg font-bold">
                     {meal.dish.name}
                   </p>
                   <p className="text-lg font-bold text-gray-800">
-                    QAR{meal.dish.price}
+                    QAR {meal.dish.price}
                   </p>
                 </div>
-
               </div>
             ))}
           </div>
