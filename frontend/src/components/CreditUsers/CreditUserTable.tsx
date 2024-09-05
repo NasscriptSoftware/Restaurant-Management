@@ -292,7 +292,7 @@ export function CreditUserTable() {
           className="flex items-center justify-center gap-2"
         >
           <PlusCircle size={20} />
-          <span>Add Credit User</span>
+          <span>Add Credit Customer</span>
         </Button>
       </div>
       <div className="rounded-md border">

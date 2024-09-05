@@ -5,7 +5,7 @@ import React from "react";
 const CreditUsersPage: React.FC = () => {
   return (
     <Layout>
-      <h1 className="font-semibold text-2xl">Credit Users</h1>
+      <h1 className="font-semibold text-2xl">Credit Customers</h1>
       <CreditUserTable />
     </Layout>
   );
