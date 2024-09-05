@@ -519,7 +519,7 @@ class CreditUser(models.Model):
         self.save()
 
     def save(self, *args, **kwargs):
-        if self.total_due > 0:
+        if self.total_due >= self.limit_amount:
             self.is_active = False
         return super().save(*args, **kwargs)
 
