@@ -76,6 +76,7 @@ const DishesPage: React.FC = () => {
 
   const data = dishes?.results || [];
 
+
   const handleAddDish = (dish: Dish) => {
     addDishToOrder(dish.id, 1);
     const existingItem = orderItems.find((item) => item.id === dish.id);
@@ -281,22 +282,22 @@ const DishesPage: React.FC = () => {
               Next
             </Button>
           </div>
-          {orderItems.length > 0 && (
-            <div className="flex justify-center mt-4 space-x-4">
-              <Button variant="outline" onClick={handleOpenMemoModal}>
+          {orderItems.length > 0 && !isMemoModalOpen && !isKitchenNoteModalOpen && (
+            <div className="flex justify-center mt-4 space-x-4 sticky bottom-0 bg-white p-4 z-10">
+              <Button variant="outline" className="bg-purple-500" onClick={handleOpenMemoModal}>
                 Memo
               </Button>
-              <Button variant="outline" onClick={handleOpenKitchenNoteModal}>
+              <Button variant="outline" className="bg-purple-500" onClick={handleOpenKitchenNoteModal}>
                 Kitchen Note
               </Button>
             </div>
           )}
+
         </div>
         {orderItems.length > 0 && (
           <div
-            className={`w-full lg:w-[550px] bg-white p-8 mt-2 ${
-              isOrderVisible ? "block" : "hidden lg:block"
-            }`}
+            className={`w-full lg:w-[550px] bg-white p-8 mt-2 ${isOrderVisible ? "block" : "hidden lg:block"
+              }`}
           >
             <div className="sticky top-0">
               <h2 className="text-2xl font-bold mb-4">New Order</h2>
@@ -442,11 +443,10 @@ const DishesPage: React.FC = () => {
                                   }}
                                 >
                                   <Check
-                                    className={`mr-2 h-4 w-4 ${
-                                      selectedDriver?.id === driver.id
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    }`}
+                                    className={`mr-2 h-4 w-4 ${selectedDriver?.id === driver.id
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                      }`}
                                   />
                                   {driver.username}
                                 </CommandItem>
