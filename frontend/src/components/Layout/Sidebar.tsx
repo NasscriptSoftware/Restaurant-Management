@@ -64,8 +64,8 @@ const Sidebar: React.FC = () => {
     { path: "/dining-table", icon: HandPlatter, label: "Diningtable" },
     { path: "/coupons", icon: Gift, label: "Coupons" },
     { path: "/mess", icon: UtensilsCrossed, label: "Mess" },
-    { path: "/salesreport", icon: ScrollText, label: "Salesreport" },
-    { path: "/credit-users", icon: Users, label: "Credit Users" },
+    { path: "/salesreport", icon: ScrollText, label: "Reports" },
+    { path: "/credit-users", icon: Users, label: "Credit Customer" },
     { path: "/transactions", icon: ArrowRightLeft, label: "Transactions" },
     { path: "/settings", icon: Settings, label: "Settings" },
   ];

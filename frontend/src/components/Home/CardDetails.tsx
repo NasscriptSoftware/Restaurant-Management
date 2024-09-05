@@ -19,7 +19,7 @@ interface Order {
   total_amount: string | number;
   status: string;
   order_type: "dining" | "takeaway" | "delivery";
-  billed_at: string;  // Assuming bill creation date is part of the order
+  billed_at: string;
   items: { dish: number; quantity: number }[];
 }
 
@@ -59,7 +59,9 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
           const orders = response.data.results;
           setAllOrders(orders);
           // Initially filter orders with the default status
-          const initialFilteredOrders = orders.filter((order: Order) => order.status === activeStatus);
+          const initialFilteredOrders = orders.filter(
+            (order: Order) => order.status === activeStatus
+          );
           setFilteredOrders(initialFilteredOrders);
           setIsLoading(false);
         } catch (error) {
@@ -78,7 +80,9 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
     setCurrentPage(1); // Reset to the first page when changing the status
 
     if (allOrders) {
-      const statusFilteredOrders = allOrders.filter(order => order.status === status);
+      const statusFilteredOrders = allOrders.filter(
+        (order) => order.status === status
+      );
       setFilteredOrders(statusFilteredOrders);
     }
   };
@@ -92,7 +96,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
 
   const handleDateFilter = () => {
     if (allOrders) {
-      let filtered = allOrders.filter(order => order.status === activeStatus); // Apply status filter first
+      let filtered = allOrders.filter((order) => order.status === activeStatus); // Apply status filter first
 
       if (fromDate && toDate) {
         const from = new Date(fromDate).setHours(0, 0, 0, 0);
@@ -140,72 +144,82 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
     : [];
 
   return (
-    <div className="p-4 shadow h-screen">
+    <div className="p-4 shadow h-full md:h-screen">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">{selectedCard.title}</h2>
+        <h2 className="text-xl md:text-2xl font-bold">{selectedCard.title}</h2>
       </div>
 
       {/* Date Filters */}
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex space-x-4">
+      <div className="flex flex-col md:flex-row md:space-x-4 mb-4">
+        <div className="flex flex-col md:flex-row space-y-4 md:space-y-0">
           <div>
-            <label className="block text-sm font-medium text-gray-700">From Date</label>
+            <label className="block text-sm font-medium text-gray-700">
+              From Date
+            </label>
             <DatePicker
               selected={fromDate}
               onChange={(date) => setFromDate(date)}
               dateFormat="yyyy-MM-dd"
-              className="mt-1 p-2 border rounded"
+              className="mt-1 p-2 border rounded w-full"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">To Date</label>
+            <label className="block text-sm font-medium text-gray-700">
+              To Date
+            </label>
             <DatePicker
               selected={toDate}
               onChange={(date) => setToDate(date)}
               dateFormat="yyyy-MM-dd"
-              className="mt-1 p-2 border rounded"
+              className="mt-1 p-2 border rounded w-full"
             />
           </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col space-y-4">
+        <div className="flex space-x-2 items-center">
           <button
-            onClick={handleDateFilter} // Apply the date filter
-            className="mt-7 p-2 bg-blue-500 text-white rounded"
+            onClick={handleDateFilter}
+            className="p-2 bg-blue-500 text-white rounded w-full md:w-auto"
           >
             Search
           </button>
           <button
             onClick={handleReset}
-            className="mt-7 p-2 rounded-full bg-red-500 text-white shadow-md"
+            className="p-2 bg-red-500 text-white rounded-full w-10 h-10 flex justify-center items-center"
             title="Reset"
           >
             <RotateCcw size={20} />
           </button>
         </div>
-      </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div
-          className={`p-4 rounded-lg shadow-md cursor-pointer ${
-            activeStatus === "delivered" ? "bg-[#fff]" : "bg-customLightPurple"
-          }`}
-          onClick={() => handleStatusClick("delivered")}
-        >
-          <h3 className="text-xl font-bold">Delivered</h3>
-        </div>
-        <div
-          className={`p-4 rounded-lg shadow-md cursor-pointer  ${
-            activeStatus === "pending" ? "bg-[#fff]" : "bg-customLightPurple"
-          }`}
-          onClick={() => handleStatusClick("pending")}
-        >
-          <h3 className="text-xl font-bold">Pending</h3>
-        </div>
-        <div
-          className={`p-4 rounded-lg shadow-md cursor-pointer ${
-            activeStatus === "cancelled" ? "bg-[#fff]" : "bg-customLightPurple"
-          }`}
-          onClick={() => handleStatusClick("cancelled")}
-        >
-          <h3 className="text-xl font-bold">Cancelled</h3>
+        {/* Status Buttons */}
+        <div className="flex flex-wrap justify-between space-x-2">
+          <button
+            className={`p-2 rounded-lg shadow-md flex-grow ${
+              activeStatus === "delivered" ? "bg-white" : "bg-purple-100"
+            }`}
+            onClick={() => handleStatusClick("delivered")}
+          >
+            <h3 className="text-sm font-bold text-center">Delivered</h3>
+          </button>
+          <button
+            className={`p-2 rounded-lg shadow-md flex-grow ${
+              activeStatus === "pending" ? "bg-white" : "bg-purple-100"
+            }`}
+            onClick={() => handleStatusClick("pending")}
+          >
+            <h3 className="text-sm font-bold text-center">Pending</h3>
+          </button>
+          <button
+            className={`p-2 rounded-lg shadow-md flex-grow ${
+              activeStatus === "cancelled" ? "bg-white" : "bg-purple-100"
+            }`}
+            onClick={() => handleStatusClick("cancelled")}
+          >
+            <h3 className="text-sm font-bold text-center">Cancelled</h3>
+          </button>
         </div>
       </div>
 

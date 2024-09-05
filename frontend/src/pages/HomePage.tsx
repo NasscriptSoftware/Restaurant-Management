@@ -10,23 +10,26 @@ const HomePage: React.FC = () => {
     { id: 3, title: 'Takeaway Orders', content: 'Details of Takeaway Orders', iconType: 'Takeaway' as 'Takeaway' },
   ];
 
-  const [selectedCard, setSelectedCard] = useState(cards[0]); // Initially set to Delivery card
+  const [selectedCard, setSelectedCard] = useState(cards[0]);
 
   return (
     <Layout>
       <div className="grid grid-cols-12 gap-4 p-4 h-full">
-        <div className="col-span-2 space-y-12 flex flex-col items-center">
+        {/* Sidebar */}
+        <div className="col-span-12 md:col-span-3 lg:col-span-2 space-y-6 flex flex-col items-center">
           {cards.map((card) => (
-            <div className='' key={card.id}>
+            <div key={card.id}>
               <Card 
                 card={card} 
                 onClick={() => setSelectedCard(card)} 
-                isActive={selectedCard?.id === card.id} // Check if the card is active
+                isActive={selectedCard?.id === card.id} 
               />
             </div>
           ))}
         </div>
-        <div className="col-span-10">
+        
+        {/* Card Details */}
+        <div className="col-span-12 md:col-span-9 lg:col-span-10">
           <CardDetails selectedCard={selectedCard} />
         </div>
       </div>
