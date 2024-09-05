@@ -567,6 +567,7 @@ class MenuViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(created_by=created_by)
 
         return queryset
+    
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

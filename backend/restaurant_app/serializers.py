@@ -420,6 +420,7 @@ class MenuSerializer(serializers.ModelSerializer):
 
 
 class MessSerializer(serializers.ModelSerializer):
+    mess_type = MessTypeSerializer(read_only=True)
     mess_type_id = serializers.PrimaryKeyRelatedField(
         queryset=MessType.objects.all(), write_only=True, source='mess_type'
     )
@@ -445,19 +446,18 @@ class MessSerializer(serializers.ModelSerializer):
             "grand_total"
         ]
 
-    def validate(self, data):
-        # Ensure end_date is later than start_date
-        if data['end_date'] <= data['start_date']:
-            raise serializers.ValidationError("End date must be later than start date")
-
-        return data
+    def calculate_total_amount(self, menus, weeks):
+        weekly_total = sum(menu.sub_total for menu in menus)
+        return weekly_total * weeks
 
     def create(self, validated_data):
         menus_data = validated_data.pop('menus', [])
         mess = Mess.objects.create(**validated_data)
-        mess.menus.set(menus_data)  # Use set() to assign many-to-many field
+        mess.menus.set(menus_data)
+
+        # Calculate total amount
         weeks = (validated_data['end_date'] - validated_data['start_date']).days // 7
-        mess.total_amount = mess.calculate_total_amount(weeks)
+        mess.total_amount = self.calculate_total_amount(mess.menus.all(), weeks)
         mess.save()
         return mess
 
@@ -467,13 +467,15 @@ class MessSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         
         if menus_data:
-            instance.menus.set(menus_data)  # Use set() to assign many-to-many field
+            instance.menus.set(menus_data)
 
+        # Calculate total amount
         weeks = (instance.end_date - instance.start_date).days // 7
-        instance.total_amount = instance.calculate_total_amount(weeks)
+        instance.total_amount = self.calculate_total_amount(instance.menus.all(), weeks)
         instance.save()
         return instance
-
+    
+    
 
 class CreditOrderSerializer(serializers.ModelSerializer):
     class Meta:

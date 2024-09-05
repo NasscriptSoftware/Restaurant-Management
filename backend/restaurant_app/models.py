@@ -409,11 +409,11 @@ class Mess(models.Model):
         weekly_total = sum(menu.sub_total for menu in self.menus.all())
         return weekly_total * weeks
 
-    def save(self, *args, **kwargs):
-        # Auto-calculate total amount before saving
-        weeks = (self.end_date - self.start_date).days // 7
-        self.total_amount = self.calculate_total_amount(weeks)
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     # Auto-calculate total amount before saving
+    #     weeks = (self.end_date - self.start_date).days // 7
+    #     self.total_amount = self.calculate_total_amount(weeks)
+    #     super().save(*args, **kwargs)
 
 
 class MessTransaction(models.Model):
