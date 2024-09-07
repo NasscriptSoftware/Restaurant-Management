@@ -54,6 +54,21 @@ class Transaction(models.Model):
     def __str__(self):
         return f"{self.ledger.name} - {self.date} - Voucher No: {self.voucher_no}"
 
+    def save(self, *args, **kwargs):
+        latest_transaction = Transaction.objects.filter(ledger=self.ledger).order_by('-date', '-id').first()
+        
+        if latest_transaction:
+            previous_balance = latest_transaction.balance_amount
+        else:
+            previous_balance = 0.00  
+        
+        if self.debit_credit == self.DEBIT:
+            self.balance_amount = previous_balance + self.debit_amount
+        elif self.debit_credit == self.CREDIT:
+            self.balance_amount = previous_balance - self.credit_amount
+        
+        super().save(*args, **kwargs)
+
 
 class IncomeStatement(models.Model):
     SALES = 'Sales'
