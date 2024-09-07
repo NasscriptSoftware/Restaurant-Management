@@ -3,13 +3,19 @@ import Layout from "../components/Layout/Layout";
 import { usePaginatedOrders } from "../hooks/useOrders";
 import { useDishes } from "../hooks/useDishes";
 import { SearchIcon } from "lucide-react";
-import { api, fetchActiveCreditUsers, updateOrderStatusNew } from "@/services/api";
+import {
+  api,
+  fetchActiveCreditUsers,
+  updateOrderStatusNew,
+} from "@/services/api";
 import KitchenPrint from "../components/Orders/KitchenPrint";
 import SalesPrint from "../components/Orders/SalesPrint";
 import { CreditUser } from "@/types";
 
-const OrderCard = lazy(() => import('../components/Orders/OrderCard'));
-const PaginationControls = lazy(() => import('../components/Layout/PaginationControls'));
+const OrderCard = lazy(() => import("../components/Orders/OrderCard"));
+const PaginationControls = lazy(
+  () => import("../components/Layout/PaginationControls")
+);
 
 const OrdersPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -31,34 +37,33 @@ const OrdersPage: React.FC = () => {
     loadCreditCardUsers();
   }, []);
 
- // Inside your component or useEffect hook where you fetch the data
+  // Inside your component or useEffect hook where you fetch the data
 
-useEffect(() => {
-  const fetchLogoInfo = async () => {
-    try {
-      const response = await api.get("/logo-info/");
-      const results = response.data.results;
-      if (results && results.length > 0) {
-        const logoData = {
-          logoUrl: results[0].print_logo, // This is where the print logo is located
-          companyName: results[0].company_name,
-          phoneNumber: results[0].phone_number,
-          location: results[0].location,
-        };
-        setLogoInfo(logoData);
-      } else {
-        // Handle case when no logo info is available
+  useEffect(() => {
+    const fetchLogoInfo = async () => {
+      try {
+        const response = await api.get("/logo-info/");
+        const results = response.data.results;
+        if (results && results.length > 0) {
+          const logoData = {
+            logoUrl: results[0].print_logo, // This is where the print logo is located
+            companyName: results[0].company_name,
+            phoneNumber: results[0].phone_number,
+            location: results[0].location,
+          };
+          setLogoInfo(logoData);
+        } else {
+          // Handle case when no logo info is available
+          setLogoInfo(null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch logo info:", error);
         setLogoInfo(null);
       }
-    } catch (error) {
-      console.error("Failed to fetch logo info:", error);
-      setLogoInfo(null);
-    }
-  };
+    };
 
-  fetchLogoInfo();
-}, []);
-
+    fetchLogoInfo();
+  }, []);
 
   const loadCreditCardUsers = async () => {
     try {
@@ -115,7 +120,9 @@ useEffect(() => {
   const handleFilterOrders = (status: string) => {
     setStatusFilter(status);
     setSelectedOrders(
-      orders.results.filter((order: any) => order.status === status).map((order: any) => order.id)
+      orders.results
+        .filter((order: any) => order.status === status)
+        .map((order: any) => order.id)
     );
     setShowActionButton(true);
 
@@ -155,37 +162,37 @@ useEffect(() => {
         selectedOrders.map(async (orderId) => {
           const order = filteredOrders.find((order) => order.id === orderId);
           if (!order) return null;
-  
+
           const cashAmount = order.total_amount; // Set the total amount as cash amount
-  
+
           // Update order status to delivered
           await updateOrderStatusNew(orderId, "delivered", {
             payment_method: "cash",
             cash_amount: cashAmount, // Set cash_amount to the total amount
             bank_amount: 0, // Explicitly set bank_amount to 0
           });
-  
+
           // Create a bill for each order
           const billsResponse = await api.post("/bills/", {
             order_id: order.id, // Use order_id here
             total_amount: order.total_amount,
             paid: true,
           });
-  
+
           if (!billsResponse || billsResponse.status !== 201) {
-            throw new Error(`Failed to create the bill for order ID ${orderId}`);
+            throw new Error(
+              `Failed to create the bill for order ID ${orderId}`
+            );
           }
         })
       );
-  
+
       // Trigger the print for sales bills after updating all orders and creating the bills
       triggerPrint("sales");
     } catch (error) {
       console.error("Error printing sales bills:", error);
     }
   };
-  
-  
 
   const triggerPrint = (type: "kitchen" | "sales") => {
     if (!type || !printRef.current) return;
@@ -252,27 +259,32 @@ useEffect(() => {
 
   return (
     <Layout>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Your Orders</h1>
-        <div className="flex items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left">
+          Your Orders
+        </h1>
+        <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search orders by ID..."
-            className="border border-gray-300 rounded px-4 py-2"
+            className="border border-gray-300 rounded px-4 py-2 w-full sm:w-auto"
           />
-          <button onClick={handleSearch} className="text-black rounded p-2">
+          <button
+            onClick={handleSearch}
+            className="text-black rounded p-2 bg-gray-200 hover:bg-gray-300 w-full sm:w-auto"
+          >
             <SearchIcon />
           </button>
         </div>
       </div>
 
       {/* Buttons for filtering */}
-      <div className="flex justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0 justify-between mb-4">
         <button
           onClick={() => handleFilterOrders("pending")}
-          className={`px-4 py-2 rounded-md ${
+          className={`w-full sm:w-auto px-4 py-2 rounded-md text-center ${
             statusFilter === "pending"
               ? "bg-blue-700 text-white"
               : "bg-blue-500 text-white hover:bg-blue-600"
@@ -283,7 +295,7 @@ useEffect(() => {
 
         <button
           onClick={() => handleFilterOrders("approved")}
-          className={`px-4 py-2 rounded-md ${
+          className={`w-full sm:w-auto px-4 py-2 rounded-md text-center ${
             statusFilter === "approved"
               ? "bg-yellow-700 text-white"
               : "bg-yellow-500 text-white hover:bg-yellow-600"
@@ -314,10 +326,10 @@ useEffect(() => {
       {filteredOrders.length ? (
         <>
           {filteredOrders.map((order: any) => (
-            <OrderCard 
-              key={order.id} 
-              order={order} 
-              dishes={dishes.results} 
+            <OrderCard
+              key={order.id}
+              order={order}
+              dishes={dishes.results}
               creditUsers={creditUsers}
               onCreditUserChange={loadCreditCardUsers}
               selectedOrders={selectedOrders}
@@ -343,9 +355,13 @@ useEffect(() => {
           .map((order: any) => (
             <div key={order.id} style={{ pageBreakAfter: "always" }}>
               {printType === "kitchen" ? (
-                <KitchenPrint order={order} dishes={dishes.results}  />
+                <KitchenPrint order={order} dishes={dishes.results} />
               ) : (
-                <SalesPrint order={order} dishes={dishes.results} logoInfo={logoInfo}/>
+                <SalesPrint
+                  order={order}
+                  dishes={dishes.results}
+                  logoInfo={logoInfo}
+                />
               )}
             </div>
           ))}
