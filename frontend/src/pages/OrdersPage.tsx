@@ -263,17 +263,17 @@ const OrdersPage: React.FC = () => {
         <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left">
           Your Orders
         </h1>
-        <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+        <div className="flex w-full sm:w-auto">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search orders by ID..."
-            className="border border-gray-300 rounded px-4 py-2 w-full sm:w-auto"
+            className="border border-gray-300 rounded px-4 py-2 w-full"
           />
           <button
             onClick={handleSearch}
-            className="text-black rounded p-2 bg-gray-200 hover:bg-gray-300 w-full sm:w-auto"
+            className="ml-2 text-black rounded p-2 bg-gray-200 hover:bg-gray-300"
           >
             <SearchIcon />
           </button>
