@@ -344,6 +344,18 @@ const SalesReportPage: React.FC = () => {
           0
         );
 
+  const totalBankAmount = reports
+    .filter((report) => report.payment_method === "bank")
+    .reduce((acc, report) => acc + parseFloat(report.bank_amount || "0"), 0); // Ensure bank_amount is parsed as float
+
+  // If you don't have a credit_amount, you can sum based on payment_method 'credit'
+  const totalCreditAmount = reports
+    .filter((report) => report.payment_method === "credit")
+    .reduce(
+      (acc, report) => acc + parseFloat(report.total_amount.toString() || "0"),
+      0
+    );
+
   return (
     <Layout>
       <div className="p-4">
@@ -371,7 +383,7 @@ const SalesReportPage: React.FC = () => {
               >
                 Mess Report
               </button>
-              
+
               <button
                 onClick={handleShowCancelledOrdersClick}
                 className={`w-full md:w-auto p-4 rounded-lg shadow-md cursor-pointer ${
@@ -625,14 +637,23 @@ const SalesReportPage: React.FC = () => {
             <p className="font-bold text-lg">Cash Amount:</p>
             <p className="font-bold text-lg">₹{totalCashAmount.toFixed(2)}</p>
           </div>
+
           <div className="flex justify-end space-x-4 mt-2">
             <p className="font-bold text-lg">Bank Amount:</p>
-            <p className="font-bold text-lg">₹{totalCardAmount.toFixed(2)}</p>
+            <p className="font-bold text-lg">
+              ₹{totalBankAmount.toFixed(2)}
+            </p>{" "}
+            {/* Ensure totalBankAmount is properly set */}
           </div>
-           <div className="flex justify-end space-x-4 mt-2">
+
+          <div className="flex justify-end space-x-4 mt-2">
             <p className="font-bold text-lg">Credit Amount:</p>
-            <p className="font-bold text-lg">₹{totalCardAmount.toFixed(2)}</p>
+            <p className="font-bold text-lg">
+              ₹{totalCreditAmount.toFixed(2)}
+            </p>{" "}
+            {/* Ensure totalCreditAmount is properly set */}
           </div>
+
           <div className="flex justify-end space-x-4 mt-2">
             <p className="font-bold text-lg">Total Amount:</p>
             <p className="font-bold text-lg">₹{totalAmount.toFixed(2)}</p>
