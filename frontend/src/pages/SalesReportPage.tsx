@@ -78,7 +78,7 @@ const SalesReportPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
-  const [activeButton, setActiveButton] = useState<string | null>(null);
+  const [activeButton, setActiveButton] = useState<string>("All"); // Default to "All"
   const [isTransactionsModalOpen, setIsTransactionsModalOpen] = useState(false);
   const [isSalesHistoryModalOpen, setIsSalesHistoryModalOpen] = useState(false);
   const [isSalesEditModalOpen, setIsSalesEditModalOpen] = useState(false);
@@ -86,7 +86,7 @@ const SalesReportPage: React.FC = () => {
   const [currentReport, setCurrentReport] = useState<
     SalesReport | MessReport | null
   >(null);
-  const [isAllButtonActive, setIsAllButtonActive] = useState(true);
+  const [, setIsAllButtonActive] = useState(true);
   const [showCancelledOrders, setShowCancelledOrders] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [orderHistory, setOrderHistory] = useState<Sales[]>([]);
@@ -347,84 +347,92 @@ const SalesReportPage: React.FC = () => {
   return (
     <Layout>
       <div className="p-4">
-        <div className="flex flex-col space-y-4 mb-4">
-          {/* Report Buttons */}
-          <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 w-full md:w-auto">
-            <button
-              onClick={() => setReportType("sales")}
-              className={`w-full md:w-auto p-4 rounded-lg shadow-md cursor-pointer ${
-                reportType === "sales"
-                  ? "bg-purple-500 text-white"
-                  : "bg-gray-200"
-              }`}
-            >
-              Sales Report
-            </button>
-            <button
-              onClick={() => setReportType("mess")}
-              className={`w-full md:w-auto p-4 rounded-lg shadow-md cursor-pointer ${
-                reportType === "mess"
-                  ? "bg-purple-500 text-white"
-                  : "bg-gray-200"
-              }`}
-            >
-              Mess Report
-            </button>
-            <button
-              onClick={handleShowCancelledOrdersClick}
-              className={`w-full md:w-auto p-4 rounded-lg shadow-md cursor-pointer ${
-                showCancelledOrders ? "bg-red-500 text-white" : "bg-gray-200"
-              }`}
-            >
-              {showCancelledOrders
-                ? "Show All Orders"
-                : "Show Cancelled Orders"}
-            </button>
-          </div>
-
-          {/* Date Inputs and Reset Button */}
-          <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0 items-center">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                From Date
-              </label>
-              <DatePicker
-                selected={fromDate}
-                onChange={(date) => setFromDate(date)}
-                dateFormat="yyyy-MM-dd"
-                className="w-full mt-1 p-2 border rounded"
-              />
+        <div className="flex flex-col ">
+          <div className="flex flex-col space-y-4 mb-4">
+            {/* Report Buttons */}
+            <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 w-full md:w-auto">
+              <button
+                onClick={() => setReportType("sales")}
+                className={`w-full md:w-auto p-4 rounded-lg shadow-md cursor-pointer ${
+                  reportType === "sales"
+                    ? "bg-purple-500 text-white"
+                    : "bg-gray-200"
+                }`}
+              >
+                Sales Report
+              </button>
+              <button
+                onClick={() => setReportType("mess")}
+                className={`w-full md:w-auto p-4 rounded-lg shadow-md cursor-pointer ${
+                  reportType === "mess"
+                    ? "bg-purple-500 text-white"
+                    : "bg-gray-200"
+                }`}
+              >
+                Mess Report
+              </button>
+              
+              <button
+                onClick={handleShowCancelledOrdersClick}
+                className={`w-full md:w-auto p-4 rounded-lg shadow-md cursor-pointer ${
+                  showCancelledOrders ? "bg-red-500 text-white" : "bg-gray-200"
+                }`}
+              >
+                {showCancelledOrders
+                  ? "Show All Orders"
+                  : "Show Cancelled Orders"}
+              </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                To Date
-              </label>
-              <DatePicker
-                selected={toDate}
-                onChange={(date) => setToDate(date)}
-                dateFormat="yyyy-MM-dd"
-                className="w-full mt-1 p-2 border rounded"
-              />
-            </div>
-            <button
-              onClick={handleReset}
-              className="p-2 mt-2 md:mt-6 rounded-full bg-red-500 text-white shadow-md"
-              title="Reset"
-            >
-              <RotateCcw size={20} />
-            </button>
-          </div>
 
-          {/* Print Button */}
-          <div className="flex justify-end md:justify-start">
-            <SalesPrint
-              reportType={reportType}
-              reports={reports}
-              messReports={messReports}
-              totalAmount={totalAmount}
-              totalCashAmount={totalCashAmount}
-              totalCardAmount={totalCardAmount}
-            />
+            {/* Date Inputs, Reset Button, and Print Button */}
+            <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0 items-center">
+              {/* Align date inputs and reset button on the same line */}
+              <div className="w-full lg:w-auto lg:ml-auto lg:flex lg:items-center lg:space-x-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    From Date
+                  </label>
+                  <DatePicker
+                    selected={fromDate}
+                    onChange={(date) => setFromDate(date)}
+                    dateFormat="yyyy-MM-dd"
+                    className="w-full mt-1 p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    To Date
+                  </label>
+                  <DatePicker
+                    selected={toDate}
+                    onChange={(date) => setToDate(date)}
+                    dateFormat="yyyy-MM-dd"
+                    className="w-full mt-1 p-2 border rounded"
+                  />
+                </div>
+
+                {/* Reset button */}
+                <button
+                  onClick={handleReset}
+                  className="p-2 mt-2 md:mt-6 rounded-full bg-red-500 text-white shadow-md lg:mt-0"
+                  title="Reset"
+                >
+                  <RotateCcw size={20} />
+                </button>
+              </div>
+
+              {/* Print Button positioned below date fields */}
+              <div className="lg:mt-2 lg:ml-4">
+                <SalesPrint
+                  reportType={reportType}
+                  reports={reports}
+                  messReports={messReports}
+                  totalAmount={totalAmount}
+                  totalCashAmount={totalCashAmount}
+                  totalCardAmount={totalCardAmount}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -432,10 +440,8 @@ const SalesReportPage: React.FC = () => {
         <div className="flex flex-wrap gap-2 mb-4">
           <button
             onClick={() => handleButtonClick("All")}
-            className={`p-2 rounded w-full md:auto sm:w-1/3 ${
+            className={`p-2 rounded w-auto ${
               activeButton === "All" ? "bg-blue-500 text-white" : "bg-gray-200"
-            } ${
-              isAllButtonActive ? "bg-blue-500" : "border border-transparent"
             }`}
           >
             All
@@ -450,7 +456,7 @@ const SalesReportPage: React.FC = () => {
                 "Bank",
                 "Cash-Bank",
                 "Credit",
-                "Canceled",
+                // "Canceled",
                 "Delivered",
               ].map((type) => (
                 <button
@@ -620,7 +626,11 @@ const SalesReportPage: React.FC = () => {
             <p className="font-bold text-lg">₹{totalCashAmount.toFixed(2)}</p>
           </div>
           <div className="flex justify-end space-x-4 mt-2">
-            <p className="font-bold text-lg">Card Amount:</p>
+            <p className="font-bold text-lg">Bank Amount:</p>
+            <p className="font-bold text-lg">₹{totalCardAmount.toFixed(2)}</p>
+          </div>
+           <div className="flex justify-end space-x-4 mt-2">
+            <p className="font-bold text-lg">Credit Amount:</p>
             <p className="font-bold text-lg">₹{totalCardAmount.toFixed(2)}</p>
           </div>
           <div className="flex justify-end space-x-4 mt-2">
