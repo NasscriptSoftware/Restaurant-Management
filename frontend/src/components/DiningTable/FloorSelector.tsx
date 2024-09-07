@@ -14,23 +14,28 @@ const FloorSelector: React.FC<FloorSelectorProps> = ({ floors, onFloorChange }) 
   const [selectedFloor, setSelectedFloor] = React.useState<Floor>();
 
   const handleFloorClick = (floor: Floor) => {
-    setSelectedFloor(selectedFloor);
+    setSelectedFloor(floor);
     onFloorChange(floor.name);
   };
 
   return (
-    <div className="w-1/4 bg-[#6a0dad] p-4 rounded-lg text-white space-y-4">
+    <div className="w-full lg:w-1/4 bg-[#6a0dad] p-4 rounded-lg text-white space-y-4">
+      {/* New Floor Button */}
       <button 
-        className="text-xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 py-2 px-4 rounded-full w-full mb-4"
+        className="text-lg md:text-xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 py-2 px-4 rounded-full w-full mb-4"
         onClick={() => {}}
       >
         New
       </button>
+      
+      {/* Floor List */}
       <ul className="space-y-2">
         {floors.map((floor) => (
           <li
             key={floor.id}
-            className={`cursor-pointer p-2 rounded ${selectedFloor === floor ? 'bg-purple-900' : 'bg-purple-700'}`}
+            className={`cursor-pointer p-2 rounded text-sm md:text-base 
+            ${selectedFloor === floor ? 'bg-purple-900' : 'bg-purple-700'} 
+            hover:bg-purple-600`}
             onClick={() => handleFloorClick(floor)}
           >
             {floor.name}
