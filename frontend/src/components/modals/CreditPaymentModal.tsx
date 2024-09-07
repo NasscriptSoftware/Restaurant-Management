@@ -12,12 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/services/api";
 
-
 interface CreditPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   creditUserId: number | null;
-  // onPaymentSuccess: () => void;
   onCreditUserChange: () => void; 
 }
 
@@ -25,12 +23,13 @@ export function CreditPaymentModal({
   isOpen,
   onClose,
   creditUserId,
-  // onPaymentSuccess,
+  onCreditUserChange,
 }: CreditPaymentModalProps) {
   const [paymentAmount, setPaymentAmount] = useState<number | string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("cash");
   const [cashAmount, setCashAmount] = useState<number | string>("0.00");
   const [bankAmount, setBankAmount] = useState<number | string>("0.00");
+  const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -58,36 +57,32 @@ export function CreditPaymentModal({
         cash_amount: paymentMethod !== "bank" ? cashAmount : "0.00",
         bank_amount: paymentMethod !== "cash" ? bankAmount : "0.00",
         payment_method: paymentMethod,
-        credit_user: creditUserId, // Pass creditUserId as credit_user
+        credit_user: creditUserId, 
       });
-      // onPaymentSuccess();
+      onCreditUserChange(); // Optionally refresh data after successful payment
       onClose();
     } catch (error) {
-      console.error("Error making payment:", error);
+      setError("Error making payment. Please try again.");
     }
   };
-  
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Make Payment</DialogTitle>
-          <DialogDescription></DialogDescription>
+          <DialogDescription>Enter payment details below.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-1 items-center gap-4">
-              <Label htmlFor="received_amount">
-                Payment Amount
-              </Label>
+              <Label htmlFor="received_amount">Payment Amount</Label>
               <Input
                 id="received_amount"
                 name="received_amount"
                 type="number"
                 value={paymentAmount}
                 onChange={handleInputChange}
-                className=""
                 required
                 min="0"
                 step="0.01"
@@ -95,9 +90,7 @@ export function CreditPaymentModal({
             </div>
 
             <div className="grid grid-cols-1 items-center gap-4">
-              <Label htmlFor="payment_method">
-                Payment Method
-              </Label>
+              <Label htmlFor="payment_method">Payment Method</Label>
               <select
                 id="payment_method"
                 name="payment_method"
@@ -113,9 +106,7 @@ export function CreditPaymentModal({
 
             {paymentMethod === "cash" && (
               <div className="grid grid-cols-1 items-center gap-4">
-                <Label htmlFor="cash_amount">
-                  Cash Amount
-                </Label>
+                <Label htmlFor="cash_amount">Cash Amount</Label>
                 <Input
                   id="cash_amount"
                   name="cash_amount"
@@ -130,9 +121,7 @@ export function CreditPaymentModal({
 
             {paymentMethod === "bank" && (
               <div className="grid grid-cols-1 items-center gap-4">
-                <Label htmlFor="bank_amount">
-                  Bank Amount
-                </Label>
+                <Label htmlFor="bank_amount">Bank Amount</Label>
                 <Input
                   id="bank_amount"
                   name="bank_amount"
@@ -145,44 +134,12 @@ export function CreditPaymentModal({
               </div>
             )}
 
-            {paymentMethod === "cash-bank" && (
-              <>
-                <div className="grid grid-cols-1 items-center gap-4">
-                  <Label htmlFor="cash_amount">
-                    Cash Amount
-                  </Label>
-                  <Input
-                    id="cash_amount"
-                    name="cash_amount"
-                    type="number"
-                    value={cashAmount}
-                    onChange={handleInputChange}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                <div className="grid grid-cols-1 items-center gap-4">
-                  <Label htmlFor="bank_amount">
-                    Bank Amount
-                  </Label>
-                  <Input
-                    id="bank_amount"
-                    name="bank_amount"
-                    type="number"
-                    value={bankAmount}
-                    onChange={handleInputChange}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-              </>
-            )}
+            {error && <div className="text-red-600">{error}</div>}
           </div>
+
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">Make Payment</Button>
+            <Button type="submit">Submit</Button>
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
           </DialogFooter>
         </form>
       </DialogContent>

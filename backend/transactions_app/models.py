@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 import datetime
+from decimal import Decimal
 
 
 class NatureGroup(models.Model): # This gorup as main group
@@ -60,12 +61,18 @@ class Transaction(models.Model):
         if latest_transaction:
             previous_balance = latest_transaction.balance_amount
         else:
-            previous_balance = 0.00  
+            previous_balance = Decimal('0.00')  
+        
+        was_negative = previous_balance < 0
+        previous_balance = abs(previous_balance)  
         
         if self.debit_credit == self.DEBIT:
             self.balance_amount = previous_balance + self.debit_amount
         elif self.debit_credit == self.CREDIT:
             self.balance_amount = previous_balance - self.credit_amount
+        
+        if was_negative:
+            self.balance_amount = -abs(self.balance_amount)
         
         super().save(*args, **kwargs)
 
