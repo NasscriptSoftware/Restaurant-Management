@@ -36,24 +36,28 @@ const MainGroups: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Main Groups</h2>
-      <table className="min-w-full bg-white shadow-md rounded-md">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 bg-gray-200 text-left">Main Group</th>
-            <th className="py-2 px-4 bg-gray-200 text-left">Nature Group</th>
-          </tr>
-        </thead>
-        <tbody>
-          {mainGroups.map((group) => (
-            <tr key={group.id}>
-              <td className="py-2 px-4 border-b">{group.name}</td>
-              <td className="py-2 px-4 border-b">{group.nature_group.name}</td>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white shadow-md rounded-md">
+          <thead>
+            <tr>
+              <th className="py-2 px-4 bg-gray-200 text-left">Main Group</th>
+              <th className="py-2 px-4 bg-gray-200 text-left">Nature Group</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {mainGroups.map((group) => (
+              <tr key={group.id}>
+                <td className="py-2 px-4 border-b">{group.name}</td>
+                <td className="py-2 px-4 border-b">{group.nature_group.name}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <div className="flex justify-between mt-4">
         <button
           onClick={handlePreviousPage}

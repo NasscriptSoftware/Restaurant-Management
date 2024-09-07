@@ -31,7 +31,8 @@ const LedgerReport: React.FC = () => {
 
   useEffect(() => {
     // Fetch the list of ledgers
-    api.get("/ledgers/")
+    api
+      .get("/ledgers/")
       .then((response) => {
         setLedgers(response.data.results);
       })
@@ -43,9 +44,11 @@ const LedgerReport: React.FC = () => {
   const handleSearch = () => {
     if (selectedLedger && fromDate && toDate) {
       setIsSearching(true);
-      api.get(`/transactions/ledger_report/?ledger=${selectedLedger}&from_date=${fromDate}&to_date=${toDate}`)
+      api
+        .get(
+          `/transactions/ledger_report/?ledger=${selectedLedger}&from_date=${fromDate}&to_date=${toDate}`
+        )
         .then((response) => {
-          // Adjust the response data access based on your API response structure
           setTransactions(response.data || []);
         })
         .catch((error) => {
@@ -57,90 +60,139 @@ const LedgerReport: React.FC = () => {
         });
     }
   };
-  console.log("trasactions",transactions);
-  
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Transactions</h1>
-      <div className="bg-white p-4 shadow-md rounded-md mb-4">
-        <div className="flex space-x-4 mb-4">
-          <div className="flex-1">
-            <label className="block mb-2 text-sm font-medium text-gray-700">Select Account</label>
+    <div className="p-6">
+      <h1 className="text-3xl font-semibold mb-6">Transactions</h1>
+
+      {/* Form Inputs */}
+      <div className="bg-white p-6 shadow-md rounded-lg mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Select Account */}
+          <div className="col-span-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Select Account
+            </label>
             <select
               value={selectedLedger}
               onChange={(e) => setSelectedLedger(e.target.value)}
-              className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none"
+              className="block w-full py-2 px-4 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none"
             >
               <option value="">Select a ledger</option>
               {ledgers.map((ledger) => (
-                <option key={ledger.id} value={ledger.id}>{ledger.name}</option>
+                <option key={ledger.id} value={ledger.id}>
+                  {ledger.name}
+                </option>
               ))}
             </select>
           </div>
-          <div className="flex-1">
-            <label className="block mb-2 text-sm font-medium text-gray-700">From Date</label>
+
+          {/* From Date */}
+          <div className="col-span-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              From Date
+            </label>
             <input
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none"
+              className="block w-full py-2 px-4 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none"
             />
           </div>
-          <div className="flex-1">
-            <label className="block mb-2 text-sm font-medium text-gray-700">To Date</label>
+
+          {/* To Date */}
+          <div className="col-span-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              To Date
+            </label>
             <input
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none"
+              className="block w-full py-2 px-4 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none"
             />
           </div>
-          <div className="flex-1 self-end">
-            <button
-              onClick={handleSearch}
-              disabled={isSearching}
-              className="bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 disabled:opacity-50 w-full"
-            >
-              {isSearching ? "Searching..." : "Search"}
-            </button>
-          </div>
+        </div>
+
+        {/* Search Button */}
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={handleSearch}
+            disabled={isSearching}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition duration-300 ease-in-out disabled:opacity-50"
+          >
+            {isSearching ? "Searching..." : "Search"}
+          </button>
         </div>
       </div>
 
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {/* Error Handling */}
+      {error && <p className="text-red-500 mb-6">{error}</p>}
 
+      {/* Transaction Table */}
       {transactions.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white shadow-md rounded-md">
+          <table className="min-w-full bg-white shadow-md rounded-lg">
             <thead>
               <tr>
-                <th className="py-2 px-4 bg-gray-200 text-left whitespace-nowrap">Date</th>
-                <th className="py-2 px-4 bg-gray-200 text-left whitespace-nowrap">Voucher No</th>
-                <th className="py-2 px-4 bg-gray-200 text-left whitespace-nowrap">Particulars</th>
-                <th className="py-2 px-4 bg-gray-200 text-right whitespace-nowrap">Debit Amount</th>
-                <th className="py-2 px-4 bg-gray-200 text-right whitespace-nowrap">Credit Amount</th>
-                <th className="py-2 px-4 bg-gray-200 text-left whitespace-nowrap">Balance</th>
-                <th className="py-2 px-4 bg-gray-200 text-left whitespace-nowrap">Dr/Cr</th>
+                <th className="py-3 px-4 bg-gray-100 text-left text-sm font-medium text-gray-600">
+                  Date
+                </th>
+                <th className="py-3 px-4 bg-gray-100 text-left text-sm font-medium text-gray-600">
+                  Voucher No
+                </th>
+                <th className="py-3 px-4 bg-gray-100 text-left text-sm font-medium text-gray-600">
+                  Particulars
+                </th>
+                <th className="py-3 px-4 bg-gray-100 text-right text-sm font-medium text-gray-600">
+                  Debit Amount
+                </th>
+                <th className="py-3 px-4 bg-gray-100 text-right text-sm font-medium text-gray-600">
+                  Credit Amount
+                </th>
+                <th className="py-3 px-4 bg-gray-100 text-right text-sm font-medium text-gray-600">
+                  Balance
+                </th>
+                <th className="py-3 px-4 bg-gray-100 text-center text-sm font-medium text-gray-600">
+                  Dr/Cr
+                </th>
               </tr>
             </thead>
             <tbody>
               {transactions.map((transaction) => (
                 <tr key={transaction.id}>
-                  <td className="py-2 px-4 border-b text-left whitespace-nowrap">{transaction.date}</td>
-                  <td className="py-2 px-4 border-b text-left whitespace-nowrap">{transaction.voucher_no}</td>
-                  <td className="py-2 px-4 border-b text-left whitespace-nowrap">{transaction.particulars.name}</td>
-                  <td className="py-2 px-4 border-b text-right whitespace-nowrap">{transaction.debit_amount}</td>
-                  <td className="py-2 px-4 border-b text-right whitespace-nowrap">{transaction.credit_amount}</td>
-                  <td className="py-2 px-4 border-b text-left whitespace-nowrap">{transaction.balance_amount}</td>
-                  <td className="py-2 px-4 border-b text-left whitespace-nowrap">{transaction.debit_credit}</td>
+                  <td className="py-2 px-4 border-b text-left text-sm text-gray-700">
+                    {transaction.date}
+                  </td>
+                  <td className="py-2 px-4 border-b text-left text-sm text-gray-700">
+                    {transaction.voucher_no}
+                  </td>
+                  <td className="py-2 px-4 border-b text-left text-sm text-gray-700">
+                    {transaction.particulars.name}
+                  </td>
+                  <td className="py-2 px-4 border-b text-right text-sm text-gray-700">
+                    {transaction.debit_amount}
+                  </td>
+                  <td className="py-2 px-4 border-b text-right text-sm text-gray-700">
+                    {transaction.credit_amount}
+                  </td>
+                  <td className="py-2 px-4 border-b text-right text-sm text-gray-700">
+                    {transaction.balance_amount}
+                  </td>
+                  <td className="py-2 px-4 border-b text-center text-sm text-gray-700">
+                    {transaction.debit_credit}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       ) : (
-        !isSearching && <div className="mt-6 text-center text-gray-500">No LedgerReport available</div>
+        !isSearching && (
+          <div className="mt-6 text-center text-gray-500">
+            No Ledger Report available
+          </div>
+        )
       )}
     </div>
   );

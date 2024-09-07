@@ -19,7 +19,7 @@ interface TransactionData {
   credit_amount: number;
   remarks: string;
   ref_no?: string;
-  debit_credit:string;
+  debit_credit: string;
 }
 
 type PayOutRequest = {
@@ -55,7 +55,6 @@ const PayIn: React.FC = () => {
       });
   }, []);
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return; // Prevent further submissions during ongoing request
@@ -70,8 +69,7 @@ const PayIn: React.FC = () => {
       debit_amount: debitAmount ? parseFloat(debitAmount) : 0,
       credit_amount: 0,
       remarks,
-      debit_credit:"debit",
-
+      debit_credit: "debit",
     };
 
     const transactionData2: TransactionData = {
@@ -81,7 +79,7 @@ const PayIn: React.FC = () => {
       debit_amount: 0,
       credit_amount: creditAmount ? parseFloat(creditAmount) : 0,
       remarks,
-      debit_credit:"credit",
+      debit_credit: "credit",
     };
 
     if (refNo.trim() !== "") {
@@ -119,8 +117,8 @@ const PayIn: React.FC = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Pay In</h1>
+      <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold mb-2 sm:mb-0">Pay In</h1>
         <button
           onClick={handleOpenModal}
           className="bg-[#6f42c1] text-white py-2 px-4 rounded"
@@ -130,9 +128,9 @@ const PayIn: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block mb-2">Date</label>
+            <label className="block mb-2 text-sm font-medium">Date</label>
             <input
               type="date"
               value={date}
@@ -143,7 +141,7 @@ const PayIn: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2">Reference No.</label>
+            <label className="block mb-2 text-sm font-medium">Reference No.</label>
             <input
               type="text"
               value={refNo}
@@ -153,7 +151,7 @@ const PayIn: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2">Cash/Bank</label>
+            <label className="block mb-2 text-sm font-medium">Cash/Bank</label>
             <select
               value={selectedCashBank}
               onChange={(e) => setSelectedCashBank(e.target.value)}
@@ -170,7 +168,7 @@ const PayIn: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2">Debit Amount</label>
+            <label className="block mb-2 text-sm font-medium">Debit Amount</label>
             <input
               type="number"
               value={debitAmount}
@@ -181,7 +179,7 @@ const PayIn: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2">Income/Partners/Recivables</label>
+            <label className="block mb-2 text-sm font-medium">Income/Partners/Recivables</label>
             <select
               value={selectedParticulars}
               onChange={(e) => setSelectedParticulars(e.target.value)}
@@ -198,7 +196,7 @@ const PayIn: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2">Credit Amount</label>
+            <label className="block mb-2 text-sm font-medium">Credit Amount</label>
             <input
               type="number"
               value={creditAmount}
@@ -208,8 +206,8 @@ const PayIn: React.FC = () => {
             />
           </div>
 
-          <div className="col-span-2">
-            <label className="block mb-2">Remarks</label>
+          <div className="col-span-1 sm:col-span-2">
+            <label className="block mb-2 text-sm font-medium">Remarks</label>
             <textarea
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
@@ -223,7 +221,7 @@ const PayIn: React.FC = () => {
         <div className="flex justify-center mt-4">
           <button
             type="submit"
-            className="bg-[#6f42c1] text-white py-2 px-4 rounded"
+            className="bg-[#6f42c1] text-white py-2 px-4 rounded w-full sm:w-auto"
             disabled={isSubmitting}  // Disable the button when submitting
           >
             Submit
