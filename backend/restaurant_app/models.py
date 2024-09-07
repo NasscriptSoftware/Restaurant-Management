@@ -5,6 +5,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
+
+from transactions_app.models import MainGroup,Ledger
 from .utils import default_time_period
 import logging
 
@@ -576,7 +578,21 @@ class CreditTransaction(models.Model):
             self.credit_user.total_due -= self.received_amount
             self.credit_user.save()
 
-    
-
+@receiver(post_save, sender=CreditUser)
+def create_ledger_for_credit_user(sender, instance, created, **kwargs):
+    if created:
+        try:
+            # Find the 'Sundry Debtors' group
+            sundry_debtors_group = MainGroup.objects.get(name="Sundry Debtors")
+            
+            # Create a new Ledger entry
+            Ledger.objects.create(
+                name=instance.username,
+                mobile_no=instance.mobile_number,
+                group=sundry_debtors_group,
+            )
+        except MainGroup.DoesNotExist:
+            # Handle the case where the 'Sundry Debtors' group doesn't exist
+            print("MainGroup 'Sundry Debtors' does not exist.")
 
 

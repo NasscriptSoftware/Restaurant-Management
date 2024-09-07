@@ -24,6 +24,7 @@ import { CreditUserModal } from "../modals/CreditUserModal";
 import ConfirmationModal from "../modals/ConfirmationModal";
 import { CreditPaymentModal } from "../modals/CreditPaymentModal";
 import CreditTransactionModal from "@/components/modals/CreditTransactionModal";
+import PayInModal from "../modals/PayInModal";
 
 interface CreditUser {
   id: number;
@@ -51,6 +52,8 @@ export function CreditUserTable() {
   );
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [selectedUserTransactions, setSelectedUserTransactions] = useState([]);
+  const [isPayInModalOpen, setIsPayInModalOpen] = useState(false);
+  // const [selectedPayInData, setSelectedPayInData] = useState<CreditUser | null>(null);
 
 
   useEffect(() => {
@@ -96,6 +99,12 @@ export function CreditUserTable() {
     setCreditUserToDelete(creditUserId);
     setIsDeleteModalOpen(true);
   };
+
+  const handleOpenPayInModal = (creditUser: CreditUser) => {
+    // setSelectedPayInData(creditUser);
+    setIsPayInModalOpen(true);
+  };
+
 
   const confirmDelete = async () => {
     if (creditUserToDelete) {
@@ -228,6 +237,24 @@ export function CreditUserTable() {
         );
       },
     },
+    {
+      id: "pay_in",
+      header: "Pay In",
+      cell: ({ row }: any) => {
+        const creditUser = row.original;
+        return (
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-blue-500 text-white"
+            onClick={() => handleOpenPayInModal(creditUser)}
+          >
+            Pay In
+          </Button>
+        );
+      },
+    },
+
     {
       id: "edit",
       header: "Edit",
@@ -372,7 +399,7 @@ export function CreditUserTable() {
         message="Are you sure you want to delete this credit user?"
         title="Confirm Action"  // Provide a title for the modal
         description="Are you sure you want to proceed with this action?"  // Provide a description for the modal
-  
+
       />
 
       <CreditPaymentModal
@@ -387,6 +414,11 @@ export function CreditUserTable() {
         onClose={() => setIsTransactionModalOpen(false)}
         transactions={selectedUserTransactions}
       />
+      <PayInModal
+        isOpen={isPayInModalOpen}
+        onClose={() => setIsPayInModalOpen(false)}
+      />
+
     </div>
   );
 }
