@@ -698,6 +698,8 @@ class MessTransactionViewSet(viewsets.ModelViewSet):
 
 class CreditTransactionViewSet(viewsets.ModelViewSet):
     serializer_class = CreditTransactionSerializer
+    queryset = CreditTransaction.objects.all()
+
     
     def get_queryset(self):
         queryset = CreditTransaction.objects.all()
@@ -705,3 +707,20 @@ class CreditTransactionViewSet(viewsets.ModelViewSet):
         if credit_user_id is not None:
             queryset = queryset.filter(credit_user_id=credit_user_id)
         return queryset
+    
+    @action(detail=False, methods=['get'])
+    def latest_transaction(self, request):
+        credit_user_id = request.query_params.get('credit_user', None)
+        if not credit_user_id:
+            return Response({"error": "credit_user parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the latest transaction based on both date and time
+        try:
+            latest_transaction = CreditTransaction.objects.filter(credit_user_id=credit_user_id).order_by('-date', '-id').first()
+            if not latest_transaction:
+                return Response({"error": "No transactions found for the given credit_user"}, status=status.HTTP_404_NOT_FOUND)
+            
+            serializer = self.get_serializer(latest_transaction)
+            return Response(serializer.data)
+        except CreditTransaction.DoesNotExist:
+            return Response({"error": "No transactions found for the given credit_user"}, status=status.HTTP_404_NOT_FOUND)

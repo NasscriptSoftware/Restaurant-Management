@@ -506,7 +506,14 @@ class MessTransactionSerializer(serializers.ModelSerializer):
         fields = ['id', 'received_amount', 'status', 'cash_amount', 'bank_amount', 'payment_method', 'mess','date']
 
 class CreditTransactionSerializer(serializers.ModelSerializer):
+    credit_user_details = serializers.SerializerMethodField()
+
     class Meta:
         model = CreditTransaction
         fields = '__all__'
         read_only_fields = ['status']
+        
+    def get_credit_user_details(self, obj):
+        if obj.credit_user:
+            return CreditUserSerializer(obj.credit_user).data
+        return None
