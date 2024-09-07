@@ -83,16 +83,18 @@ const DiningTablePage: React.FC = () => {
   return (
     <Layout>
       <div className={`flex-1 flex flex-col p-4 bg-[#8D4CF957] ${isModalOpen ? 'backdrop-blur-sm' : ''}`}>
-        <div className="flex justify-between mb-4">
-          <div className="text-white text-2xl">Dining Table</div>
+        <div className="flex justify-between mb-4 items-center">
+          <div className="text-white text-lg md:text-2xl">Dining Table</div>
           <RealTimeClock />
         </div>
-        <div className="flex flex-row gap-4">
-          <div className="flex-1 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
+        
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Table grid: responsive grid for tables */}
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {loading ? (
-              <div className="text-white text-center col-span-4">Loading...</div>
+              <div className="text-white text-center col-span-full">Loading...</div>
             ) : error ? (
-              <div className="text-white text-center col-span-4">{error}</div>
+              <div className="text-white text-center col-span-full">{error}</div>
             ) : tables.length > 0 ? (
               tables.map((table) => (
                 <Table
@@ -109,12 +111,16 @@ const DiningTablePage: React.FC = () => {
                 />
               ))
             ) : (
-              <div className="text-white text-center col-span-4">
+              <div className="text-white text-center col-span-full">
                 No tables available for the selected floor.
               </div>
             )}
           </div>
-          <FloorSelector floors={floors} onFloorChange={handleFloorChange} />
+
+          {/* Floor selector positioned below the tables on mobile, to the right on larger screens */}
+          <div className="w-full lg:w-auto">
+            <FloorSelector floors={floors} onFloorChange={handleFloorChange} />
+          </div>
         </div>
       </div>
     </Layout>
