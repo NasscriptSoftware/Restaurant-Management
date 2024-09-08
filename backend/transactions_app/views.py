@@ -1,5 +1,7 @@
 from rest_framework import viewsets,status
 from django.db import transaction 
+from django.db.models import Q
+
 from .models import (
     NatureGroup,
     MainGroup, 
@@ -68,24 +70,19 @@ class TransactionViewSet(viewsets.ModelViewSet):
         from_date = request.query_params.get('from_date', None)
         to_date = request.query_params.get('to_date', None)
 
-        # Ensure ledger_id is provided
         if not ledger_id:
             return Response([])
 
-        # Filter transactions by ledger
         queryset = self.queryset.filter(ledger__id=ledger_id)
 
-        # If no transactions match the ledger, return an empty list
         if not queryset.exists():
             return Response([])
 
-        # Parse the from_date and to_date strings into date objects
         if from_date:
             from_date = parse_date(from_date)
         if to_date:
             to_date = parse_date(to_date)
 
-        # Filter further by date range if provided
         if from_date and to_date:
             queryset = queryset.filter(date__range=(from_date, to_date))
         elif from_date:
@@ -93,9 +90,44 @@ class TransactionViewSet(viewsets.ModelViewSet):
         elif to_date:
             queryset = queryset.filter(date__lte=to_date)
 
-        # Serialize the filtered queryset
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='filter-by-nature-group')
+    def filter_by_nature_group(self, request):
+        nature_group_name = request.query_params.get('nature_group_name', None)
+        from_date = request.query_params.get('from_date', None)
+        to_date = request.query_params.get('to_date', None)
+
+        # Create a filter condition for nature_group_name
+        filters = Q()
+        if nature_group_name:
+            filters &= Q(ledger__group__nature_group__name__iexact=nature_group_name)
+
+        # Parse and apply the date range filter
+        if from_date and to_date:
+            from_date_parsed = parse_date(from_date)
+            to_date_parsed = parse_date(to_date)
+
+            if from_date_parsed and to_date_parsed:
+                filters &= Q(date__range=(from_date_parsed, to_date_parsed))
+            else:
+                return Response([])  # Return empty response if dates are invalid
+        else:
+            return Response([])  # Return empty response if both dates are not provided
+
+        # Fetch filtered transactions
+        transactions = Transaction.objects.filter(filters)
+
+        # Return empty if no transactions found
+        if not transactions.exists():
+            return Response([])
+
+        # Serialize and return the filtered data
+        serializer = self.get_serializer(transactions, many=True)
+        return Response(serializer.data)
+
+
 
 
 class IncomeStatementViewSet(viewsets.ModelViewSet):
