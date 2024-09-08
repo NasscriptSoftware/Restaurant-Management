@@ -4,6 +4,7 @@ import PayIn from "@/components/Transactions/PayIn";
 import PayOut from "@/components/Transactions/PayOut";
 import Ledger from "@/components/Transactions/Ledger";
 import LedgerReport from "@/components/Transactions/LedgerReport";
+import IncomeStatement from "@/components/Transactions/IncomeStatement "; // Import the new component
 
 const TransactionsPage: React.FC = () => {
   const [activeButton, setActiveButton] = useState("Ledger");
@@ -20,8 +21,10 @@ const TransactionsPage: React.FC = () => {
         return <PayOut />;
       case "Ledger":
         return <Ledger />;
-      case "Transactions": // Add case for Transactions
+      case "Transactions":
         return <LedgerReport />;
+      case "IncomeStatement": // Add case for IncomeStatement
+        return <IncomeStatement />;
       default:
         return null;
     }
@@ -42,7 +45,7 @@ const TransactionsPage: React.FC = () => {
             </button>
             <button
               className={`py-2 px-4 rounded ${
-                activeButton === "PayOut" ?  "bg-[#6f42c1] text-white transition-all" : "bg-purple-400 text-white hover:bg-purple-600"
+                activeButton === "PayOut" ? "bg-[#6f42c1] text-white transition-all" : "bg-purple-400 text-white hover:bg-purple-600"
               }`}
               onClick={() => handleButtonClick("PayOut")}
             >
@@ -50,7 +53,7 @@ const TransactionsPage: React.FC = () => {
             </button>
             <button
               className={`py-2 px-4 rounded ${
-                activeButton === "Ledger" ?  "bg-[#6f42c1] text-white transition-all" : "bg-purple-400 text-white hover:bg-purple-600"
+                activeButton === "Ledger" ? "bg-[#6f42c1] text-white transition-all" : "bg-purple-400 text-white hover:bg-purple-600"
               }`}
               onClick={() => handleButtonClick("Ledger")}
             >
@@ -58,11 +61,19 @@ const TransactionsPage: React.FC = () => {
             </button>
             <button
               className={`py-2 px-4 rounded ${
-                activeButton === "Transactions" ?  "bg-[#6f42c1] text-white transition-all" : "bg-purple-400 text-white hover:bg-purple-600"
+                activeButton === "Transactions" ? "bg-[#6f42c1] text-white transition-all" : "bg-purple-400 text-white hover:bg-purple-600"
               }`}
               onClick={() => handleButtonClick("Transactions")}
             >
               Ledger Reports
+            </button>
+            <button
+              className={`py-2 px-4 rounded ${
+                activeButton === "IncomeStatement" ? "bg-[#6f42c1] text-white transition-all" : "bg-purple-400 text-white hover:bg-purple-600"
+              }`}
+              onClick={() => handleButtonClick("IncomeStatement")}
+            >
+              Income Statement
             </button>
           </div>
         </header>
