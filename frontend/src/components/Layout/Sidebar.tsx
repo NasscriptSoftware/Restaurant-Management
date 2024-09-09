@@ -21,6 +21,7 @@ import {
   Users,
   Salad,
   ArrowRightLeft,
+  ChartColumn ,
 } from "lucide-react";
 import LogoutBtn from "./LogoutBtn";
 import NotificationBadge from "./NotificationBadge";
@@ -67,6 +68,7 @@ const Sidebar: React.FC = () => {
     { path: "/salesreport", icon: ScrollText, label: "Reports" },
     { path: "/credit-users", icon: Users, label: "Credit Customer" },
     { path: "/transactions", icon: ArrowRightLeft, label: "Transactions" },
+    { path: "/share-management", icon: ChartColumn, label: "ShareManagement" },
     { path: "/settings", icon: Settings, label: "Settings" },
   ];
 
