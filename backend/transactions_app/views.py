@@ -8,7 +8,9 @@ from .models import (
     Ledger, 
     Transaction,
     IncomeStatement, 
-    BalanceSheet)
+    BalanceSheet,
+    ShareUsers
+    )
 from .serializers import (
      NatureGroupSerializer, 
      MainGroupSerializer, 
@@ -16,10 +18,14 @@ from .serializers import (
      TransactionSerializer,
      IncomeStatementSerializer, 
      BalanceSheetSerializer,
+     ShareUserManagementSerializer,
+     ProfitLossShareTransaction,
+     ProfitLossShareTransactionSerializer
      )
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.utils.dateparse import parse_date
+from rest_framework.exceptions import NotFound
 
 class NatureGroupViewSet(viewsets.ModelViewSet):
     queryset = NatureGroup.objects.all()
@@ -137,3 +143,30 @@ class IncomeStatementViewSet(viewsets.ModelViewSet):
 class BalanceSheetViewSet(viewsets.ModelViewSet):
     queryset = BalanceSheet.objects.all()
     serializer_class = BalanceSheetSerializer
+
+#ShareManagement Section
+class ShareUserManagementViewSet(viewsets.ModelViewSet):
+    queryset = ShareUsers.objects.all()
+    serializer_class = ShareUserManagementSerializer
+
+class ProfitLossShareTransactionViewSet(viewsets.ModelViewSet):
+    queryset = ProfitLossShareTransaction.objects.all()
+    serializer_class = ProfitLossShareTransactionSerializer
+    def get_queryset(self):
+        queryset = ProfitLossShareTransaction.objects.all()
+        transaction_no = self.request.query_params.get('transaction_no', None)
+        if transaction_no:
+            queryset = queryset.filter(transaction_no=transaction_no)
+            if not queryset.exists():
+                raise NotFound("Transaction not found")
+        return queryset
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        
+        return Response(serializer.data, status=201, headers=headers)
+
+    def perform_create(self, serializer):
+        serializer.save()

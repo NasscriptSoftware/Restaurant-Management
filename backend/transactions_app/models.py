@@ -111,3 +111,53 @@ class BalanceSheet(models.Model):
 
     def __str__(self):
         return f"{self.ledger.name} - {self.balance_type} - {self.amount}"
+
+#ShareManagement Section
+class ShareUsers(models.Model):
+    CATEGORY_CHOICES = [
+        ('partners', 'Partners'),
+        ('management', 'Management'),
+    ]
+
+    name = models.CharField(max_length=255)
+    mobile_no = models.CharField(max_length=15)
+    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES)
+    profitlose_share =  models.PositiveIntegerField() 
+    address = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+
+#ShareManagement Section
+class ProfitLossShareTransaction(models.Model):
+    PROFIT_LOSS_CHOICES = [
+        ('profit', 'Profit'),
+        ('lose', 'Lose'),
+    ]
+    
+    created_date = models.DateTimeField(auto_now_add=True)
+    transaction_no = models.CharField(max_length=100, unique=True)
+    period_from = models.DateField()
+    period_to = models.DateField()
+    total_percentage = models.DecimalField(max_digits=5, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=10, choices=PROFIT_LOSS_CHOICES, blank=True) 
+    profit_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    loss_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    def __str__(self):
+        return f'Transaction {self.transaction_no} ({self.created_date})'
+
+class ShareUserTransaction(models.Model):
+    PROFIT_LOSS_CHOICES = [
+        ('profit', 'Profit'),
+        ('lose', 'Lose'),
+    ]
+    transaction = models.ForeignKey(ProfitLossShareTransaction, related_name='share_user_transactions', on_delete=models.CASCADE)
+    share_user = models.ForeignKey(ShareUsers, related_name='share_user_transactions', on_delete=models.CASCADE)
+    percentage = models.PositiveIntegerField()
+    profit_lose = models.CharField(max_length=10, choices=PROFIT_LOSS_CHOICES)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return f'{self.share_user.name} - {self.transaction.transaction_no}'

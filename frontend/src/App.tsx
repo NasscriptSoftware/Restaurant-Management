@@ -31,6 +31,7 @@ const HomePage = lazy(() => import("./pages/HomePage"));
 const MessPage = lazy(() => import("./pages/MessPage"));
 const SalesReportPage = lazy(() => import("./pages/SalesReportPage"));
 const TransactionsPage = lazy(() => import("./pages/TransactionsPage"));
+const ShareManagement = lazy(() => import("./pages/ShareManagement"));
 
 function App() {
   return (
@@ -150,6 +151,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={["staff", "admin"]}>
                       <TransactionsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/share-management"
+                  element={
+                    <ProtectedRoute allowedRoles={["staff", "admin"]}>
+                      <ShareManagement />
                     </ProtectedRoute>
                   }
                 />

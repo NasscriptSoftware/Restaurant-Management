@@ -5,6 +5,7 @@ import PayOut from "@/components/Transactions/PayOut";
 import Ledger from "@/components/Transactions/Ledger";
 import LedgerReport from "@/components/Transactions/LedgerReport";
 import IncomeStatement from "@/components/Transactions/IncomeStatement "; // Import the new component
+import BalanceSheet from "@/components/Transactions/BalanceSheet";
 
 const TransactionsPage: React.FC = () => {
   const [activeButton, setActiveButton] = useState("Ledger");
@@ -25,6 +26,8 @@ const TransactionsPage: React.FC = () => {
         return <LedgerReport />;
       case "IncomeStatement": // Add case for IncomeStatement
         return <IncomeStatement />;
+      case "BalanceSheet": // Add case for IncomeStatement
+        return <BalanceSheet />;
       default:
         return null;
     }
@@ -74,6 +77,14 @@ const TransactionsPage: React.FC = () => {
               onClick={() => handleButtonClick("IncomeStatement")}
             >
               Income Statement
+            </button>
+            <button
+              className={`py-2 px-4 rounded ${
+                activeButton === "BalanceSheet" ? "bg-[#6f42c1] text-white transition-all" : "bg-purple-400 text-white hover:bg-purple-600"
+              }`}
+              onClick={() => handleButtonClick("BalanceSheet")}
+            >
+              BalanceSheet
             </button>
           </div>
         </header>
