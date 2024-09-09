@@ -96,6 +96,7 @@ const PayInModal: React.FC<PayInModalProps> = ({ isOpen, onClose, creditUserId }
                 });
         }
     }, [creditUserId, ledgerOptions]);
+console.log(mobileNumber);
 
     useEffect(() => {
         if (!isOpen) {

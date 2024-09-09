@@ -19,6 +19,8 @@
         profitlose_share: string;  // This represents the profit/loss share value
     }
 
+
+
     const ProfitLossShareTransaction: React.FC = () => {
         const [commonFields, setCommonFields] = useState({
             date: '',
@@ -105,7 +107,6 @@
         
                     if (name === 'percentage') {
                         newValue = value;
-                        const percentage = parseFloat(value) || 0;
                         const amount = commonFields.status === 'Profit'
                             ? parseFloat(commonFields.profitAmount) || 0
                             : commonFields.status === 'Loss'
@@ -114,7 +115,7 @@
                         return {
                             ...section,
                             [name]: newValue,
-                            amount: calculateAmount(percentage, amount)
+                            amount: calculateAmount(newValue, amount)
                         };
                     }
         
@@ -135,6 +136,7 @@
             });
             setNameSections(updatedSections);
         };
+        
 
         const calculateAmount = (percentage: string, amount: number) => {
             const percent = parseFloat(percentage) || 0;

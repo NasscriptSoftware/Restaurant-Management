@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { api } from "@/services/api";
 import Layout from "../components/Layout/Layout";
 import Table from "../components/DiningTable/Table";
-import FloorSelector, {
+import  {
   FloorName,
 } from "../components/DiningTable/FloorSelector";
 import RealTimeClock from "../components/DiningTable/RealTimeClock";
@@ -74,9 +74,9 @@ const DiningTablePage: React.FC = () => {
     fetchTables();
   }, [selectedFloor]);
 
-  const handleFloorChange = (floorName: FloorName) => {
-    setSelectedFloor(floorName);
-  };
+  // const handleFloorChange = (floorName: FloorName) => {
+  //   setSelectedFloor(floorName);
+  // };
 
   // Define the handleFloorClick function
   const handleFloorClick = (floor: Floor) => {
