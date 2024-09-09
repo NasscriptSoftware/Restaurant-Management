@@ -23,16 +23,27 @@ const LedgerInfo: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(10); // Adjust the number of items per page as needed
+
   useEffect(() => {
-    api.get("/ledgers/")
-      .then((response) => {
+    const fetchLedgers = async () => {
+      try {
+        const response = await api.get(`/ledgers/?page=${currentPage}&page_size=${itemsPerPage}`);
         setLedgers(response.data.results);
-      })
-      .catch((error) => {
+        setTotalPages(response.data.total_pages); // Assuming your API provides the total number of pages
+      } catch (error) {
         console.error("There was an error fetching the ledgers!", error);
         setError("Could not load ledgers. Please try again later.");
-      });
+      }
+    };
 
+    fetchLedgers();
+  }, [currentPage]);
+
+  useEffect(() => {
     const fetchAllGroups = async () => {
       let allGroups: Group[] = [];
       let nextUrl = "/main-groups/";
@@ -74,6 +85,10 @@ const LedgerInfo: React.FC = () => {
     // You can also make an API call here to update the ledger on the server
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="overflow-x-auto min-h-screen">
       {error && <p className="text-red-500 mb-4">{error}</p>}
@@ -89,10 +104,10 @@ const LedgerInfo: React.FC = () => {
         <tbody>
           {ledgers.map((ledger) => (
             <tr key={ledger.id} className="align-top">
-              <td className="py-2 px-4 border-b">{ledger.id}</td>
-              <td className="py-2 px-4 border-b">{ledger.name}</td>
-              <td className="py-2 px-4 border-b">{ledger.group.name}</td>
-              <td className="py-2 px-4 border-b">
+              <td className="py-2 px-4">{ledger.id}</td>
+              <td className="py-2 px-4">{ledger.name}</td>
+              <td className="py-2 px-4">{ledger.group.name}</td>
+              <td className="py-2 px-4">
                 <button
                   onClick={() => handleEdit(ledger)}
                   className="bg-blue-500 text-white py-1 px-2 rounded hover:bg-blue-700"
@@ -104,6 +119,28 @@ const LedgerInfo: React.FC = () => {
           ))}
         </tbody>
       </table>
+
+      {/* Pagination Controls */}
+      <div className="mt-4 flex justify-center items-center">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="bg-gray-500 text-white py-1 px-4 rounded mr-2 disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="mx-2">
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="bg-gray-500 text-white py-1 px-4 rounded ml-2 disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+
 
       {isEditModalOpen && selectedLedger && (
         <EditLedgerModal

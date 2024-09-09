@@ -41,18 +41,35 @@ const PayIn: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
-    api.get("/ledgers/")
-      .then((response) => {
-        const data = response.data.results;
-        if (Array.isArray(data)) {
-          setLedgerOptions(data);
-        } else {
-          console.error("Unexpected API response format", data);
+    const fetchAllLedgers = async () => {
+      let allLedgers: Ledger[] = [];
+      let page = 1;
+      let hasMore = true;
+
+      while (hasMore) {
+        try {
+          const response = await api.get(`/ledgers/?page=${page}`);
+          const data = response.data;
+          if (Array.isArray(data.results)) {
+            allLedgers = [...allLedgers, ...data.results];
+            hasMore = data.next !== null; // Check if there's another page
+            page += 1; // Move to the next page
+          } else {
+            console.error("Unexpected API response format", data);
+            hasMore = false;
+          }
+        } catch (error) {
+          console.error("There was an error fetching the ledgers!", error);
+          hasMore = false;
         }
-      })
-      .catch((error) => {
-        console.error("There was an error fetching the ledgers!", error);
-      });
+      }
+
+      // Log the fetched ledgers to verify data
+      console.log("Fetched ledgers:", allLedgers);
+      setLedgerOptions(allLedgers);
+    };
+
+    fetchAllLedgers();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -179,7 +196,7 @@ const PayIn: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium">Income/Partners/Recivables</label>
+            <label className="block mb-2 text-sm font-medium">Income/Partners/Receivables</label>
             <select
               value={selectedParticulars}
               onChange={(e) => setSelectedParticulars(e.target.value)}

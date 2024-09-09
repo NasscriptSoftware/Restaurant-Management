@@ -30,15 +30,26 @@ const LedgerReport: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch the list of ledgers
-    api
-      .get("/ledgers/")
-      .then((response) => {
-        setLedgers(response.data.results);
-      })
-      .catch((error) => {
-        console.error("Error fetching ledgers:", error);
-      });
+    const fetchLedgers = async () => {
+      let allLedgers: Ledger[] = [];
+      let nextPageUrl = "/ledgers/";
+
+      while (nextPageUrl) {
+        try {
+          const response = await api.get(nextPageUrl);
+          allLedgers = [...allLedgers, ...response.data.results];
+          nextPageUrl = response.data.next; // Get the URL for the next page, if any
+        } catch (error) {
+          console.error("Error fetching ledgers:", error);
+          setError("Could not load ledgers. Please try again later.");
+          return;
+        }
+      }
+
+      setLedgers(allLedgers);
+    };
+
+    fetchLedgers();
   }, []);
 
   const handleSearch = () => {
@@ -204,7 +215,7 @@ const LedgerReport: React.FC = () => {
               })}
               {/* Footer for total amounts */}
               <tr>
-                <td className="py-2 px-4 text-left font-semibold">Grand   Total</td>
+                <td className="py-2 px-4 text-left font-semibold">Grand Total</td>
                 <td colSpan={2}></td>
                 <td className="py-2 px-4 text-right font-bold text-sm text-gray-900">
                   {totalDebitAmount.toFixed(2)}
@@ -214,12 +225,11 @@ const LedgerReport: React.FC = () => {
                 </td>
                 <td colSpan={2}></td>
               </tr>
-
             </tbody>
           </table>
         </div>
       ) : (
-        <p className="text-center text-gray-500 mt-4">No transactions found</p>
+        <p className="text-gray-600 mt-4">No transactions found for the selected filters.</p>
       )}
     </div>
   );
