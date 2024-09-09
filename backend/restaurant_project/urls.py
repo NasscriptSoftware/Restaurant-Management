@@ -42,7 +42,8 @@ from transactions_app.views import (NatureGroupViewSet,
  TransactionViewSet, 
  IncomeStatementViewSet, 
  BalanceSheetViewSet,
- ShareUserManagementViewSet
+ ShareUserManagementViewSet,
+ ProfitLossShareTransactionViewSet,
  )
 
 router = DefaultRouter()
@@ -88,7 +89,7 @@ router.register(r'transactions', TransactionViewSet, basename="transactions")
 router.register(r'income-statements', IncomeStatementViewSet)
 router.register(r'balance-sheets', BalanceSheetViewSet)
 router.register(r'share-user-management', ShareUserManagementViewSet, basename="share-user-management")
-
+router.register(r'profit-loss-share-transactions',ProfitLossShareTransactionViewSet,basename='profit-loss-share-transactions')
 
 
 urlpatterns = [

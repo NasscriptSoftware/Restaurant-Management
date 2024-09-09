@@ -61,6 +61,19 @@ const LedgerReport: React.FC = () => {
     }
   };
 
+  // Calculate totals
+  const totalDebitAmount = transactions.reduce(
+    (sum, transaction) => sum + parseFloat(transaction.debit_amount || "0"),
+    0
+  );
+  const totalCreditAmount = transactions.reduce(
+    (sum, transaction) => sum + parseFloat(transaction.credit_amount || "0"),
+    0
+  );
+
+  let runningDebitTotal = 0;
+  let runningCreditTotal = 0;
+
   return (
     <div className="p-6">
       <h1 className="text-3xl font-semibold mb-6">Transactions</h1>
@@ -159,40 +172,54 @@ const LedgerReport: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {transactions.map((transaction) => (
-                <tr key={transaction.id}>
-                  <td className="py-2 px-4 border-b text-left text-sm text-gray-700">
-                    {transaction.date}
-                  </td>
-                  <td className="py-2 px-4 border-b text-left text-sm text-gray-700">
-                    {transaction.voucher_no}
-                  </td>
-                  <td className="py-2 px-4 border-b text-left text-sm text-gray-700">
-                    {transaction.particulars.name}
-                  </td>
-                  <td className="py-2 px-4 border-b text-right text-sm text-gray-700">
-                    {transaction.debit_amount}
-                  </td>
-                  <td className="py-2 px-4 border-b text-right text-sm text-gray-700">
-                    {transaction.credit_amount}
-                  </td>
-                  <td className="py-2 px-4 border-b text-right text-sm text-gray-700">
-                    {transaction.balance_amount}
-                  </td>
-                  <td className="py-2 px-4 border-b text-center text-sm text-gray-700">
-                    {transaction.debit_credit}
-                  </td>
-                </tr>
-              ))}
+              {transactions.map((transaction) => {
+                runningDebitTotal += parseFloat(transaction.debit_amount || "0");
+                runningCreditTotal += parseFloat(transaction.credit_amount || "0");
+
+                return (
+                  <tr key={transaction.id}>
+                    <td className="py-2 px-4 border-b text-left text-sm text-gray-700">
+                      {transaction.date}
+                    </td>
+                    <td className="py-2 px-4 border-b text-left text-sm text-gray-700">
+                      {transaction.voucher_no}
+                    </td>
+                    <td className="py-2 px-4 border-b text-left text-sm text-gray-700">
+                      {transaction.particulars.name}
+                    </td>
+                    <td className="py-2 px-4 border-b text-right text-sm text-gray-700">
+                      {transaction.debit_amount}
+                    </td>
+                    <td className="py-2 px-4 border-b text-right text-sm text-gray-700">
+                      {transaction.credit_amount}
+                    </td>
+                    <td className="py-2 px-4 border-b text-right text-sm text-gray-700">
+                      {transaction.balance_amount}
+                    </td>
+                    <td className="py-2 px-4 border-b text-center text-sm text-gray-700">
+                      {transaction.debit_credit}
+                    </td>
+                  </tr>
+                );
+              })}
+              {/* Footer for total amounts */}
+              <tr>
+                <td className="py-2 px-4 text-left font-semibold">Grand   Total</td>
+                <td colSpan={2}></td>
+                <td className="py-2 px-4 text-right font-bold text-sm text-gray-900">
+                  {totalDebitAmount.toFixed(2)}
+                </td>
+                <td className="py-2 px-4 text-right font-bold text-sm text-gray-900">
+                  {totalCreditAmount.toFixed(2)}
+                </td>
+                <td colSpan={2}></td>
+              </tr>
+
             </tbody>
           </table>
         </div>
       ) : (
-        !isSearching && (
-          <div className="mt-6 text-center text-gray-500">
-            No Ledger Report available
-          </div>
-        )
+        <p className="text-center text-gray-500 mt-4">No transactions found</p>
       )}
     </div>
   );

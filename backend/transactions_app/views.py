@@ -25,6 +25,7 @@ from .serializers import (
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.utils.dateparse import parse_date
+from rest_framework.exceptions import NotFound
 
 class NatureGroupViewSet(viewsets.ModelViewSet):
     queryset = NatureGroup.objects.all()
@@ -151,7 +152,14 @@ class ShareUserManagementViewSet(viewsets.ModelViewSet):
 class ProfitLossShareTransactionViewSet(viewsets.ModelViewSet):
     queryset = ProfitLossShareTransaction.objects.all()
     serializer_class = ProfitLossShareTransactionSerializer
-
+    def get_queryset(self):
+        queryset = ProfitLossShareTransaction.objects.all()
+        transaction_no = self.request.query_params.get('transaction_no', None)
+        if transaction_no:
+            queryset = queryset.filter(transaction_no=transaction_no)
+            if not queryset.exists():
+                raise NotFound("Transaction not found")
+        return queryset
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

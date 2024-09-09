@@ -142,9 +142,9 @@ class ProfitLossShareTransaction(models.Model):
     period_to = models.DateField()
     total_percentage = models.DecimalField(max_digits=5, decimal_places=2)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    satus = models.CharField(max_length=10, choices=PROFIT_LOSS_CHOICES)
-    profit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    loss = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    status = models.CharField(max_length=10, choices=PROFIT_LOSS_CHOICES, blank=True) 
+    profit_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    loss_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     def __str__(self):
         return f'Transaction {self.transaction_no} ({self.created_date})'
 

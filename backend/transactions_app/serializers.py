@@ -59,48 +59,66 @@ class ShareUserManagementSerializer(serializers.ModelSerializer):
         model = ShareUsers
         fields = ['id', 'name', 'mobile_no', 'category', 'profitlose_share', 'address']
 
+def get_next_transaction_no():
+    # Get the last transaction and increment the number
+    last_transaction = ProfitLossShareTransaction.objects.order_by('-created_date').first()
+    if last_transaction:
+        last_transaction_no = last_transaction.transaction_no
+        next_transaction_no = str(int(last_transaction_no) + 1)
+    else:
+        # If there are no transactions yet, start with 1
+        next_transaction_no = '1'
+    return next_transaction_no
+
 class ShareUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShareUsers
         fields = ['id', 'name', 'category']
 
 class ShareUserTransactionSerializer(serializers.ModelSerializer):
-    share_user = ShareUserSerializer()
-    
+    share_user = serializers.PrimaryKeyRelatedField(queryset=ShareUsers.objects.all()) 
+    share_user_data = ShareUserSerializer(source='share_user', read_only=True)
     class Meta:
         model = ShareUserTransaction
-        fields = ['share_user', 'profit_lose', 'percentage', 'amount']
+        fields = ['share_user', 'share_user_data','profit_lose', 'percentage', 'amount']
 
 class ProfitLossShareTransactionSerializer(serializers.ModelSerializer):
-    share_users = ShareUserTransactionSerializer(many=True)
+    share_user_transactions = ShareUserTransactionSerializer(many=True)
 
     class Meta:
         model = ProfitLossShareTransaction
-        fields = ['created_date', 'transaction_no', 'period_from', 'period_to', 'total_percentage', 'total_amount', 'status', 'profit', 'loss', 'share_users']
+        fields = [
+            'transaction_no',
+            'created_date',
+            'period_from',
+            'period_to',
+            'status',
+            'profit_amount',
+            'loss_amount',
+            'total_amount',
+            'total_percentage',
+            'share_user_transactions'
+        ]
+        read_only_fields = ('transaction_no',)  # Make transaction_no read-only
 
     def create(self, validated_data):
-        share_users_data = validated_data.pop('share_users')
+        # Generate the next transaction number
+        transaction_no = get_next_transaction_no()
+        validated_data['transaction_no'] = transaction_no
+        
+        share_users_data = validated_data.pop('share_user_transactions')
         transaction = ProfitLossShareTransaction.objects.create(**validated_data)
-
-        total_percentage = 0
-        total_amount = 0
-
-        for user_data in share_users_data:
-            share_user = user_data['share_user']
-            ShareUserTransaction.objects.create(
-                transaction=transaction,
-                share_user=ShareUsers.objects.get(id=share_user['id']),
-                profit_lose=user_data['profit_lose'],
-                percentage=user_data['percentage'],
-                amount=user_data['amount']
-            )
-            total_percentage += user_data['percentage']
-            total_amount += user_data['amount']
-
-        # Update total_percentage and total_amount
-        transaction.total_percentage = total_percentage
+        
+        # Calculate total_amount and total_percentage
+        total_amount = sum(user_data['amount'] for user_data in share_users_data)
+        total_percentage = sum(user_data['percentage'] for user_data in share_users_data)
+        
         transaction.total_amount = total_amount
+        transaction.total_percentage = total_percentage
         transaction.save()
 
+        for share_user_data in share_users_data:
+            ShareUserTransaction.objects.create(transaction=transaction, **share_user_data)
+        
         return transaction
 
