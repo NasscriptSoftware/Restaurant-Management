@@ -10,7 +10,7 @@ interface ShareUser {
 }
 
 interface ShareUserTransaction {
-    share_user: ShareUser;
+    share_user_data: ShareUser; // Ensure the name is consistent
     profit_lose: string;
     percentage: number;
     amount: string;
@@ -28,6 +28,7 @@ interface ProfitLossShareTransaction {
     loss_amount: string;
     share_user_transactions: ShareUserTransaction[];
 }
+
 
 const formatDate = (dateString: string) => {
     const date = new Date(dateString);
