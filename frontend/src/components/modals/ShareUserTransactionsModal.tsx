@@ -8,7 +8,7 @@ interface ShareUser {
 }
 
 interface ShareUserTransaction {
-    share_user: ShareUser;
+    share_user_data: ShareUser; // Change to match ProfitLoseShareReport.tsx
     profit_lose: string;
     percentage: number;
     amount: string;
@@ -53,8 +53,8 @@ const ShareUserTransactionsModal: React.FC<ShareUserTransactionsModalProps> = ({
                         <tbody className="bg-white divide-y divide-gray-200">
                             {transactions.map((transaction, index) => (
                                 <tr key={index}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.share_user.name}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.share_user.category}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.share_user_data.name}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.share_user_data.category}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.profit_lose}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.percentage}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">{transaction.amount}</td>
