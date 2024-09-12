@@ -116,13 +116,13 @@ class BalanceSheet(models.Model):
 class ShareUsers(models.Model):
     CATEGORY_CHOICES = [
         ('partners', 'Partners'),
-        ('management', 'Management'),
+        ('managements', 'Managements'),
     ]
 
     name = models.CharField(max_length=255)
     mobile_no = models.CharField(max_length=15)
-    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES)
-    profitlose_share =  models.PositiveIntegerField() 
+    category = models.CharField(max_length=15, choices=CATEGORY_CHOICES)
+    profitlose_share =  models.DecimalField(max_digits=5, decimal_places=2)
     address = models.TextField()
 
     def __str__(self):
@@ -155,9 +155,18 @@ class ShareUserTransaction(models.Model):
     ]
     transaction = models.ForeignKey(ProfitLossShareTransaction, related_name='share_user_transactions', on_delete=models.CASCADE)
     share_user = models.ForeignKey(ShareUsers, related_name='share_user_transactions', on_delete=models.CASCADE)
-    percentage = models.PositiveIntegerField()
+    percentage = models.DecimalField(max_digits=5, decimal_places=2)
     profit_lose = models.CharField(max_length=10, choices=PROFIT_LOSS_CHOICES)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
 
     def __str__(self):
         return f'{self.share_user.name} - {self.transaction.transaction_no}'
+
+class CashCountSheet(models.Model):
+    created_date = models.DateField()
+    currency = models.PositiveIntegerField()
+    nos = models.PositiveIntegerField() 
+    amount = models.DecimalField(max_digits=12, decimal_places=2)  
+
+    def __str__(self):
+        return f"{self.currency} - {self.nos} - {self.amount}"

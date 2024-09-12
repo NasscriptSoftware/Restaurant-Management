@@ -8,7 +8,9 @@ from .models import (
     BalanceSheet,
     ShareUsers,
     ShareUserTransaction,
-    ProfitLossShareTransaction     
+    ProfitLossShareTransaction,
+    CashCountSheet,
+
     )
 
 class NatureGroupSerializer(serializers.ModelSerializer):
@@ -121,4 +123,10 @@ class ProfitLossShareTransactionSerializer(serializers.ModelSerializer):
             ShareUserTransaction.objects.create(transaction=transaction, **share_user_data)
         
         return transaction
+
+class CashCountSheetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CashCountSheet
+        fields = ['id', 'created_date', 'currency', 'nos', 'amount']
+
 

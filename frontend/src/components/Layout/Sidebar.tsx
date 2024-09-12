@@ -22,6 +22,7 @@ import {
   Salad,
   ArrowRightLeft,
   ChartColumn ,
+  CalendarRange ,
 } from "lucide-react";
 import LogoutBtn from "./LogoutBtn";
 import NotificationBadge from "./NotificationBadge";
@@ -69,6 +70,7 @@ const Sidebar: React.FC = () => {
     { path: "/credit-users", icon: Users, label: "Credit Customer" },
     { path: "/transactions", icon: ArrowRightLeft, label: "Transactions" },
     { path: "/share-management", icon: ChartColumn, label: "ShareManagement" },
+    { path: "/day-book", icon: CalendarRange , label: "DayBook" },
     { path: "/settings", icon: Settings, label: "Settings" },
   ];
 

@@ -132,8 +132,36 @@ const PayIn: React.FC = () => {
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
 
+  const refreshLedgerOptions = async () => {
+    let allLedgers: Ledger[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      try {
+        const response = await api.get(`/ledgers/?page=${page}`);
+        const data = response.data;
+        if (Array.isArray(data.results)) {
+          allLedgers = [...allLedgers, ...data.results];
+          hasMore = data.next !== null; // Check if there's another page
+          page += 1; // Move to the next page
+        } else {
+          console.error("Unexpected API response format", data);
+          hasMore = false;
+        }
+      } catch (error) {
+        console.error("There was an error fetching the ledgers!", error);
+        hasMore = false;
+      }
+    }
+
+    // Log the fetched ledgers to verify data
+    console.log("Fetched ledgers:", allLedgers);
+    setLedgerOptions(allLedgers);
+  };
+
   return (
-    <div>
+    <div className="bg-green-300">
       <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
         <h1 className="text-2xl font-bold mb-2 sm:mb-0">Pay In</h1>
         <button
@@ -147,7 +175,7 @@ const PayIn: React.FC = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block mb-2 text-sm font-medium">Date</label>
+            <label className="block mb-2 text-lg font-bold">Date</label>
             <input
               type="date"
               value={date}
@@ -158,7 +186,7 @@ const PayIn: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium">Reference No.</label>
+            <label className="block mb-2 text-lg font-bold">Reference No.</label>
             <input
               type="text"
               value={refNo}
@@ -168,7 +196,7 @@ const PayIn: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium">Cash/Bank</label>
+            <label className="block mb-2 text-lg font-bold">Cash/Bank</label>
             <select
               value={selectedCashBank}
               onChange={(e) => setSelectedCashBank(e.target.value)}
@@ -185,18 +213,19 @@ const PayIn: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium">Debit Amount</label>
+            <label className="block mb-2 text-lg font-bold">Debit Amount</label>
             <input
               type="number"
               value={debitAmount}
               onChange={(e) => setDebitAmount(e.target.value)}
               className="border rounded p-2 w-full"
               step="0.01"
+              required
             />
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium">Income/Partners/Receivables</label>
+            <label className="block mb-2 text-lg font-bold">Income/Partners/Receivables</label>
             <select
               value={selectedParticulars}
               onChange={(e) => setSelectedParticulars(e.target.value)}
@@ -213,40 +242,46 @@ const PayIn: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium">Credit Amount</label>
+            <label className="block mb-2 text-lg font-bold">Credit Amount</label>
             <input
               type="number"
               value={creditAmount}
               onChange={(e) => setCreditAmount(e.target.value)}
               className="border rounded p-2 w-full"
               step="0.01"
+              required
             />
           </div>
 
           <div className="col-span-1 sm:col-span-2">
-            <label className="block mb-2 text-sm font-medium">Remarks</label>
+            <label className="block mb-2 text-lg font-bold">Remarks</label>
             <textarea
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               className="border rounded p-2 w-full"
+              rows={3}
             />
           </div>
         </div>
 
-        {error && <p className="text-red-500">{error}</p>}
+        {error && <p className="text-red-600">{error}</p>}
 
-        <div className="flex justify-center mt-4">
-          <button
-            type="submit"
-            className="bg-[#6f42c1] text-white py-2 px-4 rounded w-full sm:w-auto"
-            disabled={isSubmitting}  // Disable the button when submitting
-          >
-            Submit
-          </button>
-        </div>
+        <button
+          type="submit"
+          className={`bg-blue-500 text-white py-2 px-4 rounded ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit'}
+        </button>
       </form>
 
-      <LedgerCreationModal isOpen={isModalOpen} onClose={handleCloseModal} />
+      {isModalOpen && (
+        <LedgerCreationModal
+        isOpen={isModalOpen} 
+          onClose={handleCloseModal}
+          refreshLedgerOptions={refreshLedgerOptions} // Pass the callback to the modal
+        />
+      )}
     </div>
   );
 };

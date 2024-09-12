@@ -27,7 +27,7 @@
                 // Optionally clear form fields here
                 setFormData({
                     name: '',
-                    category: 'Partners',
+                    category: 'partners',
                     profitlose_share: '',
                     mobile_no: '',
                     address: ''

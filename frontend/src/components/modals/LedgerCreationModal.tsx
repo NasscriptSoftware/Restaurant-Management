@@ -4,9 +4,10 @@ import React, { useState, useEffect } from "react";
 interface LedgerCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  refreshLedgerOptions: () => void;
 }
 
-const LedgerCreationModal: React.FC<LedgerCreationModalProps> = ({ isOpen, onClose }) => {
+const LedgerCreationModal: React.FC<LedgerCreationModalProps> = ({ isOpen, onClose, refreshLedgerOptions }) => {
   const [name, setName] = useState<string>("");
   const [mobileNo, setMobileNo] = useState<string>("");
   const [openingBalance, setOpeningBalance] = useState<string>("");
@@ -64,6 +65,8 @@ const LedgerCreationModal: React.FC<LedgerCreationModalProps> = ({ isOpen, onClo
       .then((response) => {
         console.log("Ledger created successfully:", response.data);
         onClose(); // Close the modal on successful submission
+        refreshLedgerOptions();
+
       })
       .catch((error) => {
         console.error("There was an error creating the ledger!", error);
