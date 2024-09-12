@@ -29,7 +29,7 @@ type PayOutRequest = {
 
 const PayOut: React.FC = () => {
   const [ledgerOptions, setLedgerOptions] = useState<Ledger[]>([]);
-  const [selectedCashBank, setSelectedCashBank] = useState<string>("");
+  const [selectedExpensePayables, setSelectedExpensePayables] = useState<string>("");
   const [selectedParticulars, setSelectedParticulars] = useState<string>("");
   const [date, setDate] = useState<string>("");
   const [debitAmount, setDebitAmount] = useState<string>("");
@@ -80,7 +80,7 @@ const PayOut: React.FC = () => {
     setError(null); // Reset error state
 
     const transactionData1: TransactionData = {
-      ledger_id: selectedCashBank!,
+      ledger_id: selectedExpensePayables!,
       particulars_id: selectedParticulars!,
       date,
       debit_amount: debitAmount ? parseFloat(debitAmount) : 0,
@@ -91,7 +91,7 @@ const PayOut: React.FC = () => {
 
     const transactionData2: TransactionData = {
       ledger_id: selectedParticulars!,
-      particulars_id: selectedCashBank!,
+      particulars_id: selectedExpensePayables!,
       date,
       debit_amount: 0,
       credit_amount: creditAmount ? parseFloat(creditAmount) : 0,
@@ -115,7 +115,7 @@ const PayOut: React.FC = () => {
       console.log("Transactions successful");
 
       // Reset form fields
-      setSelectedCashBank("");
+      setSelectedExpensePayables("");
       setSelectedParticulars("");
       setDate("");
       setDebitAmount("");
@@ -133,8 +133,37 @@ const PayOut: React.FC = () => {
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
 
+  const refreshLedgerOptions = async () => {
+    let allLedgers: Ledger[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      try {
+        const response = await api.get(`/ledgers/?page=${page}`);
+        const data = response.data;
+        if (Array.isArray(data.results)) {
+          allLedgers = [...allLedgers, ...data.results];
+          hasMore = data.next !== null; // Check if there's another page
+          page += 1; // Move to the next page
+        } else {
+          console.error("Unexpected API response format", data);
+          hasMore = false;
+        }
+      } catch (error) {
+        console.error("There was an error fetching the ledgers!", error);
+        hasMore = false;
+      }
+    }
+
+    // Log the fetched ledgers to verify data
+    console.log("Fetched ledgers:", allLedgers);
+    setLedgerOptions(allLedgers);
+  };
+
+
   return (
-    <div>
+    <div className="bg-blue-200">
       <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
         <h1 className="text-2xl font-bold mb-2 sm:mb-0">Pay Out</h1>
         <button
@@ -148,7 +177,7 @@ const PayOut: React.FC = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block mb-2 text-sm font-medium">Date</label>
+            <label className="block mb-2 text-lg font-bold">Date</label>
             <input
               type="date"
               value={date}
@@ -159,7 +188,7 @@ const PayOut: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium">Reference No.</label>
+            <label className="block mb-2 text-lg font-bold">Reference No.</label>
             <input
               type="text"
               value={refNo}
@@ -169,10 +198,10 @@ const PayOut: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium">Expense/Payables</label>
+            <label className="block mb-2 text-lg font-bold">Expense/Payables</label>
             <select
-              value={selectedCashBank}
-              onChange={(e) => setSelectedCashBank(e.target.value)}
+              value={selectedExpensePayables}
+              onChange={(e) => setSelectedExpensePayables(e.target.value)}
               className="border rounded p-2 w-full"
               required
             >
@@ -186,18 +215,19 @@ const PayOut: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium">Debit Amount</label>
+            <label className="block mb-2 text-lg font-bold">Debit Amount</label>
             <input
               type="number"
               value={debitAmount}
               onChange={(e) => setDebitAmount(e.target.value)}
               className="border rounded p-2 w-full"
               step="0.01"
+              required
             />
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium">Cash/Bank/Creditors</label>
+            <label className="block mb-2 text-lg font-bold">Cash/Bank/Creditors</label>
             <select
               value={selectedParticulars}
               onChange={(e) => setSelectedParticulars(e.target.value)}
@@ -214,18 +244,19 @@ const PayOut: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium">Credit Amount</label>
+            <label className="block mb-2 text-lg font-bold">Credit Amount</label>
             <input
               type="number"
               value={creditAmount}
               onChange={(e) => setCreditAmount(e.target.value)}
               className="border rounded p-2 w-full"
               step="0.01"
+              required
             />
           </div>
 
           <div className="col-span-1 sm:col-span-2">
-            <label className="block mb-2 text-sm font-medium">Remarks</label>
+            <label className="block mb-2 text-lg font-bold">Remarks</label>
             <textarea
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
@@ -247,7 +278,7 @@ const PayOut: React.FC = () => {
         </div>
       </form>
 
-      <LedgerCreationModal isOpen={isModalOpen} onClose={handleCloseModal} />
+      <LedgerCreationModal isOpen={isModalOpen} refreshLedgerOptions={refreshLedgerOptions} onClose={handleCloseModal} />
     </div>
   );
 };

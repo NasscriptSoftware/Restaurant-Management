@@ -16,12 +16,20 @@ interface Transaction {
     credit_amount?: string;
 }
 
+interface ProfitAndLossResponse {
+    total_expense: number;
+    total_income: number;
+    net_profit: number;
+    net_loss: number;
+}
+
 const BalanceSheet: React.FC = () => {
     const [liabilitiesData, setLiabilitiesData] = useState<Transaction[]>([]);
     const [assetData, setAssetData] = useState<Transaction[]>([]);
     const [fromDate, setFromDate] = useState<string>("");
     const [toDate, setToDate] = useState<string>("");
     const [isSearching, setIsSearching] = useState(false);
+    const [profitAndLossData, setProfitAndLossData] = useState<ProfitAndLossResponse | null>(null);
 
     const handleSearch = async () => {
         if (!fromDate || !toDate) {
@@ -32,24 +40,37 @@ const BalanceSheet: React.FC = () => {
         setIsSearching(true);
 
         try {
+            // Fetch liabilities (Liability) data
             const expenseResponse = await api.get('/transactions/filter-by-nature-group/', {
                 params: { nature_group_name: 'Liability', from_date: fromDate, to_date: toDate },
             });
 
+            // Fetch assets (Asset) data
             const incomeResponse = await api.get('/transactions/filter-by-nature-group/', {
                 params: { nature_group_name: 'Asset', from_date: fromDate, to_date: toDate },
             });
 
+            // New API call for profit and loss data
+            const profitAndLossResponse = await api.get('/transactions/profit-and-loss/', {
+                params: { from_date: fromDate, to_date: toDate },
+            });
+
+            // Store profit and loss data
+            setProfitAndLossData(profitAndLossResponse.data);
+
+            // Log the profit and loss response data
+            console.log('Profit and Loss Data:', profitAndLossResponse.data);
+
             if (Array.isArray(expenseResponse.data)) {
                 setLiabilitiesData(expenseResponse.data);
             } else {
-                console.error('Unexpected data format for expenses:', expenseResponse.data);
+                console.error('Unexpected data format for liabilities:', expenseResponse.data);
             }
 
             if (Array.isArray(incomeResponse.data)) {
                 setAssetData(incomeResponse.data);
             } else {
-                console.error('Unexpected data format for income:', incomeResponse.data);
+                console.error('Unexpected data format for assets:', incomeResponse.data);
             }
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -59,10 +80,6 @@ const BalanceSheet: React.FC = () => {
     };
 
     const parseAmount = (amount?: string) => Number(amount) || 0;
-
-    const calculateTotal = (data: Transaction[], key: 'debit_amount' | 'credit_amount') => {
-        return data.reduce((total, item) => total + parseAmount(item[key]), 0);
-    };
 
     const groupBy = (data: Transaction[], key: keyof LedgerGroup) => {
         return data.reduce((groups, item) => {
@@ -78,76 +95,71 @@ const BalanceSheet: React.FC = () => {
     const aggregateLedgerTotals = (transactions: Transaction[]) => {
         return transactions.reduce((acc, transaction) => {
             const ledgerName = transaction.ledger.name;
-    
+
             if (!acc[ledgerName]) {
                 acc[ledgerName] = { debit: 0, credit: 0, balance: 0 };
             }
-    
-            // Update totals for debit and credit
+
             acc[ledgerName].debit += parseAmount(transaction.debit_amount);
             acc[ledgerName].credit += parseAmount(transaction.credit_amount);
-    
-            // Calculate balance based on which amount is greater
-            if (acc[ledgerName].debit > acc[ledgerName].credit) {
-                acc[ledgerName].balance = acc[ledgerName].debit - acc[ledgerName].credit;
-            } else {
-                acc[ledgerName].balance = acc[ledgerName].credit - acc[ledgerName].debit;
-            }
-    
+
+            acc[ledgerName].balance = Math.abs(acc[ledgerName].debit - acc[ledgerName].credit);
+
             return acc;
         }, {} as Record<string, { debit: number; credit: number; balance: number }>);
     };
-    
 
     const liabilitiesGroups = groupBy(liabilitiesData, 'name');
     const assetGroups = groupBy(assetData, 'name');
 
-    const totalExpenses = calculateTotal(liabilitiesData, 'debit_amount');
-    const totalIncome = calculateTotal(assetData, 'credit_amount');
-    const netProfit = totalIncome - totalExpenses;
-    const netLoss = totalExpenses > totalIncome ? totalExpenses - totalIncome : 0;
-    const grandTotalExpenses = totalExpenses + (netProfit > 0 ? netProfit : 0);
-    const grandTotalIncome = totalIncome + (netLoss > 0 ? netLoss : 0);
+    // Calculate the grand total for liabilities and assets
+    const liabilitiesGrandTotal = (profitAndLossData?.net_profit || 0) + Object.values(liabilitiesGroups).reduce((acc, transactions) => {
+        return acc + Object.values(aggregateLedgerTotals(transactions))
+            .reduce((groupAcc, { balance }) => groupAcc + balance, 0);
+    }, 0);
+
+    const assetsGrandTotal = (profitAndLossData?.net_loss || 0) + Object.values(assetGroups).reduce((acc, transactions) => {
+        return acc + Object.values(aggregateLedgerTotals(transactions))
+            .reduce((groupAcc, { balance }) => groupAcc + balance, 0);
+    }, 0);
 
     return (
         <div className="p-4">
             {/* Search Form */}
             <div className="bg-white p-6 shadow-md rounded-lg mb-6">
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-col md:flex-row items-end gap-4">
                     {/* From Date */}
                     <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            From Date
-                        </label>
+                        <label htmlFor="fromDate" className="block text-sm font-medium text-gray-700">From Date</label>
                         <input
                             type="date"
+                            id="fromDate"
                             value={fromDate}
                             onChange={(e) => setFromDate(e.target.value)}
-                            className="block w-full py-2 px-4 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         />
                     </div>
 
                     {/* To Date */}
                     <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            To Date
-                        </label>
+                        <label htmlFor="toDate" className="block text-sm font-medium text-gray-700">To Date</label>
                         <input
                             type="date"
+                            id="toDate"
                             value={toDate}
                             onChange={(e) => setToDate(e.target.value)}
-                            className="block w-full py-2 px-4 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         />
                     </div>
 
                     {/* Search Button */}
-                    <div className="flex-shrink-0">
+                    <div className="mt-1">
                         <button
+                            type="button"
                             onClick={handleSearch}
-                            disabled={isSearching}
-                            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-300 ease-in-out disabled:opacity-50"
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
-                            {isSearching ? "Searching..." : "Search"}
+                            {isSearching ? 'Searching...' : 'Search'}
                         </button>
                     </div>
                 </div>
@@ -162,9 +174,9 @@ const BalanceSheet: React.FC = () => {
                         <div className="flex-1 overflow-auto">
                             {Object.entries(liabilitiesGroups).map(([groupName, transactions]) => (
                                 <div key={groupName} className="mb-6">
-                                    <table className="min-w-full table-auto border-collapse ">
+                                    <table className="min-w-full table-auto border-collapse">
                                         <thead>
-                                            <tr className="bg-gray-100">
+                                            <tr>
                                                 <th className=" px-4 py-2 text-left">{groupName}</th>
                                                 <th className=" px-4 py-2 text-right">
                                                     QAR {Object.values(aggregateLedgerTotals(transactions))
@@ -186,21 +198,28 @@ const BalanceSheet: React.FC = () => {
                                     </table>
                                 </div>
                             ))}
+                            <div className="mb-6">
+                                <table className="min-w-full table-auto border-collapse">
+                                    <thead>
+                                        <tr>
+                                            <th className=" px-4 py-2 text-left">Profit</th>
+                                            <th className=" px-4 py-2 text-right">
+                                                {profitAndLossData ? (
+                                                    <>
+                                                        {profitAndLossData.net_profit > 0 ? `QAR ${profitAndLossData.net_profit.toFixed(2)}` : '0.00'}
+                                                    </>
+                                                ) : 'Loading...'}
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
                         </div>
-                        <div className="font-bold mt-4">
-                            <div className="flex justify-between mb-2">
-                                <p>Total Liabilities:</p>
-                                <p>{totalExpenses.toFixed(2)}</p>
-                            </div>
-                            <div className="flex justify-between mb-2">
-                                <p>Net Profit:</p>
-                                <p>{netProfit > 0 ? netProfit.toFixed(2) : "0.00"}</p>
-                            </div>
-                            <div className="flex justify-between">
-                                <p>Grand Total:</p>
-                                <p>{grandTotalExpenses.toFixed(2)}</p>
-                            </div>
+                        <div className="bg-green-300 px-4 py-2 font-bold flex justify-between">
+                            <span>Total</span>
+                            <span>QAR {liabilitiesGrandTotal.toFixed(2)}</span>
                         </div>
+
                     </div>
 
                     {/* Assets Section */}
@@ -211,7 +230,7 @@ const BalanceSheet: React.FC = () => {
                                 <div key={groupName} className="mb-6">
                                     <table className="min-w-full table-auto border-collapse">
                                         <thead>
-                                            <tr className="bg-gray-100">
+                                            <tr>
                                                 <th className=" px-4 py-2 text-left">{groupName}</th>
                                                 <th className=" px-4 py-2 text-right">
                                                     QAR {Object.values(aggregateLedgerTotals(transactions))
@@ -233,26 +252,32 @@ const BalanceSheet: React.FC = () => {
                                     </table>
                                 </div>
                             ))}
+                            <div className="mb-6">
+                                <table className="min-w-full table-auto border-collapse">
+                                    <thead>
+                                        <tr>
+                                            <th className=" px-4 py-2 text-left">Loss</th>
+                                            <th className=" px-4 py-2 text-right">
+                                                {profitAndLossData ? (
+                                                    <>
+                                                        {profitAndLossData.net_loss > 0 ? `QAR ${profitAndLossData.net_loss.toFixed(2)}` : '0.00'}
+                                                    </>
+                                                ) : 'Loading...'}
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
                         </div>
-                        <div className="font-bold mt-4">
-                            <div className="flex justify-between mb-2">
-                                <p>Total Assets:</p>
-                                <p>{totalIncome.toFixed(2)}</p>
-                            </div>
-                            <div className="flex justify-between mb-2">
-                                <p>Net Loss:</p>
-                                <p>{netLoss > 0 ? netLoss.toFixed(2) : "0.00"}</p>
-                            </div>
-                            <div className="flex justify-between">
-                                <p>Grand Total:</p>
-                                <p>{grandTotalIncome.toFixed(2)}</p>
-                            </div>
+                        <div className="bg-green-300 px-4 py-2 font-bold flex justify-between">
+                            <span>Total</span>
+                            <span>QAR {assetsGrandTotal.toFixed(2)}</span>
                         </div>
 
                     </div>
                 </div>
             ) : (
-                <p className="text-center text-gray-500">No data available. Please perform a search.</p>
+                <div className="text-center text-gray-500">No data available</div>
             )}
         </div>
     );

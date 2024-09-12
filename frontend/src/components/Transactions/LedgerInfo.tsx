@@ -26,14 +26,14 @@ const LedgerInfo: React.FC = () => {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [itemsPerPage] = useState(10); // Adjust the number of items per page as needed
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => {
     const fetchLedgers = async () => {
       try {
         const response = await api.get(`/ledgers/?page=${currentPage}&page_size=${itemsPerPage}`);
         setLedgers(response.data.results);
-        setTotalPages(response.data.total_pages); // Assuming your API provides the total number of pages
+        setTotalPages(Math.ceil(response.data.count / 10)); // Assuming your API provides the total number of pages
       } catch (error) {
         console.error("There was an error fetching the ledgers!", error);
         setError("Could not load ledgers. Please try again later.");
@@ -65,6 +65,7 @@ const LedgerInfo: React.FC = () => {
 
     fetchAllGroups();
   }, []);
+console.log("totalpages",totalPages);
 
   const handleEdit = (ledger: Ledger) => {
     setSelectedLedger(ledger);
@@ -90,7 +91,7 @@ const LedgerInfo: React.FC = () => {
   };
 
   return (
-    <div className="overflow-x-auto min-h-screen">
+    <div className="overflow-x-auto max-h-screen">
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <table className="min-w-full bg-white shadow-md rounded-md">
         <thead>
@@ -120,27 +121,29 @@ const LedgerInfo: React.FC = () => {
         </tbody>
       </table>
 
-      {/* Pagination Controls */}
-      <div className="mt-4 flex justify-center items-center">
-        <button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="bg-gray-500 text-white py-1 px-4 rounded mr-2 disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span className="mx-2">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="bg-gray-500 text-white py-1 px-4 rounded ml-2 disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
+      <div className="mt-4 flex flex-col items-center">
+        <div className="flex items-center">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="bg-gray-300 text-gray-700 py-2 px-4 rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
 
+          <span className="text-gray-700 mx-4">
+            Page {currentPage} of {totalPages}
+          </span>
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="bg-gray-300 text-gray-700 py-2 px-4 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
       {isEditModalOpen && selectedLedger && (
         <EditLedgerModal

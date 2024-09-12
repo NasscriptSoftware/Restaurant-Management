@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { api } from "@/services/api";
 import { Pencil } from 'lucide-react';
+import ShareUserEditModal from '@/components/modals/ShareUserEditModal'; 
 
 interface ShareManagementItem {
     id: number;
@@ -13,6 +14,8 @@ interface ShareManagementItem {
 
 const ShareManagementList: React.FC = () => {
     const [data, setData] = useState<ShareManagementItem[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
 
     useEffect(() => {
         fetchData();
@@ -29,7 +32,17 @@ const ShareManagementList: React.FC = () => {
     };
 
     const handleEdit = (id: number) => {
-        console.log(`Edit item with id: ${id}`);
+        setSelectedItemId(id);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedItemId(null);
+    };
+
+    const handleUpdate = async () => {
+        await fetchData(); // Refresh data after update
     };
 
     return (
@@ -65,6 +78,16 @@ const ShareManagementList: React.FC = () => {
                     ))}
                 </tbody>
             </table>
+
+            {isModalOpen && (
+                <ShareUserEditModal
+                    isOpen={isModalOpen}
+                    onClose={handleCloseModal}
+                    itemId={selectedItemId}
+                    onUpdate={handleUpdate} 
+
+                />
+            )}
         </div>
     );
 };

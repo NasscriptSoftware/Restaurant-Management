@@ -115,87 +115,86 @@ const IncomeStatement: React.FC = () => {
             {expenseData.length > 0 || incomeData.length > 0 ? (
                 <div className="grid grid-cols-12 gap-4">
                     {/* Expense Section */}
-                    <div className="col-span-12 md:col-span-6 bg-white shadow-md rounded-md p-4">
+                    <div className="col-span-12 md:col-span-6 bg-white shadow-md rounded-md p-4 flex flex-col h-full">
                         <h2 className="text-2xl font-bold mb-4 text-center">Expense</h2>
-                        <table className="min-w-full table-auto border-collapse border border-gray-300">
-                            <thead>
-                                <tr className="bg-gray-100">
-                                    <th className="border border-gray-300 px-4 py-2 text-left">Particulars</th>
-                                    <th className="border border-gray-300 px-4 py-2 text-right">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {expenseData.map((item, index) => (
-                                    <tr key={index}>
-                                        <td className="border border-gray-300 px-4 py-2">{item.ledger.name}</td>
-                                        <td className="border border-gray-300 px-4 py-2 text-right">
-                                            QAR {parseAmount(item.debit_amount).toFixed(2)}
-                                        </td>
+                        <div className="flex-grow overflow-auto">
+                            <table className="min-w-full table-auto border-collapse">
+                                <thead>
+                                    <tr className="bg-gray-100">
+                                        <th className="px-4 py-2 text-left">Particulars</th>
+                                        <th className="px-4 py-2 text-right">Amount</th>
                                     </tr>
-                                ))}
-                                <tr className="font-bold">
-                                    <td className="border border-gray-300 px-4 py-2">Total</td>
-                                    <td className="border border-gray-300 px-4 py-2 text-right">
-                                        QAR {totalExpenses.toFixed(2)}
-                                    </td>
-                                </tr>
-                                <tr className="font-bold text-green-600">
-                                    <td className="border border-gray-300 px-4 py-2">Net Profit</td>
-                                    <td className="border border-gray-300 px-4 py-2 text-right">
-                                        QAR {netProfit > 0 ? netProfit.toFixed(2) : "0.00"}
-                                    </td>
-                                </tr>
-                                <tr className="font-bold text-blue-600">
-                                    <td className="border border-gray-300 px-4 py-2">Grand Total</td>
-                                    <td className="border border-gray-300 px-4 py-2 text-right">
-                                        QAR {grandTotalExpenses.toFixed(2)}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {expenseData.map((item, index) => (
+                                        <tr key={index}>
+                                            <td className="px-4 py-2">{item.ledger.name}</td>
+                                            <td className="px-4 py-2 text-right">
+                                                {parseAmount(item.debit_amount).toFixed(2)}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Sticky Totals Section */}
+                        <div className="mt-4 border-t border-gray-300 pt-2">
+                            <div className="font-bold flex justify-between">
+                                <span>Total</span>
+                                <span>{totalExpenses.toFixed(2)}</span>
+                            </div>
+                            <div className="font-bold flex justify-between text-green-600">
+                                <span>Net Profit</span>
+                                <span>{netProfit > 0 ? netProfit.toFixed(2) : "0.00"}</span>
+                            </div>
+                            <div className="font-bold flex justify-between text-blue-600">
+                                <span>Grand Total</span>
+                                <span>{grandTotalExpenses.toFixed(2)}</span>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Income Section */}
-                    <div className="col-span-12 md:col-span-6 bg-white shadow-md rounded-md p-4">
+                    <div className="col-span-12 md:col-span-6 bg-white shadow-md rounded-md p-4 flex flex-col h-full">
                         <h2 className="text-2xl font-bold mb-4 text-center">Income</h2>
-                        <table className="min-w-full table-auto border-collapse border border-gray-300">
-                            <thead>
-                                <tr className="bg-gray-100">
-                                    <th className="border border-gray-300 px-4 py-2 text-left">Particulars</th>
-                                    <th className="border border-gray-300 px-4 py-2 text-right">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {incomeData.map((item, index) => (
-                                    <tr key={index}>
-                                        <td className="border border-gray-300 px-4 py-2">{item.ledger.name}</td>
-                                        <td className="border border-gray-300 px-4 py-2 text-right">
-                                            QAR {parseAmount(item.credit_amount).toFixed(2)}
-                                        </td>
+                        <div className="flex-grow overflow-auto">
+                            <table className="min-w-full table-auto border-collapse">
+                                <thead>
+                                    <tr className="bg-gray-100">
+                                        <th className="px-4 py-2 text-left">Particulars</th>
+                                        <th className="px-4 py-2 text-right">Amount</th>
                                     </tr>
-                                ))}
-                                <tr className="font-bold">
-                                    <td className="border border-gray-300 px-4 py-2">Total</td>
-                                    <td className="border border-gray-300 px-4 py-2 text-right">
-                                        QAR {totalIncome.toFixed(2)}
-                                    </td>
-                                </tr>
-                                <tr className="font-bold text-red-600">
-                                    <td className="border border-gray-300 px-4 py-2">Net Loss</td>
-                                    <td className="border border-gray-300 px-4 py-2 text-right">
-                                        QAR {netLoss > 0 ? netLoss.toFixed(2) : "0.00"}
-                                    </td>
-                                </tr>
-                                <tr className="font-bold text-blue-600">
-                                    <td className="border border-gray-300 px-4 py-2">Grand Total</td>
-                                    <td className="border border-gray-300 px-4 py-2 text-right">
-                                        QAR {grandTotalIncome.toFixed(2)}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {incomeData.map((item, index) => (
+                                        <tr key={index}>
+                                            <td className="px-4 py-2">{item.ledger.name}</td>
+                                            <td className="px-4 py-2 text-right">
+                                                {parseAmount(item.credit_amount).toFixed(2)}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Sticky Totals Section */}
+                        <div className="mt-4 border-t border-gray-300 pt-2">
+                            <div className="font-bold flex justify-between">
+                                <span>Total</span>
+                                <span>{totalIncome.toFixed(2)}</span>
+                            </div>
+                            <div className="font-bold flex justify-between text-red-600">
+                                <span>Net Loss</span>
+                                <span>{netLoss > 0 ? netLoss.toFixed(2) : "0.00"}</span>
+                            </div>
+                            <div className="font-bold flex justify-between text-blue-600">
+                                <span>Grand Total</span>
+                                <span>{grandTotalIncome.toFixed(2)}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
             ) : (
                 <p className="text-center text-gray-500">No data available. Please search to view results.</p>
             )}

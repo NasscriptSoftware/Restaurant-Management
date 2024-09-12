@@ -82,6 +82,15 @@ const LedgerReport: React.FC = () => {
     0
   );
 
+  // New balance logic
+  const totalBalanceAmount =
+    totalDebitAmount > totalCreditAmount
+      ? totalDebitAmount - totalCreditAmount
+      : totalCreditAmount - totalDebitAmount;
+
+  const balanceType =
+    totalDebitAmount > totalCreditAmount ? "Debit Amount" : "Credit Amount";
+
   let runningDebitTotal = 0;
   let runningCreditTotal = 0;
 
@@ -174,9 +183,6 @@ const LedgerReport: React.FC = () => {
                 <th className="py-3 px-4 bg-gray-100 text-right text-sm font-medium text-gray-600">
                   Credit Amount
                 </th>
-                <th className="py-3 px-4 bg-gray-100 text-right text-sm font-medium text-gray-600">
-                  Balance
-                </th>
                 <th className="py-3 px-4 bg-gray-100 text-center text-sm font-medium text-gray-600">
                   Dr/Cr
                 </th>
@@ -204,32 +210,47 @@ const LedgerReport: React.FC = () => {
                     <td className="py-2 px-4 border-b text-right text-sm text-gray-700">
                       {transaction.credit_amount}
                     </td>
-                    <td className="py-2 px-4 border-b text-right text-sm text-gray-700">
-                      {transaction.balance_amount}
-                    </td>
                     <td className="py-2 px-4 border-b text-center text-sm text-gray-700">
                       {transaction.debit_credit}
                     </td>
                   </tr>
                 );
               })}
-              {/* Footer for total amounts */}
+
+              {/* Total Debit and Credit */}
               <tr>
-                <td className="py-2 px-4 text-left font-semibold">Grand Total</td>
-                <td colSpan={2}></td>
-                <td className="py-2 px-4 text-right font-bold text-sm text-gray-900">
-                  {totalDebitAmount.toFixed(2)}
+                <td colSpan={1} className="py-2 px-4 text-left text-sm font-semibold text-black">
+                  Current Total
                 </td>
-                <td className="py-2 px-4 text-right font-bold text-sm text-gray-900">
-                  {totalCreditAmount.toFixed(2)}
+                <td colSpan={2} className="py-2 px-4 text-left text-sm font-semibold text-black"></td>
+                <td className="py-2 px-4 text-right text-sm font-semibold text-black">
+                  {runningDebitTotal.toFixed(2)}
                 </td>
-                <td colSpan={2}></td>
+                <td className="py-2 px-4 text-right text-sm font-semibold text-black">
+                  {runningCreditTotal.toFixed(2)}
+                </td>
+                <td className="py-2 px-4 text-center text-sm font-semibold text-black"></td>
+              </tr>
+
+              {/* Closing Balance */}
+              <tr>
+                <td colSpan={1} className="py-2 px-4 text-left text-sm font-semibold text-black">
+                  Closing Balance
+                </td>
+                <td colSpan={2} className="py-2 px-4 text-left text-sm font-semibold text-black"></td>
+                <td className="py-2 px-4 text-right text-sm font-semibold text-black">
+                  {balanceType === "Debit Amount" ? totalBalanceAmount.toFixed(2) : ""}
+                </td>
+                <td className="py-2 px-4 text-right text-sm font-semibold text-black">
+                  {balanceType === "Credit Amount" ? totalBalanceAmount.toFixed(2) : ""}
+                </td>
+                <td className="py-2 px-4 text-center text-sm font-semibold text-black"></td>
               </tr>
             </tbody>
           </table>
         </div>
       ) : (
-        <p className="text-gray-600 mt-4">No transactions found for the selected filters.</p>
+        <p className="text-gray-500">No transactions found.</p>
       )}
     </div>
   );
