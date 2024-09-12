@@ -1,8 +1,10 @@
 from rest_framework import viewsets,status
 from django.db import transaction 
-from django.db.models import Q
+from django.db.models import Sum, Q
+from datetime import datetime
 
 from .models import (
+    CashCountSheet,
     NatureGroup,
     MainGroup, 
     Ledger, 
@@ -12,6 +14,7 @@ from .models import (
     ShareUsers
     )
 from .serializers import (
+     CashCountSheetSerializer,
      NatureGroupSerializer, 
      MainGroupSerializer, 
      LedgerSerializer, 
@@ -72,17 +75,26 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def ledger_report(self, request):
-        ledger_id = request.query_params.get('ledger', None)
+        ledger_param = request.query_params.get('ledger', None)
         from_date = request.query_params.get('from_date', None)
         to_date = request.query_params.get('to_date', None)
+
+        if not ledger_param:
+            return Response([])
+
+        # Determine if the parameter is a name or ID
+        try:
+            ledger_id = int(ledger_param)
+            # If it converts to an integer, assume it's an ID
+        except ValueError:
+            # Otherwise, treat it as a name and fetch the ID
+            ledger = Ledger.objects.filter(name=ledger_param).first()
+            ledger_id = ledger.id if ledger else None
 
         if not ledger_id:
             return Response([])
 
         queryset = self.queryset.filter(ledger__id=ledger_id)
-
-        if not queryset.exists():
-            return Response([])
 
         if from_date:
             from_date = parse_date(from_date)
@@ -132,6 +144,49 @@ class TransactionViewSet(viewsets.ModelViewSet):
         # Serialize and return the filtered data
         serializer = self.get_serializer(transactions, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='profit-and-loss')
+    def profit_and_loss(self, request):
+        from_date = request.query_params.get('from_date', None)
+        to_date = request.query_params.get('to_date', None)
+
+        # Date filters
+        filters = Q()
+        if from_date and to_date:
+            from_date_parsed = parse_date(from_date)
+            to_date_parsed = parse_date(to_date)
+
+            if from_date_parsed and to_date_parsed:
+                filters &= Q(date__range=(from_date_parsed, to_date_parsed))
+            else:
+                return Response({"error": "Invalid date format"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error": "Both from_date and to_date are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Filter transactions for 'Expense' and 'Income'
+        expense_transactions = Transaction.objects.filter(
+            filters & Q(ledger__group__nature_group__name__iexact='Expense')
+        )
+        income_transactions = Transaction.objects.filter(
+            filters & Q(ledger__group__nature_group__name__iexact='Income')
+        )
+
+        # Sum the debit_amount for 'Expense' transactions
+        total_expense = expense_transactions.aggregate(total_debit=Sum('debit_amount'))['total_debit'] or 0
+
+        # Sum the credit_amount for 'Income' transactions
+        total_income = income_transactions.aggregate(total_credit=Sum('credit_amount'))['total_credit'] or 0
+
+        # Calculate net profit and loss
+        net_profit = total_income - total_expense if total_income > total_expense else 0
+        net_loss = total_expense - total_income if total_expense > total_income else 0
+
+        return Response({
+            'total_expense': total_expense,
+            'total_income': total_income,
+            'net_profit': net_profit,
+            'net_loss': net_loss,
+        })
 
 
 
@@ -170,3 +225,42 @@ class ProfitLossShareTransactionViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
+
+class CashCountSheetViewSet(viewsets.ModelViewSet):
+    serializer_class = CashCountSheetSerializer
+    def get_queryset(self):
+        queryset = CashCountSheet.objects.all()
+
+        # Get the from_date and to_date parameters
+        from_date = self.request.query_params.get('from_date')
+        to_date = self.request.query_params.get('to_date')
+
+        if from_date and to_date:
+            try:
+                from_date = datetime.strptime(from_date, "%Y-%m-%d")
+                to_date = datetime.strptime(to_date, "%Y-%m-%d")
+                queryset = queryset.filter(
+                    created_date__range=(from_date, to_date)
+                )
+            except ValueError:
+                # Handle the case where the date format is incorrect
+                return Response({"error": "Invalid date format"}, status=status.HTTP_400_BAD_REQUEST)
+
+        return queryset
+    def create(self, request, *args, **kwargs):
+        entries = request.data.get('entries', [])
+        
+        # Validate if entries is a list
+        if not isinstance(entries, list):
+            return Response({"error": "Invalid data format"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create a list of serializers with the incoming data
+        serializer = CashCountSheetSerializer(data=entries, many=True)
+        
+        # Validate the data
+        if serializer.is_valid():
+            # Save the data
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
