@@ -37,7 +37,7 @@ const PasscodeLoginPage = () => {
       }, 50);
     } else {
       setTimeout(() => {
-        navigate("/");
+        navigate("/dishes");
       }, 50);
     }
   };

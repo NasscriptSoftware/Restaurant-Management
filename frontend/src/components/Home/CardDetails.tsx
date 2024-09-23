@@ -1,8 +1,18 @@
 import React, { useEffect, useState } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { RotateCcw } from "lucide-react";
+import { motion } from "framer-motion";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon, RotateCcw, Search } from "lucide-react";
 import { api } from "@/services/api";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import OrdersListing, { Order } from "./OrdersListing";
+import { useDishes } from "@/hooks/useDishes";
 
 interface CardDetailsProps {
   selectedCard: {
@@ -13,281 +23,216 @@ interface CardDetailsProps {
   } | null;
 }
 
-interface Order {
-  id: number;
-  created_at: string;
-  total_amount: string | number;
-  status: string;
-  order_type: "dining" | "takeaway" | "delivery";
-  billed_at: string;
-  items: { dish: number; quantity: number }[];
-}
-
 type StatusType = "pending" | "delivered" | "cancelled";
 
 const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
-  const [activeStatus, setActiveStatus] = useState<StatusType>("pending"); // Default to "pending"
-  const [allOrders, setAllOrders] = useState<Order[] | null>(null); // Store all orders
-  const [filteredOrders, setFilteredOrders] = useState<Order[] | null>(null); // Store filtered orders
+  const [activeStatus, setActiveStatus] = useState<StatusType>("pending");
+  const [orders, setOrders] = useState<Order[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [fromDate, setFromDate] = useState<Date | null>(null);
-  const [toDate, setToDate] = useState<Date | null>(null);
+  const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
+  const [toDate, setToDate] = useState<Date | undefined>(undefined);
+  const { dishes } = useDishes();
+  const data = dishes ? dishes.results : undefined;
+
   const ordersPerPage = 5;
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      if (selectedCard) {
-        setIsLoading(true);
-        setIsError(false);
+  const fetchOrders = async (filters: any = {}) => {
+    if (selectedCard) {
+      setIsLoading(true);
+      setIsError(false);
 
-        const token = localStorage.getItem("token");
+      try {
+        const response = await api.get(`/orders/sales_report/`, {
+          params: {
+            order_type: selectedCard.iconType.toLowerCase(),
+            from_date: fromDate ? format(fromDate, "yyyy-MM-dd") : undefined,
+            to_date: toDate ? format(toDate, "yyyy-MM-dd") : undefined,
+            order_status: activeStatus,
+            ...filters,
+          },
+        });
 
-        const params: any = {
-          order_type: selectedCard.iconType.toLowerCase(),
-        };
-
-        try {
-          const response = await api.get(`/orders`, {
-            params,
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          const orders = response.data.results;
-          setAllOrders(orders);
-          // Initially filter orders with the default status
-          const initialFilteredOrders = orders.filter(
-            (order: Order) => order.status === activeStatus
-          );
-          setFilteredOrders(initialFilteredOrders);
-          setIsLoading(false);
-        } catch (error) {
-          console.error("Error fetching orders:", error);
-          setIsError(true);
-          setIsLoading(false);
-        }
+        setOrders(response.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        setIsError(true);
+        setIsLoading(false);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchOrders();
   }, [selectedCard]);
 
-  const handleStatusClick = (status: "pending" | "cancelled" | "delivered") => {
+  const handleStatusClick = (status: StatusType) => {
     setActiveStatus(status);
-    setCurrentPage(1); // Reset to the first page when changing the status
-
-    if (allOrders) {
-      const statusFilteredOrders = allOrders.filter(
-        (order) => order.status === status
-      );
-      setFilteredOrders(statusFilteredOrders);
-    }
+    setCurrentPage(1);
+    fetchOrders({ order_status: status });
   };
 
   const handleReset = () => {
-    setFromDate(null);
-    setToDate(null);
-    handleStatusClick(activeStatus); // Reset to the current active status
+    setFromDate(undefined);
+    setToDate(undefined);
+    setActiveStatus("pending");
     setCurrentPage(1);
+    fetchOrders({ order_status: "pending" });
   };
 
   const handleDateFilter = () => {
-    if (allOrders) {
-      let filtered = allOrders.filter((order) => order.status === activeStatus); // Apply status filter first
-
-      if (fromDate && toDate) {
-        const from = new Date(fromDate).setHours(0, 0, 0, 0);
-        const to = new Date(toDate).setHours(23, 59, 59, 999);
-
-        filtered = filtered.filter((order) => {
-          const billDate = new Date(order.billed_at).getTime();
-          return billDate >= from && billDate <= to;
-        });
-      }
-
-      setFilteredOrders(filtered);
-      setCurrentPage(1); // Reset to the first page on new search/filter
-    }
+    fetchOrders();
   };
 
   const handlePreviousPage = () => {
-    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1)); // Decrease the page number but not below 1
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
   const handleNextPage = () => {
-    if (filteredOrders) {
+    if (orders) {
       setCurrentPage((prevPage) =>
-        prevPage < Math.ceil(filteredOrders.length / ordersPerPage)
+        prevPage < Math.ceil(orders.length / ordersPerPage)
           ? prevPage + 1
           : prevPage
-      ); // Increase the page number but not beyond the total pages
+      );
     }
   };
 
   if (!selectedCard) {
     return (
-      <div className="p-4 bg-white shadow">Select a card to see details</div>
+      <div className="p-4 bg-white shadow rounded-lg">
+        Select a card to see details
+      </div>
     );
   }
 
   if (isError) {
-    return <div className="p-4 bg-white shadow">Error loading orders.</div>;
+    return (
+      <div className="p-4 bg-white shadow rounded-lg">
+        Error loading orders.
+      </div>
+    );
   }
 
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = filteredOrders
-    ? filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder)
+  const currentOrders = orders
+    ? orders.slice(indexOfFirstOrder, indexOfLastOrder)
     : [];
 
   return (
-    <div className="p-4 shadow h-full md:h-screen">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl md:text-2xl font-bold">{selectedCard.title}</h2>
-      </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="p-6 shadow-lg rounded-lg h-full md:h-screen overflow-y-auto"
+    >
+      <motion.h2
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="text-2xl md:text-3xl font-bold mb-6"
+      >
+        {selectedCard.title}
+      </motion.h2>
 
       {/* Date Filters */}
-      <div className="flex flex-col md:flex-row md:space-x-4 mb-4">
-        <div className="flex flex-col md:flex-row space-y-4 md:space-y-0">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              From Date
-            </label>
-            <DatePicker
-              selected={fromDate}
-              onChange={(date) => setFromDate(date)}
-              dateFormat="yyyy-MM-dd"
-              className="mt-1 p-2 border rounded w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              To Date
-            </label>
-            <DatePicker
-              selected={toDate}
-              onChange={(date) => setToDate(date)}
-              dateFormat="yyyy-MM-dd"
-              className="mt-1 p-2 border rounded w-full"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col space-y-4">
-        <div className="flex space-x-2 items-center">
-          <button
+      <div className="flex flex-col justify-between md:flex-row md:space-x-4 mb-6">
+        <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !fromDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {fromDate ? format(fromDate, "PPP") : <span>From Date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={fromDate}
+                onSelect={setFromDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !toDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {toDate ? format(toDate, "PPP") : <span>To Date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={toDate}
+                onSelect={setToDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <Button
+            variant="outline"
             onClick={handleDateFilter}
-            className="p-2 bg-blue-500 text-white rounded w-full md:w-auto"
+            className="w-full md:w-auto"
           >
-            Search
-          </button>
-          <button
+            <Search size={18} />
+          </Button>
+        </div>
+        <div className="flex space-x-2 items-center">
+          <Button
             onClick={handleReset}
-            className="p-2 bg-red-500 text-white rounded-full w-10 h-10 flex justify-center items-center"
+            variant="outline"
+            size="icon"
+            className="rounded-full"
             title="Reset"
           >
-            <RotateCcw size={20} />
-          </button>
+            <RotateCcw className="h-4 w-4" />
+          </Button>
         </div>
+      </div>
 
+      <div className="flex flex-col space-y-4 mb-6">
         {/* Status Buttons */}
         <div className="flex flex-wrap justify-between space-x-2">
-          <button
-            className={`p-2 rounded-lg shadow-md flex-grow ${
-              activeStatus === "delivered" ? "bg-white" : "bg-purple-100"
-            }`}
-            onClick={() => handleStatusClick("delivered")}
-          >
-            <h3 className="text-sm font-bold text-center">Delivered</h3>
-          </button>
-          <button
-            className={`p-2 rounded-lg shadow-md flex-grow ${
-              activeStatus === "pending" ? "bg-white" : "bg-purple-100"
-            }`}
-            onClick={() => handleStatusClick("pending")}
-          >
-            <h3 className="text-sm font-bold text-center">Pending</h3>
-          </button>
-          <button
-            className={`p-2 rounded-lg shadow-md flex-grow ${
-              activeStatus === "cancelled" ? "bg-white" : "bg-purple-100"
-            }`}
-            onClick={() => handleStatusClick("cancelled")}
-          >
-            <h3 className="text-sm font-bold text-center">Cancelled</h3>
-          </button>
+          {["delivered", "pending", "cancelled"].map((status) => (
+            <Button
+              key={status}
+              variant={activeStatus === status ? "default" : "outline"}
+              className="flex-grow"
+              onClick={() => handleStatusClick(status as StatusType)}
+            >
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </Button>
+          ))}
         </div>
       </div>
 
-      <div>
-        {isLoading ? (
-          <p>Loading orders...</p>
-        ) : currentOrders.length === 0 ? (
-          <p>No orders found for the current search or filters.</p>
-        ) : (
-          <>
-            <ul className="space-y-4">
-              {currentOrders.map((order) => (
-                <li
-                  key={order.id}
-                  className="bg-gray-100 p-4 rounded-lg shadow-md"
-                >
-                  <div>
-                    <strong>Order ID:</strong> {order.id}
-                  </div>
-                  <div>
-                    <strong>Created At:</strong>{" "}
-                    {new Date(order.created_at).toLocaleString()}
-                  </div>
-                  <div>
-                    <strong>Total Amount:</strong> QAR
-                    {Number(order.total_amount).toFixed(2)}
-                  </div>
-                  <div>
-                    <strong>Status:</strong> {order.status}
-                  </div>
-                  <div>
-                    <strong>Items:</strong>
-                    <ul className="list-disc pl-5">
-                      {order.items.map((item, index) => (
-                        <li key={index}>
-                          Dish ID: {item.dish}, Quantity: {item.quantity}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            {filteredOrders && filteredOrders.length > ordersPerPage && (
-              <div className="flex justify-between mt-4">
-                <button
-                  className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded disabled:opacity-50"
-                  onClick={handlePreviousPage}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </button>
-                <button
-                  className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded disabled:opacity-50"
-                  onClick={handleNextPage}
-                  disabled={
-                    currentPage >=
-                    Math.ceil(filteredOrders.length / ordersPerPage)
-                  }
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+      <OrdersListing
+        isLoading={isLoading}
+        currentOrders={currentOrders}
+        filteredOrders={orders}
+        ordersPerPage={ordersPerPage}
+        currentPage={currentPage}
+        handlePreviousPage={handlePreviousPage}
+        handleNextPage={handleNextPage}
+        dishes={data}
+      />
+    </motion.div>
   );
 };
 
