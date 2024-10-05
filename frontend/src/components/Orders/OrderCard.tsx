@@ -7,14 +7,14 @@ import KitchenPrint from "./KitchenPrint";
 import SalesPrint from "./SalesPrint";
 import AddProductModal from "./AddProductModal";
 import PrintConfirmationModal from "./PrintConfirmationModal";
-import { api, updateOrderStatusNew} from "../../services/api";
+import { api, updateOrderStatusNew } from "../../services/api";
 import ReactSelect from "react-select";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "../ui/hover-card";
-import { BadgeInfo, Bike, Mail, Phone, PlusCircle } from "lucide-react";
+import { BadgeInfo, Bike, HandPlatter, Mail, Phone, PlusCircle, ShoppingBag } from "lucide-react";
 import { CreditUserModal } from "../modals/CreditUserModal";
 import { Button } from "../ui/button"; // Assuming you have a Button component
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"; // Assuming you have Popover components
@@ -96,9 +96,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   );
   const [openDriverSelect, setOpenDriverSelect] = useState<boolean>(false);
 
-  const {
-    data: deliveryDriversList
-  } = useQuery<{ results: DeliveryDriver[] }>(
+  const { data: deliveryDriversList } = useQuery<{ results: DeliveryDriver[] }>(
     "deliveryDrivers",
     fetchDeliveryDrivers
   );
@@ -162,8 +160,10 @@ const OrderCard: React.FC<OrderCardProps> = ({
       });
     } else {
       try {
-        await updateOrderStatusNew(order.id, newStatus as "pending" | "approved" | "cancelled" | "delivered");
-
+        await updateOrderStatusNew(
+          order.id,
+          newStatus as "pending" | "approved" | "cancelled" | "delivered"
+        );
         onStatusUpdated(); // Refresh orders after status change
       } catch (error) {
         console.error("Error updating status:", error);
@@ -592,14 +592,28 @@ const OrderCard: React.FC<OrderCardProps> = ({
           </HoverCard>
         )}
 
-        {order?.order_type !== "delivery" && (
-          <button
-            className="font-bold italic"
+        {order?.order_type === "dining" && (
+          <Button
+            variant="secondary"
+            className="font-bold italic flex gap-2 items-center"
             onClick={() => setShowOrderTypeModal(true)}
           >
+            <HandPlatter size={18} />
             {order?.order_type?.charAt(0).toUpperCase() +
               order?.order_type?.slice(1)}
-          </button>
+          </Button>
+        )}
+
+        {order?.order_type === "takeaway" && (
+          <Button
+            variant="secondary"
+            className="font-bold italic flex gap-2 items-center"
+            onClick={() => setShowOrderTypeModal(true)}
+          >
+            <ShoppingBag size={18} />
+            {order?.order_type?.charAt(0).toUpperCase() +
+              order?.order_type?.slice(1)}
+          </Button>
         )}
 
         <span className="text-lg font-semibold text-gray-800">

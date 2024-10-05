@@ -3,12 +3,12 @@ import { OrderItem, Dish } from "../../types";
 
 interface OrderItemsProps {
   orderItem: OrderItem;
-  dishes: Dish[];
-  isNewlyAdded?: boolean; // Prop to check if the item is newly added
+  dishes: Dish[] | undefined;
+  isNewlyAdded?: boolean;
 }
 
 const OrderItems: React.FC<OrderItemsProps> = ({ orderItem, dishes, isNewlyAdded }) => {
-  const dish = dishes.find((d) => d.id === orderItem.dish);
+  const dish = dishes ? dishes.find((d) => d.id === orderItem.dish) : undefined;
 
   if (!dish) {
     return (

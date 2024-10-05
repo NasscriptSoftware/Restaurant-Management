@@ -329,7 +329,7 @@ class Menu(models.Model):
     sub_total = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
     is_custom = models.BooleanField(
         default=False
-    )  # False for predefined, True for custom
+    )
     mess_type = models.ForeignKey(
         "MessType",
         related_name="menus",
@@ -339,7 +339,10 @@ class Menu(models.Model):
     )
     created_by = models.CharField(
         max_length=255, default="admin", null=True, blank=True
-    )  # UUID for users, 'admin' for shop-created menus
+    )
+
+    class Meta:
+        ordering = ('name',)
 
     def __str__(self):
         return self.name

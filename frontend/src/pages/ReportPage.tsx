@@ -776,9 +776,10 @@ interface ProductReport {
   invoice_number: string;
   order_created_at: string;
   order_type: string;
-  cash_amount: number;
-  bank_amount: number;
+  cash_amount: string;
+  bank_amount: string;
   payment_method: string;
+  created_at: string;
 }
 
 interface Transaction {

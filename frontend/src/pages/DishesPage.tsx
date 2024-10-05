@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "react-query";
-import { Check, ChevronsUpDown, CircleCheckBig, Search } from "lucide-react";
-
+import { Check, ChevronsUpDown, CircleCheck, Search } from "lucide-react";
+import { motion } from "framer-motion";
 import Layout from "../components/Layout/Layout";
 import DishList from "../components/Dishes/DishList";
 import OrderItem from "../components/Orders/OrderItem";
@@ -11,11 +11,7 @@ import { useOrders } from "../hooks/useOrders";
 import MemoModal from "@/components/modals/MemoModal";
 import KitchenNoteModal from "@/components/modals/KitchenNoteModal";
 import { Dish, Category, OrderFormData, DeliveryDriver } from "../types";
-import {
-  fetchDeliveryDrivers,
-  fetchUnreadCount,
-  getCategories,
-} from "../services/api";
+import { fetchDeliveryDrivers, getCategories } from "../services/api";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -35,15 +31,25 @@ import {
 } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Loader from "@/components/Layout/Loader";
+import { AnimatePresence } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/features/store";
+import {
+  addItem,
+  clearItems,
+  setItems,
+  updateQuantity,
+} from "@/features/slices/orderSlice";
 
 type OrderType = "dining" | "takeaway" | "delivery";
 
-type OrderDish = Dish & { quantity: number; variants: any[] };
+export type OrderDish = Dish & { quantity: number; variants: any[] };
 
 const DishesPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { dishes, isLoading, isError, addDishToOrder, page, setPage } =
-    useDishes();
+  const dispatch = useDispatch();
+  const orderItems = useSelector((state: RootState) => state.order.items);
+  const { dishes, isLoading, isError, addDishToOrder } = useDishes();
+
   const { createOrder } = useOrders();
   const { data: categories } = useQuery<Category[]>(
     "categories",
@@ -54,10 +60,8 @@ const DishesPage: React.FC = () => {
     fetchDeliveryDrivers
   );
 
-  const [orderItems, setOrderItems] = useState<OrderDish[]>([]);
   const [isOrderVisible, setIsOrderVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderType, setOrderType] = useState<OrderType>("dining");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDriver, setSelectedDriver] = useState<DeliveryDriver | null>(
@@ -74,36 +78,46 @@ const DishesPage: React.FC = () => {
   const [isKitchenNoteModalOpen, setIsKitchenNoteModalOpen] = useState(false);
   const [kitchenNote, setKitchenNote] = useState("");
 
-  const data = dishes?.results || [];
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const navigate = useNavigate();
 
+  const data = dishes || [];
+
+  useEffect(() => {
+    if (showSuccessModal) {
+      const timer = setTimeout(() => {
+        setShowSuccessModal(false);
+        navigate("/orders");
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessModal, navigate]);
+
+  useEffect(() => {
+    // Load order items from localStorage on component mount
+    const savedOrderItems = localStorage.getItem("orderItems");
+    if (savedOrderItems) {
+      dispatch(setItems(JSON.parse(savedOrderItems)));
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    // Save order items to localStorage whenever they change
+    localStorage.setItem("orderItems", JSON.stringify(orderItems));
+  }, [orderItems]);
 
   const handleAddDish = (dish: Dish) => {
-    addDishToOrder(dish.id, 1);
-    const existingItem = orderItems.find((item) => item.id === dish.id);
-    if (existingItem) {
-      setOrderItems(
-        orderItems.map((item) =>
-          item.id === dish.id
-            ? { ...item, quantity: (item.quantity || 0) + 1 }
-            : item
-        )
-      );
-    } else {
-      setOrderItems([...orderItems, { ...dish, quantity: 1, variants: [] }]);
-    }
+    dispatch(addItem({ ...dish, quantity: 1, variants: [] }));
     setIsOrderVisible(true);
   };
 
-  const updateQuantity = (id: number, change: number) => {
-    setOrderItems(
-      orderItems
-        .map((item) =>
-          item.id === id
-            ? { ...item, quantity: Math.max((item.quantity || 0) + change, 0) }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
+  const updateQuantityFn = (id: number, change: number) => {
+    dispatch(updateQuantity({ id, change }));
+  };
+
+  const handleClearItems = () => {
+    dispatch(clearItems());
   };
 
   const handleCheckout = () => {
@@ -150,7 +164,7 @@ const DishesPage: React.FC = () => {
 
       createOrder(orderData);
       setShowSuccessModal(true);
-      setOrderItems([]);
+      handleClearItems();
       setIsOrderVisible(false);
     } catch (error) {
       console.error(`Error creating order:`, error);
@@ -167,7 +181,7 @@ const DishesPage: React.FC = () => {
   };
 
   const handleUpdateOrderItems = (updatedItems: OrderDish[]) => {
-    setOrderItems(updatedItems);
+    dispatch(setItems(updatedItems));
   };
 
   const handleOpenMemoModal = () => {
@@ -176,12 +190,6 @@ const DishesPage: React.FC = () => {
 
   const handleCloseMemoModal = () => {
     setIsMemoModalOpen(false);
-  };
-
-  const handleCloseBtnClick = () => {
-    fetchUnreadCount();
-    setShowSuccessModal(false);
-    navigate("/orders");
   };
 
   const handleCategoryClick = (categoryId: number | null) => {
@@ -200,10 +208,6 @@ const DishesPage: React.FC = () => {
       .includes(searchQuery.toLowerCase());
     return categoryMatch && searchMatch;
   });
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-  };
 
   if (isLoading)
     return (
@@ -265,43 +269,36 @@ const DishesPage: React.FC = () => {
             ))}
           </div>
           <DishList dishes={filteredDishes} onAddDish={handleAddDish} />
-          <div className="flex justify-center mt-16">
-            <Button
-              onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
-              className="mr-2"
-            >
-              Previous
-            </Button>
-            <span className="px-4 py-2 bg-gray-200 rounded">{page}</span>
-            <Button
-              onClick={() => handlePageChange(page + 1)}
-              disabled={!dishes?.next}
-              className="ml-2"
-            >
-              Next
-            </Button>
-          </div>
-          {orderItems.length > 0 && !isMemoModalOpen && !isKitchenNoteModalOpen && (
-            <div className="flex justify-center mt-4 space-x-4 sticky bottom-0 bg-white p-4 z-10">
-              <Button variant="outline" className="bg-purple-500" onClick={handleOpenMemoModal}>
-                Memo
-              </Button>
-              <Button variant="outline" className="bg-purple-500" onClick={handleOpenKitchenNoteModal}>
-                Kitchen Note
-              </Button>
-            </div>
-          )}
-
+          {orderItems.length > 0 &&
+            !isMemoModalOpen &&
+            !isKitchenNoteModalOpen && (
+              <div className="flex justify-center mt-4 space-x-4 sticky bottom-0 bg-white p-4 z-10">
+                <Button
+                  variant="outline"
+                  className="w-full h-14 border hover:border-purple-600 bg-purple-600 hover:bg-purple-500 hover:text-white text-white"
+                  onClick={handleOpenMemoModal}
+                >
+                  Memo
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full h-14 border hover:border-purple-600 bg-purple-600 text-white"
+                  onClick={handleOpenKitchenNoteModal}
+                >
+                  Kitchen Note
+                </Button>
+              </div>
+            )}
         </div>
         {orderItems.length > 0 && (
           <div
-            className={`w-full lg:w-[550px] bg-white p-8 mt-2 ${isOrderVisible ? "block" : "hidden lg:block"
-              }`}
+            className={`w-full lg:w-[550px] bg-white p-8 mt-2 ${
+              isOrderVisible ? "block" : "hidden lg:block"
+            }`}
           >
             <div className="sticky top-0">
               <h2 className="text-2xl font-bold mb-4">New Order</h2>
-              <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+              <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 invisible-scrollbar">
                 {orderItems.map((item) => (
                   <OrderItem
                     key={item.id}
@@ -313,10 +310,10 @@ const DishesPage: React.FC = () => {
                           : item.category.id,
                       price: item.price.toString(),
                     }}
-                    incrementQuantity={() => updateQuantity(item.id, 1)}
-                    decrementQuantity={() => updateQuantity(item.id, -1)}
+                    incrementQuantity={() => updateQuantityFn(item.id, 1)}
+                    decrementQuantity={() => updateQuantityFn(item.id, -1)}
                     removeItem={() =>
-                      updateQuantity(item.id, -(item.quantity || 0))
+                      updateQuantityFn(item.id, -(item.quantity || 0))
                     }
                   />
                 ))}
@@ -443,10 +440,11 @@ const DishesPage: React.FC = () => {
                                   }}
                                 >
                                   <Check
-                                    className={`mr-2 h-4 w-4 ${selectedDriver?.id === driver.id
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                      }`}
+                                    className={`mr-2 h-4 w-4 ${
+                                      selectedDriver?.id === driver.id
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    }`}
                                   />
                                   {driver.username}
                                 </CommandItem>
@@ -480,13 +478,13 @@ const DishesPage: React.FC = () => {
               typeof item.category === "number"
                 ? item.category
                 : item.category.id,
-            price: item.price.toString(), // Convert price to string
+            price: item.price.toString(),
           }))}
           onUpdateOrderItems={(updatedItems) => {
             handleUpdateOrderItems(
               updatedItems.map((item) => ({
                 ...item,
-                price: Number(item.price), // Convert price back to number
+                price: Number(item.price),
               }))
             );
           }}
@@ -498,18 +496,56 @@ const DishesPage: React.FC = () => {
           onSave={handleSaveKitchenNote}
         />
       </div>
-      {showSuccessModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg flex flex-col items-center">
-            <CircleCheckBig size={48} className="text-green-500 mb-4" />
-            <h2 className="text-2xl font-bold mb-4">Order Success</h2>
-            <p>Your order has been placed successfully!</p>
-            <Button className="mt-4" onClick={handleCloseBtnClick}>
-              Close
-            </Button>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 15 }}
+              className="bg-white p-8 rounded-lg flex flex-col items-center shadow-lg"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              >
+                <CircleCheck size={64} className="text-green-500 mb-4" />
+              </motion.div>
+              <motion.h2
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-2xl font-bold mb-2"
+              >
+                Order Successful!
+              </motion.h2>
+              <motion.p
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-gray-600"
+              >
+                Your order has been placed successfully.
+              </motion.p>
+              <motion.p
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="text-sm text-gray-500 mt-4"
+              >
+                Redirecting to orders...
+              </motion.p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Layout>
   );
 };

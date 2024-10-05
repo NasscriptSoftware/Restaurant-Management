@@ -81,7 +81,6 @@ router.register(r'order-status', OrderStatusUpdateViewSet, basename='order-statu
 router.register(r'logo-info', LogoInfoViewSet, basename='logoinfo')
 
 # Accounts Transactions
-
 router.register(r'nature-groups', NatureGroupViewSet)
 router.register(r'main-groups', MainGroupViewSet)
 router.register(r'ledgers', LedgerViewSet)

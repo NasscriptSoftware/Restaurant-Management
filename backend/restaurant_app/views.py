@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import TokenError, RefreshToken
 from rest_framework_simplejwt.exceptions import InvalidToken
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from django.db.models import Sum, Count, Avg, F
+from django.db.models import Sum, Count, Avg, F, Value,DecimalField, IntegerField
 from django.utils.dateparse import parse_date
 from django.db.models import Q
 from django.db.models.functions import TruncDate, TruncHour
@@ -19,6 +19,7 @@ from delivery_drivers.serializers import DeliveryOrderSerializer
 from restaurant_app.models import *
 from restaurant_app.serializers import *
 from rest_framework.decorators import api_view
+from django.db.models.functions import Coalesce,Cast
 
 
 User = get_user_model()
@@ -94,6 +95,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class DishViewSet(viewsets.ModelViewSet):
     queryset = Dish.objects.all()
     serializer_class = DishSerializer
+    pagination_class = None
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -184,7 +186,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=["get"])  # Update on 21-08-2024
+    @action(detail=False, methods=["get"])
     def sales_report(self, request):
         from_date = request.query_params.get("from_date")
         to_date = request.query_params.get("to_date")
@@ -330,7 +332,38 @@ class OrderViewSet(viewsets.ModelViewSet):
         }
 
         return Response(trends)
+    
+    @action(detail=False, methods=['get'])
+    def product_wise_report(self, request):
+        from_date = request.query_params.get('from_date')
+        to_date = request.query_params.get('to_date')
 
+        # Parse the dates if they are provided
+        if from_date:
+            from_date = parse_date(from_date)
+        if to_date:
+            to_date = parse_date(to_date)
+
+        # Filter orders by the provided date range
+        orders = Order.objects.filter(created_at__date__gte=from_date, created_at__date__lte=to_date)
+
+        # Properly cast fields and define output fields in the aggregation
+        order_items = OrderItem.objects.filter(order__in=orders).values(
+            product_name=F('dish__name'),
+            total_quantity=Sum(Cast('quantity', output_field=IntegerField())),  # Cast quantity explicitly
+            total_amount=Coalesce(Sum(Cast(F('order__total_amount'), output_field=DecimalField())), Value(0, output_field=DecimalField())),  # Properly cast total_amount and use output_field
+            invoice_number=F('order__invoice_number'),
+            order_created_at=F('order__created_at'),  # Include order created_at
+            order_type=F('order__order_type'),        # Include order_type
+            cash_amount=F('order__cash_amount'),      # Include cash_amount
+            bank_amount=F('order__bank_amount'),      # Include bank_amount
+            payment_method=F('order__payment_method') # Include payment_method
+        )
+
+        # Format the response
+        report_data = list(order_items)
+
+        return Response(report_data)
 
 class OrderStatusUpdateViewSet(viewsets.GenericViewSet):
     queryset = Order.objects.all()
@@ -366,7 +399,6 @@ class OrderStatusUpdateViewSet(viewsets.GenericViewSet):
                 # Create the credit order if it doesn't exist
                 CreditOrder.objects.get_or_create(order=updated_order, credit_user=credit_user)
                 credit_user.add_to_total_due(updated_order.total_amount)
-
             return Response({"detail": "Order updated successfully."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     

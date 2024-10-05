@@ -1,5 +1,6 @@
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import React from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface PaginationControlsProps {
   currentPage: number;
@@ -12,28 +13,45 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
   totalPages,
   onPageChange,
 }) => {
+  const pageNumbers = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i);
+  }
+
   return (
-    <div className="flex justify-between items-center mt-6">
-      <button
+    <nav className="flex justify-center items-center space-x-2 mt-8">
+      <Button
+        variant="outline"
+        size="icon"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="flex gap-2 items-center bg-gray-300 px-4 py-2 rounded disabled:opacity-50"
       >
-        <ArrowLeft size={20} />
-        Previous
-      </button>
-      <span>
-        Page {currentPage} of {totalPages}
-      </span>
-      <button
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+      <div className="flex space-x-1">
+        {pageNumbers.map((number) => (
+          <Button
+            key={number}
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(number)}
+            className={`w-8 ${
+              currentPage === number ? "bg-primary text-primary-foreground" : ""
+            }`}
+          >
+            {number}
+          </Button>
+        ))}
+      </div>
+      <Button
+        variant="outline"
+        size="icon"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="flex gap-2 items-center bg-gray-300 px-4 py-2 rounded disabled:opacity-50"
       >
-        Next
-        <ArrowRight size={20} />
-      </button>
-    </div>
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </nav>
   );
 };
 

@@ -11,6 +11,11 @@ import {
 import KitchenPrint from "../components/Orders/KitchenPrint";
 import SalesPrint from "../components/Orders/SalesPrint";
 import { CreditUser } from "@/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 const OrderCard = lazy(() => import("../components/Orders/OrderCard"));
 const PaginationControls = lazy(
@@ -36,8 +41,6 @@ const OrdersPage: React.FC = () => {
   useEffect(() => {
     loadCreditCardUsers();
   }, []);
-
-  // Inside your component or useEffect hook where you fetch the data
 
   useEffect(() => {
     const fetchLogoInfo = async () => {
@@ -133,14 +136,6 @@ const OrdersPage: React.FC = () => {
       setPrintType("sales");
     }
   };
-
-  // const calculateCashAmount = (orderId: number) => {
-  //   const order = filteredOrders.find(order => order.id === orderId);
-  //   if (!order) return 0;
-
-  //   // Customize the calculation logic if necessary
-  //   return order.total_amount;
-  // };
 
   const handleGenerateKitchenBills = async () => {
     try {
@@ -253,83 +248,71 @@ const OrdersPage: React.FC = () => {
       <Layout>Error loading orders or dishes. Please try again later.</Layout>
     );
 
-  if (!dishes || !dishes.results) {
+  if (!dishes || !dishes) {
     return <Layout>No dish data available.</Layout>;
   }
 
   return (
     <Layout>
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
-        <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left">
-          Your Orders
-        </h1>
-        <div className="flex w-full sm:w-auto">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search orders by ID..."
-            className="border border-gray-300 rounded px-4 py-2 w-full"
-          />
-          <button
-            onClick={handleSearch}
-            className="ml-2 text-black rounded p-2 bg-gray-200 hover:bg-gray-300"
-          >
-            <SearchIcon />
-          </button>
-        </div>
-      </div>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Your Orders</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <div className="flex w-full sm:w-1/2">
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search orders by ID..."
+                className="mr-2"
+              />
+              <Button onClick={handleSearch} variant="outline">
+                <SearchIcon className="h-4 w-4 mr-2" />
+                Search
+              </Button>
+            </div>
+            <Select value={statusFilter || ""} onValueChange={(value) => handleFilterOrders(value)}>
+              <SelectTrigger className="w-full sm:w-auto">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Orders</SelectItem>
+                <SelectItem value="pending"><Badge>1</Badge> Pending Orders</SelectItem>
+                <SelectItem value="approved"><Badge>2</Badge> Kitchen Orders</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Buttons for filtering */}
-      <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0 justify-between mb-4">
-        <button
-          onClick={() => handleFilterOrders("pending")}
-          className={`w-full sm:w-auto px-4 py-2 rounded-md text-center ${
-            statusFilter === "pending"
-              ? "bg-blue-700 text-white"
-              : "bg-blue-500 text-white hover:bg-blue-600"
-          }`}
-        >
-          Select All Pending Orders
-        </button>
-
-        <button
-          onClick={() => handleFilterOrders("approved")}
-          className={`w-full sm:w-auto px-4 py-2 rounded-md text-center ${
-            statusFilter === "approved"
-              ? "bg-yellow-700 text-white"
-              : "bg-yellow-500 text-white hover:bg-yellow-600"
-          }`}
-        >
-          Select All Kitchen Orders
-        </button>
-      </div>
-
-      {/* Centered action button */}
       {showActionButton && selectedOrders.length > 0 && (
-        <div className="flex justify-center mb-4">
-          <button
-            onClick={
-              statusFilter === "pending"
-                ? handleGenerateKitchenBills
-                : handlePrintSalesBills
-            }
-            className="bg-green-500 text-white px-6 py-3 rounded-md hover:bg-green-600"
-          >
-            {statusFilter === "pending"
-              ? "Generate Kitchen Bills"
-              : "Print Sales Bills"}
-          </button>
-        </div>
+        <Card className="mb-6">
+          <CardContent className="flex justify-center py-4">
+            <Button
+              onClick={
+                statusFilter === "pending"
+                  ? handleGenerateKitchenBills
+                  : handlePrintSalesBills
+              }
+              className="bg-green-500 hover:bg-green-600"
+            >
+              {statusFilter === "pending"
+                ? "Generate Kitchen Bills"
+                : "Print Sales Bills"}
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {filteredOrders.length ? (
-        <>
+        <div className="space-y-4">
           {filteredOrders.map((order: any) => (
             <OrderCard
               key={order.id}
               order={order}
-              dishes={dishes.results}
+              dishes={dishes}
               creditUsers={creditUsers}
               onCreditUserChange={loadCreditCardUsers}
               selectedOrders={selectedOrders}
@@ -343,9 +326,13 @@ const OrdersPage: React.FC = () => {
             totalPages={Math.ceil(orders.count / 10)}
             onPageChange={setCurrentPage}
           />
-        </>
+        </div>
       ) : (
-        <p className="text-gray-600">No orders found for the provided ID.</p>
+        <Card>
+          <CardContent className="text-center py-8">
+            <p className="text-gray-600">No orders found for the provided ID.</p>
+          </CardContent>
+        </Card>
       )}
 
       {/* Hidden print area */}
@@ -355,11 +342,11 @@ const OrdersPage: React.FC = () => {
           .map((order: any) => (
             <div key={order.id} style={{ pageBreakAfter: "always" }}>
               {printType === "kitchen" ? (
-                <KitchenPrint order={order} dishes={dishes.results} />
+                <KitchenPrint order={order} dishes={dishes} />
               ) : (
                 <SalesPrint
                   order={order}
-                  dishes={dishes.results}
+                  dishes={dishes}
                   logoInfo={logoInfo}
                 />
               )}

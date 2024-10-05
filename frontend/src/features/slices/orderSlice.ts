@@ -1,20 +1,53 @@
-// slices/orderSlice.js
-import { createSlice } from "@reduxjs/toolkit";
+import { OrderDish } from "@/pages/DishesPage";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-const orderSlice = createSlice({
+export interface OrderState {
+  items: OrderDish[];
+}
+
+const initialState: OrderState = {
+  items: [],
+};
+
+export const orderSlice = createSlice({
   name: "order",
-  initialState: {
-    orderData: null,
-  },
+  initialState,
   reducers: {
-    setOrderData: (state, action) => {
-      state.orderData = action.payload;
+    addItem: (state, action: PayloadAction<OrderDish>) => {
+      const existingItem = state.items.find(
+        (item) => item.id === action.payload.id
+      );
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        state.items.push({ ...action.payload, quantity: 1 });
+      }
     },
-    clearOrderData: (state) => {
-      state.orderData = null;
+    updateQuantity: (
+      state,
+      action: PayloadAction<{ id: number; change: number }>
+    ) => {
+      const item = state.items.find((item) => item.id === action.payload.id);
+      if (item) {
+        item.quantity = Math.max(
+          (item.quantity || 0) + action.payload.change,
+          0
+        );
+      }
+      state.items = state.items.filter((item) => item.quantity > 0);
+    },
+    clearItems: (state) => {
+      state.items = [];
+    },
+    setItems: (state, action: PayloadAction<OrderDish[]>) => {
+      if (JSON.stringify(state.items) !== JSON.stringify(action.payload)) {
+        state.items = action.payload;
+      }
     },
   },
 });
 
-export const { setOrderData, clearOrderData } = orderSlice.actions;
+export const { addItem, updateQuantity, clearItems, setItems } =
+  orderSlice.actions;
+
 export default orderSlice.reducer;
