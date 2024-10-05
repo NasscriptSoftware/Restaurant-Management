@@ -14,7 +14,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "../ui/hover-card";
-import { BadgeInfo, Bike, HandPlatter, Mail, Phone, PlusCircle, Salad, ShoppingBag } from "lucide-react";
+import { BadgeInfo, Bike, HandPlatter, Mail, Phone, PlusCircle, ShoppingBag } from "lucide-react";
 import { CreditUserModal } from "../modals/CreditUserModal";
 import { Button } from "../ui/button"; // Assuming you have a Button component
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"; // Assuming you have Popover components

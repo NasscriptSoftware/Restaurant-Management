@@ -12,9 +12,11 @@ import {
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import authReducer from "./slices/authSlice";
+import orderReducer from "./slices/orderSlice";
 
 const rootReducer = combineReducers({
   auth: authReducer,
+  order: orderReducer,
 });
 
 const persistedReducer = persistReducer(
@@ -38,4 +40,5 @@ export const store = configureStore({
 
 export const persistor = persistStore(store);
 
+export type RootState = ReturnType<typeof store.getState>;
 export default store;

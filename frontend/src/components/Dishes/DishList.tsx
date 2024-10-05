@@ -1,76 +1,88 @@
-// import React from 'react';
-// import DishItem from './DishItem';
-// import { DishListProps } from '../../types';
-
-// const DishList: React.FC<DishListProps> = ({ dishes, onAddDish }) => {
-//   if (dishes.length === 0) return <div>No dishes available</div>;
-
-//   return (
-//     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-//       {dishes.map((dish) => (
-//         <DishItem key={dish.id} dish={dish} onAddDish={onAddDish} />
-//       ))}
-//     </div>
-//   );
-// };
-
-// export default DishList;
-
 import React, { useState } from "react";
 import DishItem from "./DishItem";
 import { DishListProps } from "../../types";
-import { Button } from "../ui/button";
+import { motion } from 'framer-motion'
+import { RadioGroup } from '@headlessui/react'
 
 const DishList: React.FC<DishListProps> = ({ dishes, onAddDish }) => {
   const [showImage, setShowImage] = useState(true);
-  const [itemsPerRow, setItemsPerRow] = useState(4);
+  const options = [
+    { title: 'With Images', value: true },
+    { title: 'Without Images', value: false },
+  ]
 
   const handleAddDish = (dish: any) => {
     onAddDish(dish);
-    setItemsPerRow(4); 
   };
+
+  const handleChange = (value: boolean) => {
+    setShowImage(value)
+  }
 
   return (
     <div>
-      <div className="flex justify-start mb-4">
-        <Button
-          onClick={() => {
-            setShowImage(true);
-            setItemsPerRow(4);
-          }}
-          className={`${
-            showImage ? "bg-[#6f42c1] text-white" : ''
-          } rounded-lg px-3 py-1 transition-colors duration-300`}
-          variant={showImage ? "default" : "outline"}
-        >
-          With Images
-        </Button>
-        <Button
-          onClick={() => {
-            setShowImage(false);
-            setItemsPerRow(5); 
-          }}
-          className={`${
-            !showImage ? "bg-[#6f42c1] text-white" : ''
-          } rounded-lg px-3 py-1 mx-2 transition-colors duration-300`}
-          variant={!showImage ? "default" : "outline"}
-        >
-          Without Images
-        </Button>
+      <div className="w-full max-w-md mx-auto mb-5">
+        <RadioGroup value={showImage} onChange={handleChange} className="mt-2">
+          <RadioGroup.Label className="sr-only">
+            Image display options
+          </RadioGroup.Label>
+          <div className="flex p-1 space-x-1 bg-white border rounded-xl">
+            {options.map((option) => (
+              <RadioGroup.Option
+                key={option.title}
+                value={option.value}
+                className={({ active, checked }) =>
+                  `${
+                    active
+                      ? "ring-2 ring-purple-500 ring-opacity-60 ring-offset-2 ring-offset-purple-300"
+                      : ""
+                  }
+                ${checked ? "bg-purple-600 text-white" : "bg-white"}
+                  relative flex-1 cursor-pointer rounded-lg px-5 py-3 focus:outline-none`
+                }
+              >
+                {({ checked }) => (
+                  <>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center">
+                        <div className="text-sm">
+                          <RadioGroup.Label
+                            as="p"
+                            className={`font-medium ${
+                              checked ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            {option.title}
+                          </RadioGroup.Label>
+                        </div>
+                      </div>
+                      {checked && (
+                        <motion.div
+                          className="absolute inset-0 rounded-lg"
+                          layoutId="highlight"
+                          initial={false}
+                          transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 30,
+                          }}
+                        />
+                      )}
+                    </div>
+                  </>
+                )}
+              </RadioGroup.Option>
+            ))}
+          </div>
+        </RadioGroup>
       </div>
 
-      <div
-        className={`grid ${
-          showImage
-            ? `grid-cols-1 sm:grid-cols-2 lg:grid-cols-${itemsPerRow} gap-6`
-            : `grid-cols-2 sm:grid-cols-3 lg:grid-cols-${itemsPerRow} gap-6`
-        }`}
-      >
+      <div className="grid grid-cols-4 gap-2">
         {dishes.map((dish) => (
           <DishItem
             key={dish.id}
             dish={dish}
-            onAddDish={handleAddDish} 
+            onAddDish={handleAddDish}
             showImage={showImage}
           />
         ))}

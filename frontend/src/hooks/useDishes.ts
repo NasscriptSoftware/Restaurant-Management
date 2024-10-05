@@ -5,9 +5,8 @@ import { UseDishesReturn } from '../types';
 
 export const useDishes = (): UseDishesReturn => {
   const [page, setPage] = useState(1);
-  const pageSize = 10;
 
-  const { data, isLoading, isError, refetch } = useQuery(['dishes', page], () => getDishes(page, pageSize), {
+  const { data, isLoading, isError, refetch } = useQuery(['dishes'], () => getDishes(), {
     keepPreviousData: true,
   });
 

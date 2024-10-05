@@ -151,7 +151,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {fromDate ? format(fromDate, "PPP") : <span>From Date</span>}
+                {fromDate ? format(fromDate, "PPP") : <span>{format(new Date(), 'PPP')}</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
@@ -173,7 +173,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {toDate ? format(toDate, "PPP") : <span>To Date</span>}
+                {toDate ? format(toDate, "PPP") : <span>{format(new Date(), 'PPP')}</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">

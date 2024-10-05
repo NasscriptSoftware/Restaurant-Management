@@ -45,7 +45,7 @@ const DishItem: React.FC<DishItemWithToggleProps> = ({ dish, onAddDish, showImag
   return (
     <div
       onClick={() => onAddDish(dish)}
-      className={`flex flex-col justify-between bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+      className={`cursor-pointer hover:scale-95 flex flex-col justify-between bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
         showImage ? "w-full" : "w-full" 
       }`}
     >

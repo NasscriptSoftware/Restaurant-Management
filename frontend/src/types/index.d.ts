@@ -183,7 +183,7 @@ export interface UseCategoriesReturn {
 }
 
 export interface UseDishesReturn {
-  dishes: ApiResponse<Dish> | undefined;
+  dishes: Dish[] | undefined;
   isLoading: boolean;
   isError: boolean;
   refetch: () => void;

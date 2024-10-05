@@ -94,6 +94,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class DishViewSet(viewsets.ModelViewSet):
     queryset = Dish.objects.all()
     serializer_class = DishSerializer
+    pagination_class = None
     filter_backends = [
         DjangoFilterBackend,
         filters.SearchFilter,
