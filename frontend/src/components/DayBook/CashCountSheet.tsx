@@ -15,8 +15,12 @@ const CashCountSheet: React.FC = () => {
     const [totalPages, setTotalPages] = useState<number>(1);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [fromDate, setFromDate] = useState<string>("");
-    const [toDate, setToDate] = useState<string>("");
+    const getCurrentDate = () => {
+        const today = new Date();
+        return today.toISOString().split("T")[0];
+      };
+    const [fromDate, setFromDate] = useState<string>(getCurrentDate());
+    const [toDate, setToDate] = useState<string>(getCurrentDate());
     const [searchPerformed, setSearchPerformed] = useState<boolean>(false);
 
     useEffect(() => {

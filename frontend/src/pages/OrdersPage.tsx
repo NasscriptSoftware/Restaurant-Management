@@ -232,16 +232,16 @@ const OrdersPage: React.FC = () => {
       printWindow.document.close();
       printWindow.focus();
 
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
+      // setTimeout(() => {
+      //   printWindow.print();
+      //   printWindow.close();
 
-        setSelectedOrders([]);
-        setShowActionButton(false);
+      //   setSelectedOrders([]);
+      //   setShowActionButton(false);
 
-        // Forcefully refresh the page after printing
-        window.location.reload();
-      }, 100);
+      //   // Forcefully refresh the page after printing
+      //   window.location.reload();
+      // }, 100);
     }
   };
 

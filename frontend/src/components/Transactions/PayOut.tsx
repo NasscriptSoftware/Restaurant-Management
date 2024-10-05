@@ -31,7 +31,11 @@ const PayOut: React.FC = () => {
   const [ledgerOptions, setLedgerOptions] = useState<Ledger[]>([]);
   const [selectedExpensePayables, setSelectedExpensePayables] = useState<string>("");
   const [selectedParticulars, setSelectedParticulars] = useState<string>("");
-  const [date, setDate] = useState<string>("");
+  const getCurrentDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  };
+  const [date, setDate] = useState<string>(getCurrentDate());
   const [debitAmount, setDebitAmount] = useState<string>("");
   const [creditAmount, setCreditAmount] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");

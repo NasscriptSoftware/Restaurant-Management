@@ -163,6 +163,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
     } else {
       try {
         await updateOrderStatusNew(order.id, newStatus as "pending" | "approved" | "cancelled" | "delivered");
+
         onStatusUpdated(); // Refresh orders after status change
       } catch (error) {
         console.error("Error updating status:", error);
@@ -170,7 +171,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
       }
     }
   };
-
   const handleOrderSelection = () => {
     onOrderSelection(
       selectedOrders.includes(order.id)
@@ -295,8 +295,10 @@ const OrderCard: React.FC<OrderCardProps> = ({
       );
 
       if (response && response.detail) {
-        // Ensure the API call was successful
-        // Call the bills API after successful status update
+        const UpdatedOrder = await api.get(`/orders/${initialOrder.id}`);
+        setOrder(UpdatedOrder.data)
+       console.log("UpdatedOrder",UpdatedOrder);
+       
         const billsResponse = await api.post("/bills/", {
           order_id: order.id, // Use order_id here
           total_amount: order.total_amount,
@@ -313,7 +315,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
           // Trigger the order list refresh after payment submission
           onStatusUpdated(); // Refresh orders after status change
-          window.location.reload();
+          // window.location.reload();
         } else {
           throw new Error("Failed to create the bill");
         }
@@ -380,10 +382,13 @@ const OrderCard: React.FC<OrderCardProps> = ({
         order_type: newOrderType,
         ...deliveryData,
       });
+      
 
       if (response.status === 200) {
         const updatedOrderData = response.data;
         setOrder(updatedOrderData);
+
+        
         setShowOrderTypeModal(false);
         window.location.reload();
       } else {

@@ -23,8 +23,12 @@ interface Ledger {
 const LedgerReport: React.FC = () => {
   const [ledgers, setLedgers] = useState<Ledger[]>([]);
   const [selectedLedger, setSelectedLedger] = useState<string>("");
-  const [fromDate, setFromDate] = useState<string>("");
-  const [toDate, setToDate] = useState<string>("");
+  const getCurrentDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  };
+  const [fromDate, setFromDate] = useState<string>(getCurrentDate());
+  const [toDate, setToDate] = useState<string>(getCurrentDate());
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);

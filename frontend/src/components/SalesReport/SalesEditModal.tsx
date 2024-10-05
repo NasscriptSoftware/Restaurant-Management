@@ -19,6 +19,7 @@ interface SalesEditModalProps {
     isOpen: boolean;
     report: SalesReport | null;
     onClose: () => void;
+    onUpdate: (updatedReport: SalesReport) => void;
 }
 
 interface FormData {
@@ -26,7 +27,7 @@ interface FormData {
     customer_phone_number: string;
 }
 
-const SalesEditModal: React.FC<SalesEditModalProps> = ({ isOpen, report, onClose }) => {
+const SalesEditModal: React.FC<SalesEditModalProps> = ({ isOpen, report, onClose, onUpdate }) => {
     const [formData, setFormData] = useState<FormData>({
         customer_name: report?.customer_name || "",
         customer_phone_number: report?.customer_phone_number || "",
@@ -51,14 +52,16 @@ const SalesEditModal: React.FC<SalesEditModalProps> = ({ isOpen, report, onClose
 
     const handleSave = async () => {
         if (!report) return;
-
+    
         try {
-            await api.patch(`/orders/${report.id}/`, formData);
-            onClose();
+            const response = await api.patch(`/orders/${report.id}/`, formData);
+            const updatedReport: SalesReport = response.data; // Extract the data property
+            onUpdate(updatedReport); // Pass the updated report to the parent component
         } catch (error) {
             console.error("Failed to update report:", error);
         }
     };
+    
 
     if (!isOpen) return null;
 

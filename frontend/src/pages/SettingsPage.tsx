@@ -3,10 +3,12 @@ import Layout from "../components/Layout/Layout";
 import SettingItem from "../components/Settings/SettingItem";
 
 const settingsItems = [
-  "What's new",
-  "About us",
-  "Support",
-  "Admin Pannel"
+  { label: "What's new", url: "/whats-new" },
+  { label: "About us", url: "/about-us" },
+  { label: "Support", url: "/support" },
+  { label: "Dining Table", url: "/dining-table" },
+  { label: "Coupons", url: "/coupons" },
+  { label: "Admin Pannel" } 
 ];
 
 const SettingsPage: React.FC = () => {
@@ -14,9 +16,10 @@ const SettingsPage: React.FC = () => {
     <Layout>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 bg-[#52088E]">
         {settingsItems.map((item, index) => (
-          <SettingItem 
-            key={index} 
-            label={item} 
+          <SettingItem
+            key={index}
+            label={item.label}
+            url={item.url} 
             className="text-center whitespace-nowrap min-w-max"
           />
         ))}

@@ -1,5 +1,16 @@
 import React from "react";
 
+type ProductReport = {
+  product_name:string;
+  invoice_number: string;
+  created_at: string;
+  order_type: string;
+  payment_method: string;
+  cash_amount: string;
+  bank_amount: string;
+  total_amount: number;
+};
+
 export interface SalesReport {
   id: number;
   invoice_number: string;
@@ -29,18 +40,21 @@ export interface MessReport {
 }
 
 interface SalesPrintProps {
-  reportType: "sales" | "mess";
+  reportType: 'sales' | 'mess' | 'product';  // Include 'product' in reportType
   reports: SalesReport[];
   messReports: MessReport[];
+  productReports?: ProductReport[];  // Add productReports as an optional prop
   totalAmount: number;
   totalCashAmount: number;
   totalCardAmount: number;
+  // Other props...
 }
 
 const SalesPrint: React.FC<SalesPrintProps> = ({
   reportType,
   reports,
   messReports,
+  productReports = [], // Default to an empty array if undefined
   totalAmount,
   totalCashAmount,
   totalCardAmount,
@@ -75,10 +89,10 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
         </style>
       </head>
       <body>
-        <h1>${reportType === "sales" ? "Sales Report" : "Mess Report"}</h1>
+        <h1>${reportType === "sales" ? "Sales Report" : reportType === "mess" ? "Mess Report" : "Product Report"}</h1>
         ${
           reportType === "sales"
-            ? `
+            ? ` 
           <table>
             <thead>
               <tr>
@@ -129,7 +143,8 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
             </tfoot>
           </table>
         `
-            : `
+            : reportType === "mess"
+            ? `
           <table>
             <thead>
               <tr>
@@ -188,6 +203,59 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
             </tfoot>
           </table>
         `
+            : reportType === "product"
+            ? `
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Invoice No</th>
+                <th>Date</th>
+                <th>Order Type</th>
+                <th>Payment Type</th>
+                <th>Cash</th>
+                <th>Bank</th>
+                <th>Total Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${productReports
+                .map(
+                  (report) => `
+                <tr>
+                  <td>${report.product_name}</td>
+                  <td>${report.invoice_number}</td>
+                  <td>${new Date(report.created_at).toLocaleDateString()}</td>
+                  <td>${report.order_type}</td>
+                  <td>${report.payment_method}</td>
+                  <td>${report.cash_amount}</td>
+                  <td>${report.bank_amount}</td>
+                  <td>${report.total_amount}</td>
+                </tr>
+              `
+                )
+                .join("")}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="6"></td>
+                <td>Total Cash:</td>
+                <td>₹${totalCashAmount.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td colspan="6"></td>
+                <td>Total Card:</td>
+                <td>₹${totalCardAmount.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td colspan="6"></td>
+                <td>Grand Total:</td>
+                <td>₹${totalAmount.toFixed(2)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        `
+            : ""
         }
       </body>
       </html>

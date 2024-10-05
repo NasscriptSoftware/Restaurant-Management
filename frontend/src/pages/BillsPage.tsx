@@ -13,19 +13,20 @@ const BillsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [allBills, setAllBills] = useState<Bill[]>([]);
   const [filteredBills, setFilteredBills] = useState<Bill[]>([]);
-  const [fromDate, setFromDate] = useState<Date | null>(null);
-  const [toDate, setToDate] = useState<Date | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [fromDate, setFromDate] = useState<Date | null>(new Date()); // Default to today
+  const [toDate, setToDate] = useState<Date | null>(new Date()); // Default to today
+  const [searchTerm, setSearchTerm] = useState<string>(""); // Search term for bill number
   const [showCancelled, setShowCancelled] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const itemsPerPage = 10;
 
+  // Fetch all bills
   const fetchBills = async () => {
     setIsLoading(true);
     try {
       const response = await api.get("/bills/");
-      setAllBills(response.data.results); // `response.data` already contains the parsed JSON data
+      setAllBills(response.data.results);
       setIsLoading(false);
     } catch (error) {
       console.error("Error fetching bills:", error);
@@ -37,9 +38,11 @@ const BillsPage: React.FC = () => {
     fetchBills();
   }, []);
 
+  // Filter bills based on date range, search term, and showCancelled flag
   useEffect(() => {
     let filtered = allBills;
 
+    // Date range filter
     if (fromDate && toDate) {
       const from = new Date(fromDate).setHours(0, 0, 0, 0);
       const to = new Date(toDate).setHours(23, 59, 59, 999);
@@ -50,12 +53,14 @@ const BillsPage: React.FC = () => {
       });
     }
 
+    // Search by bill number
     if (searchTerm) {
       filtered = filtered.filter((bill) =>
         bill.id.toString().includes(searchTerm)
       );
     }
 
+    // Filter for cancelled bills
     if (showCancelled) {
       filtered = filtered.filter((bill) => bill.order.status === "cancelled");
     }
@@ -64,11 +69,12 @@ const BillsPage: React.FC = () => {
     setCurrentPage(1);
   }, [fromDate, toDate, searchTerm, showCancelled, allBills]);
 
+  // Reset filters
   const handleReset = () => {
-    setFromDate(null);
-    setToDate(null);
-    setSearchTerm("");
-    setShowCancelled(false);
+    setFromDate(new Date()); // Reset to today
+    setToDate(new Date()); // Reset to today
+    setSearchTerm(""); // Clear search term
+    setShowCancelled(false); // Show all bills
   };
 
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -81,9 +87,7 @@ const BillsPage: React.FC = () => {
     <Layout>
       <h1 className="text-3xl font-bold mb-6">Generated Bills</h1>
       <div className="flex flex-col md:flex-row justify-between items-center mb-4 space-y-4 md:space-y-0">
-        {/* Date Pickers and Reset */}
         <div className="flex flex-col md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4 w-full md:w-auto">
-          {/* From Date */}
           <div className="w-full md:w-auto">
             <label className="block text-sm font-medium text-gray-700">
               From Date
@@ -97,7 +101,6 @@ const BillsPage: React.FC = () => {
             />
           </div>
 
-          {/* To Date */}
           <div className="w-full md:w-auto">
             <label className="block text-sm font-medium text-gray-700">
               To Date
@@ -111,7 +114,19 @@ const BillsPage: React.FC = () => {
             />
           </div>
 
-          {/* Reset Button */}
+          <div className="w-full md:w-auto">
+            <label className="block text-sm font-medium text-gray-700">
+              Search by Bill No.
+            </label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mt-1 p-2 border rounded w-full"
+              placeholder="Enter bill number"
+            />
+          </div>
+
           <div className="flex items-center justify-center md:items-end">
             <button
               onClick={handleReset}
@@ -123,20 +138,16 @@ const BillsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Show Cancelled Bills Button */}
         <div className="flex justify-center w-full md:w-auto">
           <button
             onClick={() => setShowCancelled(!showCancelled)}
-            className={`p-3 rounded-full ${
-              showCancelled ? "bg-blue-500" : "bg-gray-500"
-            } text-white shadow-md ml-0 md:ml-4`}
+            className={`p-3 rounded-full ${showCancelled ? "bg-blue-500" : "bg-gray-500"} text-white shadow-md ml-0 md:ml-4`}
           >
             {showCancelled ? "Show All Bills" : "Show Cancelled Bills"}
           </button>
         </div>
       </div>
 
-      {/* Bills Display */}
       {isLoading ? (
         <Loader />
       ) : paginatedBills.length ? (

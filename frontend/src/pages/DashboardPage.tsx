@@ -140,7 +140,7 @@ const RestaurantDashboard: React.FC = () => {
             title="Total Income"
             value={`QAR ${total_income.toLocaleString()}`}
             icon={<Wallet className="h-4 w-4 text-muted-foreground" />}
-            trend={total_income_trend}
+            trend={parseFloat(total_income_trend.toFixed(2))}
           />
           <DashboardCard
             title="Peak Hour"
@@ -153,13 +153,13 @@ const RestaurantDashboard: React.FC = () => {
             icon={
               <ShoppingCartIcon className="h-4 w-4 text-muted-foreground" />
             }
-            trend={total_orders_trend}
+            trend={parseFloat(total_orders_trend.toFixed(2))}
           />
           <DashboardCard
             title="Average Order Value"
             value={`QAR ${avg_order_value.toFixed(2)}`}
             icon={<TrendingUpIcon className="h-4 w-4 text-muted-foreground" />}
-            trend={avg_order_value_trend}
+            trend={parseFloat(avg_order_value_trend.toFixed(2))}
           />
         </div>
 

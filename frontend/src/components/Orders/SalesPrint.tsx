@@ -22,7 +22,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
     };
     return date.toLocaleDateString(undefined, options);
   };
-
+  
   const formatTime = (datetime: string) => {
     const date = new Date(datetime);
     const options: Intl.DateTimeFormatOptions = {

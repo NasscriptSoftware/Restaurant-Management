@@ -26,8 +26,12 @@ interface ProfitAndLossResponse {
 const BalanceSheet: React.FC = () => {
     const [liabilitiesData, setLiabilitiesData] = useState<Transaction[]>([]);
     const [assetData, setAssetData] = useState<Transaction[]>([]);
-    const [fromDate, setFromDate] = useState<string>("");
-    const [toDate, setToDate] = useState<string>("");
+    const getCurrentDate = () => {
+        const today = new Date();
+        return today.toISOString().split("T")[0];
+      };
+    const [fromDate, setFromDate] = useState<string>(getCurrentDate());
+    const [toDate, setToDate] = useState<string>(getCurrentDate());
     const [isSearching, setIsSearching] = useState(false);
     const [profitAndLossData, setProfitAndLossData] = useState<ProfitAndLossResponse | null>(null);
 

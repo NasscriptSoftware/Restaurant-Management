@@ -29,7 +29,7 @@ const DiningTablePage = lazy(() => import("./pages/DiningTablePage"));
 const CouponPage = lazy(() => import("./pages/CouponPage"));
 const HomePage = lazy(() => import("./pages/HomePage"));
 const MessPage = lazy(() => import("./pages/MessPage"));
-const SalesReportPage = lazy(() => import("./pages/SalesReportPage"));
+const SalesReportPage = lazy(() => import("./pages/ReportPage"));
 const TransactionsPage = lazy(() => import("./pages/TransactionsPage"));
 const ShareManagement = lazy(() => import("./pages/ShareManagement"));
 const DayBookPage = lazy(() => import("./pages/DayBookPage"));
