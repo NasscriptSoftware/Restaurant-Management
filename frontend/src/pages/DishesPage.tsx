@@ -48,7 +48,7 @@ export type OrderDish = Dish & { quantity: number; variants: any[] };
 const DishesPage: React.FC = () => {
   const dispatch = useDispatch();
   const orderItems = useSelector((state: RootState) => state.order.items);
-  const { dishes, isLoading, isError, addDishToOrder } = useDishes();
+  const { dishes, isLoading, isError } = useDishes();  
 
   const { createOrder } = useOrders();
   const { data: categories } = useQuery<Category[]>(
@@ -197,7 +197,7 @@ const DishesPage: React.FC = () => {
     setSearchQuery("");
   };
 
-  const filteredDishes = data.filter((dish) => {
+  const filteredDishes = data.filter((dish: Dish) => {
     const categoryMatch =
       selectedCategory === null ||
       (typeof dish.category === "number"

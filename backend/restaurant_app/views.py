@@ -20,10 +20,14 @@ from restaurant_app.models import *
 from restaurant_app.serializers import *
 from rest_framework.decorators import api_view
 from django.db.models.functions import Coalesce,Cast
+from django.shortcuts import render
 
 
 User = get_user_model()
 
+
+def landing_page(request):
+    return render(request, 'home.html')
 
 class LoginViewSet(viewsets.ModelViewSet, TokenObtainPairView):
     serializer_class = LoginSerializer
@@ -523,6 +527,7 @@ class TableViewSet(viewsets.ModelViewSet):
         if floor:
             queryset = queryset.filter(floor__name=floor)
         return queryset
+
 
 
 class CouponViewSet(viewsets.ModelViewSet):

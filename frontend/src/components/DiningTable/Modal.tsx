@@ -30,12 +30,13 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, table, onUpdate }) => {
         seats_count: seatsCount,
         is_ready: isReady,
       });
-      onUpdate(); // Refresh data after update
+      onUpdate(); // This will call handleUpdate from DiningTablePage
       onClose();
     } catch (error) {
       console.error("Error updating table:", error);
     }
   };
+  
 
   return (
     <>

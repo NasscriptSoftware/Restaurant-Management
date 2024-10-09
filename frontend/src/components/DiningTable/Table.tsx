@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import Modal from "./Modal"; // Import the Modal component
-import { api } from "@/services/api";
+import { useState } from "react";
+import { api } from "@/services/api"; // Ensure this is the correct path to your API
+import Modal from "./Modal";
 
 interface TableProps {
   id: number;
@@ -8,13 +8,14 @@ interface TableProps {
   startTime: string;
   endTime: string;
   seatsCount: number;
-  capacity: number; // Ensure capacity is included here
+  capacity: number;
   isReady: boolean;
   onModalOpen: () => void;
   onModalClose: () => void;
+  onUpdate: (table: { id: number; startTime: string; endTime: string; seatsCount: number; isReady: boolean; }) => void;
 }
 
-const Table: React.FC<TableProps> = ({
+export default function Table({
   id,
   name,
   startTime,
@@ -23,8 +24,9 @@ const Table: React.FC<TableProps> = ({
   capacity,
   isReady,
   onModalOpen,
-  onModalClose
-}) => {
+  onModalClose,
+  onUpdate,
+}: TableProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [tableDetails, setTableDetails] = useState({
@@ -52,33 +54,37 @@ const Table: React.FC<TableProps> = ({
   };
 
   const handleUpdate = () => {
-    // Refresh data after update
     setIsModalOpen(false);
+    onUpdate(tableDetails); // Pass updated table details to the parent component
     onModalClose();
   };
 
   return (
     <>
       <div
-        className="bg-customLightPurple p-4 rounded-lg text-white text-center font-bold shadow-md transition-transform transform hover:scale-105 hover:shadow-lg relative"
+        className={`bg-white p-4 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 ${isReady ? 'border-green-500 border-2' : 'border-red-500 border-2'
+          }`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <span className="block text-xl md:text-2xl lg:text-3xl">{name}</span>
-        <div className="mt-2">
-          <p className="text-sm md:text-md flex items-center">
-            Start Time: {startTime}
+        <h3 className="text-xl font-bold mb-2">{name}</h3>
+        <div className="space-y-1">
+          <p className="text-sm">
+            <span className="font-medium">Time:</span> {startTime} - {endTime}
           </p>
-          <p className="text-sm md:text-md flex items-center">
-            End Time: {endTime}
+          <p className="text-sm">
+            <span className="font-medium">Seats:</span> {seatsCount} / {capacity}
           </p>
-          <p className="text-sm md:text-md">Seats: {seatsCount}</p>
-          <p className="text-sm md:text-md">Capacity: {capacity}</p>
-          <p className="text-sm md:text-md">Ready: {isReady ? "Yes" : "No"}</p>
+          <p className="text-sm">
+            <span className="font-medium">Status:</span>{" "}
+            <span className={isReady ? "text-green-500" : "text-red-500"}>
+              {isReady ? "Ready" : "Not Ready"}
+            </span>
+          </p>
         </div>
         {isHovered && (
           <button
-            className="mt-4 bg-blue-500 text-white py-2 px-4 rounded absolute bottom-4 left-1/2 transform -translate-x-1/2"
+            className="mt-4 bg-blue-500 text-white py-2 px-4 rounded w-full hover:bg-blue-600 transition-colors duration-300"
             onClick={handleEditClick}
           >
             Update
@@ -88,11 +94,10 @@ const Table: React.FC<TableProps> = ({
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        table={tableDetails} 
-        onUpdate={handleUpdate} 
+        table={tableDetails}
+        onUpdate={handleUpdate} // Pass handleUpdate here
       />
+
     </>
   );
-};
-
-export default Table;
+}

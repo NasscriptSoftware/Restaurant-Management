@@ -8,3 +8,6 @@ Pillow
 reportlab
 twilio
 django-unfold
+psycopg2-binary
+whitenoise
+gunicorn

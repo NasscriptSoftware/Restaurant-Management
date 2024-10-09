@@ -4,8 +4,6 @@ from .models import (
     MainGroup,
     Ledger, 
     Transaction,
-    IncomeStatement,
-    BalanceSheet,
     ShareUsers,
     ShareUserTransaction,
     ProfitLossShareTransaction,
@@ -41,18 +39,6 @@ class TransactionSerializer(serializers.ModelSerializer):
     particulars =  LedgerSerializer(read_only=True)
     class Meta:
         model = Transaction
-        fields = '__all__'
-
-
-
-class IncomeStatementSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = IncomeStatement
-        fields = '__all__'
-
-class BalanceSheetSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BalanceSheet
         fields = '__all__'
 
 #ShareManagement

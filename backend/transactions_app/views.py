@@ -9,8 +9,6 @@ from .models import (
     MainGroup, 
     Ledger, 
     Transaction,
-    IncomeStatement, 
-    BalanceSheet,
     ShareUsers
     )
 from .serializers import (
@@ -19,8 +17,6 @@ from .serializers import (
      MainGroupSerializer, 
      LedgerSerializer, 
      TransactionSerializer,
-     IncomeStatementSerializer, 
-     BalanceSheetSerializer,
      ShareUserManagementSerializer,
      ProfitLossShareTransaction,
      ProfitLossShareTransactionSerializer
@@ -189,15 +185,6 @@ class TransactionViewSet(viewsets.ModelViewSet):
         })
 
 
-
-
-class IncomeStatementViewSet(viewsets.ModelViewSet):
-    queryset = IncomeStatement.objects.all()
-    serializer_class = IncomeStatementSerializer
-
-class BalanceSheetViewSet(viewsets.ModelViewSet):
-    queryset = BalanceSheet.objects.all()
-    serializer_class = BalanceSheetSerializer
 
 #ShareManagement Section
 class ShareUserManagementViewSet(viewsets.ModelViewSet):

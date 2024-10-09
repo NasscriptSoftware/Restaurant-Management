@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import  { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Trash2, Plus, Minus } from "lucide-react";
 import { api } from "@/services/api";

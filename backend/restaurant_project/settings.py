@@ -73,7 +73,7 @@ ROOT_URLCONF = "restaurant_project.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": ['templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -340,6 +340,80 @@ UNFOLD = {
                         "icon": "list",
                         "link": reverse_lazy(
                             "admin:restaurant_app_menuitem_changelist"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": _("Accounts"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Nature of Groups"),
+                        "icon": "menu_book",
+                        "link": reverse_lazy("admin:transactions_app_naturegroup_changelist"),
+                    },
+                    {
+                        "title": _("Main Groups"),
+                        "icon": "list",
+                        "link": reverse_lazy(
+                            "admin:transactions_app_maingroup_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Ledgers"),
+                        "icon": "list",
+                        "link": reverse_lazy(
+                            "admin:transactions_app_ledger_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Transactions"),
+                        "icon": "list",
+                        "link": reverse_lazy(
+                            "admin:transactions_app_transaction_changelist"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": _("Profit & Loss Share Transactions"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("ShareUsers"),
+                        "icon": "menu_book",
+                        "link": reverse_lazy("admin:transactions_app_shareusers_changelist"),
+                    },
+                    {
+                        "title": _("Profit LossShare Transactions"),
+                        "icon": "list",
+                        "link": reverse_lazy(
+                            "admin:transactions_app_profitlosssharetransaction_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Share User Transactions"),
+                        "icon": "list",
+                        "link": reverse_lazy(
+                            "admin:transactions_app_shareusertransaction_changelist"
+                        ),
+                    },
+
+                ],
+            },
+            {
+                "title": _("Cash Count Sheet "),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Cash Count Sheet"),
+                        "icon": "list",
+                        "link": reverse_lazy(
+                            "admin:transactions_app_cashcountsheet_changelist"
                         ),
                     },
                 ],

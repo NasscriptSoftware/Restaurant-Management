@@ -15,6 +15,10 @@ const Ledger: React.FC = () => {
     setIsModalOpen(false);
   };
 
+  const refreshLedgerOptions = async () => {
+    console.log("Refresh Ledger!");
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
@@ -29,17 +33,15 @@ const Ledger: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mb-4">
         <button
-          className={`py-2 px-4 rounded ${
-            activeTab === "info" ? "bg-gray-400" : "bg-gray-200"
-          } text-black hover:bg-gray-300 w-full sm:w-auto`}
+          className={`py-2 px-4 rounded ${activeTab === "info" ? "bg-gray-400" : "bg-gray-200"
+            } text-black hover:bg-gray-300 w-full sm:w-auto`}
           onClick={() => setActiveTab("info")}
         >
           Ledger Info
         </button>
         <button
-          className={`py-2 px-4 rounded ${
-            activeTab === "report" ? "bg-gray-400" : "bg-gray-200"
-          } text-black hover:bg-gray-300 w-full sm:w-auto`}
+          className={`py-2 px-4 rounded ${activeTab === "report" ? "bg-gray-400" : "bg-gray-200"
+            } text-black hover:bg-gray-300 w-full sm:w-auto`}
           onClick={() => setActiveTab("report")}
         >
           Main Groups
@@ -51,7 +53,7 @@ const Ledger: React.FC = () => {
         {activeTab === "report" && <MainGroups />}
       </div>
 
-      {isModalOpen && <LedgerCreationModal isOpen={isModalOpen} onClose={closeModal} />}
+      {isModalOpen && <LedgerCreationModal isOpen={isModalOpen} onClose={closeModal} refreshLedgerOptions={refreshLedgerOptions} />}
     </div>
   );
 };

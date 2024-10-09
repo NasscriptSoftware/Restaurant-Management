@@ -18,9 +18,31 @@ const IncomeStatement: React.FC = () => {
         const today = new Date();
         return today.toISOString().split("T")[0];
       };
-    const [fromDate, setFromDate] = useState<string>(getCurrentDate());
-    const [toDate, setToDate] = useState<string>(getCurrentDate());
+    const [fromDate, setFromDate] = useState<string>(getCurrentDate);
+    const [toDate, setToDate] = useState<string>(getCurrentDate);
     const [isSearching, setIsSearching] = useState(false);
+
+
+const aggregateByLedger = (data: Transaction[], key: 'debit_amount' | 'credit_amount') => {
+    return data.reduce((acc, item) => {
+        const ledgerName = item.ledger.name;
+        const debitAmount = parseAmount(item.debit_amount);
+        const creditAmount = parseAmount(item.credit_amount);
+
+        if (key === 'debit_amount') {
+            if (debitAmount === 0 && creditAmount > 0) {
+                acc[ledgerName] = (acc[ledgerName] || 0) - creditAmount;
+            } else {
+                acc[ledgerName] = (acc[ledgerName] || 0) + debitAmount;
+            }
+        } else if (key === 'credit_amount') {
+            acc[ledgerName] = (acc[ledgerName] || 0) + creditAmount;
+        }
+
+        return acc;
+    }, {} as Record<string, number>);
+};
+
 
     const handleSearch = async () => {
         if (!fromDate || !toDate) {
@@ -59,12 +81,13 @@ const IncomeStatement: React.FC = () => {
 
     const parseAmount = (amount?: string) => Number(amount) || 0;
 
-    const calculateTotal = (data: Transaction[], key: 'debit_amount' | 'credit_amount') => {
-        return data.reduce((total, item) => total + parseAmount(item[key]), 0);
-    };
+    // Aggregated data
+    const aggregatedExpenseData = aggregateByLedger(expenseData, 'debit_amount');
+    const aggregatedIncomeData = aggregateByLedger(incomeData, 'credit_amount');
 
-    const totalExpenses = calculateTotal(expenseData, 'debit_amount');
-    const totalIncome = calculateTotal(incomeData, 'credit_amount');
+    // Calculating totals
+    const totalExpenses = Object.values(aggregatedExpenseData).reduce((sum, amount) => sum + amount, 0);
+    const totalIncome = Object.values(aggregatedIncomeData).reduce((sum, amount) => sum + amount, 0);
     const netProfit = totalIncome - totalExpenses;
     const netLoss = totalExpenses > totalIncome ? totalExpenses - totalIncome : 0;
     const grandTotalExpenses = totalExpenses + (netProfit > 0 ? netProfit : 0);
@@ -130,11 +153,11 @@ const IncomeStatement: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {expenseData.map((item, index) => (
+                                    {Object.entries(aggregatedExpenseData).map(([ledgerName, totalDebit], index) => (
                                         <tr key={index}>
-                                            <td className="px-4 py-2">{item.ledger.name}</td>
+                                            <td className="px-4 py-2">{ledgerName}</td>
                                             <td className="px-4 py-2 text-right">
-                                                {parseAmount(item.debit_amount).toFixed(2)}
+                                                {totalDebit.toFixed(2)}
                                             </td>
                                         </tr>
                                     ))}
@@ -170,11 +193,11 @@ const IncomeStatement: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {incomeData.map((item, index) => (
+                                    {Object.entries(aggregatedIncomeData).map(([ledgerName, totalCredit], index) => (
                                         <tr key={index}>
-                                            <td className="px-4 py-2">{item.ledger.name}</td>
+                                            <td className="px-4 py-2">{ledgerName}</td>
                                             <td className="px-4 py-2 text-right">
-                                                {parseAmount(item.credit_amount).toFixed(2)}
+                                                {totalCredit.toFixed(2)}
                                             </td>
                                         </tr>
                                     ))}

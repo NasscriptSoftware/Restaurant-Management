@@ -15,7 +15,7 @@ const RealTimeClock: React.FC = () => {
   const formattedTime = time.toLocaleTimeString();
 
   return (
-    <div className="flex items-center text-white text-2xl">
+    <div className="flex items-center text-black text-2xl">
       <Clock className="mr-2" />
       {formattedTime}
     </div>

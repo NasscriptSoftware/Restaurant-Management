@@ -34,7 +34,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
   const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
   const { dishes } = useDishes();
-  const data = dishes ? dishes.results : undefined;
+  const data = dishes ? dishes : undefined;
 
   const ordersPerPage = 5;
 

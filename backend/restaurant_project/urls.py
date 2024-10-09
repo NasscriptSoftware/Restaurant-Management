@@ -30,7 +30,8 @@ from restaurant_app.views import (
     OrderTypeChangeViewSet,
     DishVariantViewSet,
     CancelOrderByBillView,
-    CreditTransactionViewSet
+    CreditTransactionViewSet,
+    landing_page
 )
 from delivery_drivers.views import (
     DeliveryDriverViewSet,
@@ -40,8 +41,6 @@ from transactions_app.views import (CashCountSheetViewSet, NatureGroupViewSet,
  MainGroupViewSet, 
  LedgerViewSet, 
  TransactionViewSet, 
- IncomeStatementViewSet, 
- BalanceSheetViewSet,
  ShareUserManagementViewSet,
  ProfitLossShareTransactionViewSet,
  )
@@ -85,14 +84,13 @@ router.register(r'nature-groups', NatureGroupViewSet)
 router.register(r'main-groups', MainGroupViewSet)
 router.register(r'ledgers', LedgerViewSet)
 router.register(r'transactions', TransactionViewSet, basename="transactions")
-router.register(r'income-statements', IncomeStatementViewSet)
-router.register(r'balance-sheets', BalanceSheetViewSet)
 router.register(r'share-user-management', ShareUserManagementViewSet, basename="share-user-management")
 router.register(r'profit-loss-share-transactions',ProfitLossShareTransactionViewSet,basename='profit-loss-share-transactions')
 router.register(r'cashcount-sheet', CashCountSheetViewSet,basename="cashcount-sheet")
 
 
 urlpatterns = [
+    path('', landing_page, name='landing_page'),
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
     path("api/login-passcode/", PasscodeLoginView.as_view(), name="login-passcode"),

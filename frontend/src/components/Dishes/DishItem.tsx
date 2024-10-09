@@ -55,7 +55,7 @@ const DishItem: React.FC<DishItemWithToggleProps> = ({ dish, onAddDish, showImag
           alt={dish.name}
           className="w-full h-48 object-cover mb-4 rounded"
         />
-      )}
+      )}  
       <h3 className="text-xl font-semibold mb-2">{dish.name}</h3>
       <p className="text-gray-600 mb-2">{dish.description}</p>
       <div className="flex justify-between items-center mt-2">

@@ -77,40 +77,6 @@ class Transaction(models.Model):
         super().save(*args, **kwargs)
 
 
-class IncomeStatement(models.Model):
-    SALES = 'Sales'
-    INDIRECT_INCOME = 'Indirect Income'
-
-    INCOME_TYPE_CHOICES = [
-        (SALES, 'Sales'),
-        (INDIRECT_INCOME, 'Indirect Income'),
-        # Add other types as needed
-    ]
-
-    ledger = models.ForeignKey(Ledger, on_delete=models.CASCADE, related_name='income_statements')
-    income_type = models.CharField(max_length=20, choices=INCOME_TYPE_CHOICES)
-    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-
-    def __str__(self):
-        return f"{self.ledger.name} - {self.income_type} - {self.amount}"
-
-
-class BalanceSheet(models.Model):
-    ASSET = 'Asset'
-    LIABILITY = 'Liability'
-
-    BALANCE_TYPE_CHOICES = [
-        (ASSET, 'Asset'),
-        (LIABILITY, 'Liability'),
-        # Add other types as needed
-    ]
-
-    ledger = models.ForeignKey(Ledger, on_delete=models.CASCADE, related_name='balance_sheets')
-    balance_type = models.CharField(max_length=20, choices=BALANCE_TYPE_CHOICES)
-    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-
-    def __str__(self):
-        return f"{self.ledger.name} - {self.balance_type} - {self.amount}"
 
 #ShareManagement Section
 class ShareUsers(models.Model):

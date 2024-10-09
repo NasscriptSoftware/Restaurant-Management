@@ -12,7 +12,7 @@ interface CashCountSheetData {
 const CashCountSheet: React.FC = () => {
     const [data, setData] = useState<CashCountSheetData[]>([]);
     const [currentPage, setCurrentPage] = useState<number>(1);
-    const [totalPages, setTotalPages] = useState<number>(1);
+    // const [totalPages, setTotalPages] = useState<number>(1);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const getCurrentDate = () => {
@@ -33,7 +33,7 @@ const CashCountSheet: React.FC = () => {
                 }
                 const response = await api.get(url);
                 setData(response.data.results);
-                setTotalPages(Math.ceil(response.data.count / 10));
+                // setTotalPages(Math.ceil(response.data.count / 10));
             } catch (err) {
                 setError("Failed to fetch data.");
             } finally {
@@ -44,9 +44,9 @@ const CashCountSheet: React.FC = () => {
         fetchData();
     }, [currentPage, fromDate, toDate, searchPerformed]);
 
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
+    // const handlePageChange = (page: number) => {
+    //     setCurrentPage(page);
+    // };
 
     const handleSearch = () => {
         setSearchPerformed(true);

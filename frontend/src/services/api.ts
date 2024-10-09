@@ -69,7 +69,7 @@ export const getCategories = () =>
 
 export const getDishes = () =>
   api
-    .get<ApiResponse<Dish>>(`/dishes/`)
+    .get<Dish[]>(`/dishes/`)
     .then((response) => response.data);
 
 export const fetchDish = async (dishId: number) => {

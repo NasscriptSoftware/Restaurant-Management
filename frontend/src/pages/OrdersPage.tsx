@@ -192,53 +192,123 @@ const OrdersPage: React.FC = () => {
   const triggerPrint = (type: "kitchen" | "sales") => {
     if (!type || !printRef.current) return;
 
+    // Open a new window for printing
     const printWindow = window.open("", "PRINT", "height=600,width=800");
 
     if (printWindow) {
+      // Write the basic structure for the print window
       printWindow.document.write("<html><head><title>Print</title>");
       printWindow.document.write("<style>");
       printWindow.document.write(`
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            .bill-container { 
-                width: 300px; 
-                padding: 20px; 
-                border: 2px dashed gray; 
-                margin: 0 auto; 
-                text-align: left; 
-                background-color: #fff;
-            }
-            h2 { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 20px; }
-            p { margin: 5px 0; font-size: 14px; }
-            h4 { margin-top: 20px; font-size: 16px; font-weight: bold; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { padding: 5px 0; }
-            th { text-align: left; font-weight: bold; border-bottom: 1px solid #ccc; }
-            .kitchen-bill-table td, .sales-bill-table td { padding: 5px 0; }
-            .sales-bill-table th, .sales-bill-table td { text-align: right; }
-            .sales-bill-table th:nth-child(1), .sales-bill-table td:nth-child(1) { text-align: left; }
-            .total-row { font-weight: bold; border-top: 1px solid #ccc; padding-top: 10px; }
-            .newly-added { color: red; margin-top: 20px; display: block; text-align: center; }
-        `);
+        @page {
+          size: 80mm 297mm;
+          margin: 0;
+        }
+        body {
+          font-family: 'Courier New', monospace;
+          padding: 0;
+          margin: 0;
+          background-color: #f0f0f0;
+        }
+        .bill-container { 
+          width: 76mm; 
+          padding: 2mm;
+          border: 1px dashed #000;
+          margin: 2mm auto;
+          text-align: left;
+          background-color: #fff;
+          box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+          text-align: center;
+          font-size: 14px;
+          font-weight: bold;
+          margin-bottom: 10px;
+          border-bottom: 1px dashed #000;
+          padding-bottom: 5px;
+        }
+        p {
+          margin: 3px 0;
+          font-size: 12px;
+        }
+        h4 {
+          margin-top: 10px;
+          font-size: 13px;
+          font-weight: bold;
+          border-top: 1px dashed #000;
+          padding-top: 5px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 5px;
+        }
+        th, td {
+          padding: 3px 0;
+          font-size: 12px;
+        }
+        th {
+          text-align: left;
+          font-weight: bold;
+          border-bottom: 1px dashed #000;
+        }
+        .kitchen-bill-table td, .sales-bill-table td {
+          padding: 3px 0;
+        }
+        .sales-bill-table th, .sales-bill-table td {
+          text-align: right;
+        }
+        .sales-bill-table th:nth-child(1), .sales-bill-table td:nth-child(1) {
+          text-align: left;
+        }
+        .total-row {
+          font-weight: bold;
+          border-top: 1px dashed #000;
+          padding-top: 5px;
+        }
+        .newly-added {
+          color: #ff0000;
+          margin-top: 10px;
+          display: block;
+          text-align: center;
+          font-size: 12px;
+        }
+        @media print {
+          body {
+            width: 80mm;
+            margin: 0 auto;
+          }
+        }
+      `);
       printWindow.document.write("</style>");
       printWindow.document.write("</head><body>");
+
+      // Write the contents of the printRef into the new window
       printWindow.document.write(printRef.current.innerHTML);
+
       printWindow.document.write("</body></html>");
 
+      // Close the document writing
       printWindow.document.close();
+
+      // Focus on the print window and trigger the print
       printWindow.focus();
+      printWindow.print();
 
-      // setTimeout(() => {
-      //   printWindow.print();
-      //   printWindow.close();
+      // Optional: Automatically close the print window after printing
+      printWindow.onafterprint = () => {
+        printWindow.close();
 
-      //   setSelectedOrders([]);
-      //   setShowActionButton(false);
+        // Optionally reset the selected orders and action button
+        // setSelectedOrders([]);
+        // setShowActionButton(false);
 
-      //   // Forcefully refresh the page after printing
-      //   window.location.reload();
-      // }, 100);
+        // Optionally refresh the page after printing
+        // window.location.reload();
+      };
     }
   };
+
 
   if (ordersLoading || dishesLoading)
     return <Layout>Loading orders and dishes...</Layout>;
