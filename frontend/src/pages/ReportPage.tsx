@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DriverDetailsModal from "@/components/SalesReport/DriverDetailsModal";
 
 interface SalesReport {
   id: number;
@@ -27,6 +28,7 @@ interface SalesReport {
   bank_amount: string;
   customer_phone_number: string;
   customer_name: string;
+  delivery_driver_id:string;
 }
 
 interface MessType {
@@ -105,6 +107,8 @@ const ReportPage: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [orderHistory, setOrderHistory] = useState<Sales[]>([]);
   const [currentMember, setCurrentMember] = useState<SalesReport | MessReport | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
 
   const itemsPerPage = 10;
 
@@ -337,7 +341,15 @@ const ReportPage: React.FC = () => {
     setCurrentPage(1);
     fetchDataWithFilter({});
   };
+  const openModal = (driverId: string) => {
+    setSelectedDriverId(driverId);
+    setIsModalOpen(true);
+};
 
+const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedDriverId(null);
+};
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedReports = reports.slice(startIndex, startIndex + itemsPerPage);
   const paginatedMessReports = messReports.slice(startIndex, startIndex + itemsPerPage);
@@ -494,7 +506,9 @@ const ReportPage: React.FC = () => {
                           <td className="p-2">{report.invoice_number}</td>
                           <td className="p-2">{report.customer_phone_number || "N/A"}</td>
                           <td className="p-2">{format(new Date(report.created_at), "dd-MM-yyyy")}</td>
-                          <td className="p-2 capitalize">{report.order_type}</td>
+                          {/* <td className="p-2 capitalize">{report.order_type}</td> */}
+                          <td className="p-2 capitalize" onClick={() => openModal(report.delivery_driver_id)}>{report.order_type}</td>
+
                           <td className="p-2 capitalize">{report.payment_method}</td>
                           <td className="p-2 capitalize">{report.status}</td>
                           <td className="p-2">{report.total_amount}</td>
@@ -671,6 +685,11 @@ const ReportPage: React.FC = () => {
             report={currentReport as MessReport}
           />
         )}
+        
+
+            {isModalOpen && (
+                <DriverDetailsModal driverId={selectedDriverId!} closeModal={closeModal} />
+            )}
       </div>
     </Layout>
   );

@@ -13,6 +13,7 @@ interface SalesReport {
     bank_amount: string;
     customer_phone_number: string;
     customer_name: string;
+    delivery_driver_id:string;
 }
 
 interface SalesEditModalProps {
