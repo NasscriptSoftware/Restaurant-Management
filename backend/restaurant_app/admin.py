@@ -1,6 +1,7 @@
 from unfold.admin import ModelAdmin as UnflodModelAdmin
 from django.utils.translation import gettext_lazy as _
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+from django.utils.html import format_html
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from restaurant_app.models import *
@@ -91,5 +92,31 @@ admin.site.register(CreditOrder, UnflodModelAdmin)
 admin.site.register(MessTransaction, UnflodModelAdmin)
 
 admin.site.register(LogoInfo, UnflodModelAdmin)
+
+@admin.register(SidebarItem)
+class SidebarItemAdmin(UnflodModelAdmin):
+    list_display = ('label', 'path', 'icon', 'active_status')
+    list_filter = ('active',)
+    search_fields = ('label', 'path')
+    actions = ['toggle_active']
+
+    def active_status(self, obj):
+        return format_html(
+            '<span style="color:{};">{}</span>',
+            'green' if obj.active else 'red',
+            'Active' if obj.active else 'Inactive'
+        )
+    active_status.short_description = 'Status'
+
+    @admin.action(description="Change status of selected sidebar items")
+    def toggle_active(self, request, queryset):
+        for item in queryset:
+            item.active = not item.active
+            item.save()
+        self.message_user(request, f"Active status toggled for {queryset.count()} items.")
+
+    class Media:
+        js = ('admin/js/list_filter_toggle.js',)
+
 admin.site.register(DishVariant, UnflodModelAdmin)
 admin.site.register(CreditTransaction,UnflodModelAdmin)

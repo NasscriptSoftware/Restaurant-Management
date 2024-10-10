@@ -6,6 +6,7 @@ from django.urls import path, include
 
 from rest_framework_simplejwt.views import TokenRefreshView
 from restaurant_app.views import (
+    toggle_sidebar_item_active,
     CategoryViewSet,
     DishViewSet,
     LogoInfoViewSet,
@@ -31,7 +32,8 @@ from restaurant_app.views import (
     DishVariantViewSet,
     CancelOrderByBillView,
     CreditTransactionViewSet,
-    landing_page
+    landing_page,
+    SidebarItemViewSet
 )
 from delivery_drivers.views import (
     DeliveryDriverViewSet,
@@ -78,6 +80,7 @@ router.register(r'order-status', OrderStatusUpdateViewSet, basename='order-statu
 
 # to change the logo of the users
 router.register(r'logo-info', LogoInfoViewSet, basename='logoinfo')
+router.register(r'sidebar-items', SidebarItemViewSet)
 
 # Accounts Transactions
 router.register(r'nature-groups', NatureGroupViewSet)
@@ -100,6 +103,8 @@ urlpatterns = [
 
     # Register the new Cancel Order API
     path("api/bills/<int:bill_id>/cancel_order/", CancelOrderByBillView.as_view(), name="cancel-order-by-bill"),
+    path('admin/restaurant_app/sidebaritem/<int:item_id>/toggle-active/', toggle_sidebar_item_active, name='toggle_sidebar_item_active'),
+
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

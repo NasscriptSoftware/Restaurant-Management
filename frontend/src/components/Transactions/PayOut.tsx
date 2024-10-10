@@ -167,7 +167,7 @@ const PayOut: React.FC = () => {
 
 
   return (
-    <div className="bg-blue-200">
+    <div className="bg-red-500/5">
       <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
         <h1 className="text-2xl font-bold mb-2 sm:mb-0">Pay Out</h1>
         <button
@@ -178,107 +178,108 @@ const PayOut: React.FC = () => {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block mb-2 text-lg font-bold">Date</label>
+      <form onSubmit={handleSubmit} className="space-y-4" encType="multipart/form-data">
+        <div className="flex justify-between gap-4">
+          <div className="flex-1 max-w-xs">
+            <label className="block text-lg font-semibold mb-1 text-black">Date</label>
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="border rounded p-2 w-full"
+              className="w-full px-3 py-2 border border-gray-300 rounded"
               required
             />
           </div>
 
-          <div>
-            <label className="block mb-2 text-lg font-bold">Reference No.</label>
+          <div className="flex-1 max-w-xs">
+            <label className="block text-lg font-semibold mb-1 text-black">Reference No.</label>
             <input
               type="text"
               value={refNo}
               onChange={(e) => setRefNo(e.target.value)}
-              className="border rounded p-2 w-full"
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2 text-lg font-bold">Expense/Payables</label>
-            <select
-              value={selectedExpensePayables}
-              onChange={(e) => setSelectedExpensePayables(e.target.value)}
-              className="border rounded p-2 w-full"
-              required
-            >
-              <option value="">Select an account</option>
-              {ledgerOptions.map((ledger) => (
-                <option key={ledger.id} value={ledger.id}>
-                  {ledger.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block mb-2 text-lg font-bold">Debit Amount</label>
-            <input
-              type="number"
-              value={debitAmount}
-              onChange={(e) => setDebitAmount(e.target.value)}
-              className="border rounded p-2 w-full"
-              step="0.01"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2 text-lg font-bold">Cash/Bank/Creditors</label>
-            <select
-              value={selectedParticulars}
-              onChange={(e) => setSelectedParticulars(e.target.value)}
-              className="border rounded p-2 w-full"
-              required
-            >
-              <option value="">Select an account</option>
-              {ledgerOptions.map((ledger) => (
-                <option key={ledger.id} value={ledger.id}>
-                  {ledger.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block mb-2 text-lg font-bold">Credit Amount</label>
-            <input
-              type="number"
-              value={creditAmount}
-              onChange={(e) => setCreditAmount(e.target.value)}
-              className="border rounded p-2 w-full"
-              step="0.01"
-              required
-            />
-          </div>
-
-          <div className="col-span-1 sm:col-span-2">
-            <label className="block mb-2 text-lg font-bold">Remarks</label>
-            <textarea
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
-              className="border rounded p-2 w-full"
+              className="w-full px-3 py-2 border border-gray-300 rounded"
             />
           </div>
         </div>
 
-        {error && <p className="text-red-500">{error}</p>}
+        <div className="flex justify-between gap-4">
+          <div className="flex-1">
+            <label className="block text-lg font-semibold mb-1 text-black">Expense Payables</label>
+            <select
+              value={selectedExpensePayables}
+              onChange={(e) => setSelectedExpensePayables(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded"
+              required
+            >
+              <option value="">Select Ledger</option>
+              {ledgerOptions.map((ledger) => (
+                <option key={ledger.id} value={ledger.id}>
+                  {ledger.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex justify-center mt-4">
-          <button
-            type="submit"
-            className="bg-[#6f42c1] text-white py-2 px-4 rounded w-full sm:w-auto"
-            disabled={isSubmitting}  // Disable the button when submitting
-          >
-            Submit
-          </button>
+          <div className="flex-1">
+            <label className="block text-lg font-semibold mb-1 text-black">Debit Amount</label>
+            <input
+              type="number"
+              value={debitAmount}
+              onChange={(e) => setDebitAmount(e.target.value)}
+              className="border border-gray-300 rounded-md p-2 w-full sm:w-2/6"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-between gap-4">
+          <div className="flex-1">
+            <label className="block text-lg font-semibold mb-1 text-black">Particulars</label>
+            <select
+              value={selectedParticulars}
+              onChange={(e) => setSelectedParticulars(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded"
+              required
+            >
+              <option value="">Select Particulars</option>
+              {ledgerOptions.map((ledger) => (
+                <option key={ledger.id} value={ledger.id}>
+                  {ledger.name} 
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex-1">
+            <label className="block text-lg font-semibold mb-1 text-black">Credit Amount</label>
+            <input
+              type="number"
+              value={creditAmount}
+              onChange={(e) => setCreditAmount(e.target.value)}
+              className="border border-gray-300 rounded-md p-2 w-full sm:w-2/6"
+              />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-lg font-semibold mb-1 text-black">Remarks</label>
+          <textarea
+            value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded"
+            rows={4}
+          />
+        </div>
+        {error && <p className="text-red-600">{error}</p>}
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          className={`mt-4  py-3 px-4 bg-blue-500 text-white font-semibold rounded shadow ${isSubmitting ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
+            }`}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Submitting..." : "Submit"}
+        </button>
         </div>
       </form>
 

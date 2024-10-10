@@ -220,6 +220,18 @@ UNFOLD = {
         "show_all_applications": True,
         "navigation": [
             {
+                "title": _("Developer Options"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Sidebar control"),
+                        "icon": "room_service",
+                        "link": reverse_lazy("admin:restaurant_app_sidebaritem_changelist"),
+                    },
+                ],
+            },
+            {
                 "title": _("Core"),
                 "separator": True,
                 "collapsible": True,

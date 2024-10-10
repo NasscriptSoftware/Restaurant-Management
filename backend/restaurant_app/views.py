@@ -14,6 +14,8 @@ from django.db.models import Sum, Count, Avg, F, Value,DecimalField, IntegerFiel
 from django.utils.dateparse import parse_date
 from django.db.models import Q
 from django.db.models.functions import TruncDate, TruncHour
+from django.http import JsonResponse
+from django.contrib.admin.views.decorators import staff_member_required
 from delivery_drivers.models import DeliveryOrder
 from delivery_drivers.serializers import DeliveryOrderSerializer
 from restaurant_app.models import *
@@ -21,6 +23,7 @@ from restaurant_app.serializers import *
 from rest_framework.decorators import api_view
 from django.db.models.functions import Coalesce,Cast
 from django.shortcuts import render
+from rest_framework.pagination import PageNumberPagination
 
 
 User = get_user_model()
@@ -28,6 +31,28 @@ User = get_user_model()
 
 def landing_page(request):
     return render(request, 'home.html')
+
+class NoPagination(PageNumberPagination):
+    page_size = 100  # Set a high number or limit
+
+class SidebarItemViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = SidebarItem.objects.all()  # Assuming SidebarItem is your model
+    serializer_class = SidebarItemSerializer
+    pagination_class = NoPagination
+
+
+@staff_member_required
+def toggle_sidebar_item_active(request, item_id):
+    if request.method == 'POST':
+        item = SidebarItem.objects.get(id=item_id)
+        item.active = not item.active
+        item.save()
+        return JsonResponse({
+            'success': True,
+            'new_status': 'Active' if item.active else 'Inactive'
+        })
+    return JsonResponse({'success': False})
+
 
 class LoginViewSet(viewsets.ModelViewSet, TokenObtainPairView):
     serializer_class = LoginSerializer
@@ -348,8 +373,14 @@ class OrderViewSet(viewsets.ModelViewSet):
         if to_date:
             to_date = parse_date(to_date)
 
-        # Filter orders by the provided date range
-        orders = Order.objects.filter(created_at__date__gte=from_date, created_at__date__lte=to_date)
+        # Filter orders by the provided date range only if dates are available
+        filter_kwargs = {}
+        if from_date:
+            filter_kwargs['created_at__date__gte'] = from_date
+        if to_date:
+            filter_kwargs['created_at__date__lte'] = to_date
+
+        orders = Order.objects.filter(**filter_kwargs)
 
         # Properly cast fields and define output fields in the aggregation
         order_items = OrderItem.objects.filter(order__in=orders).values(
@@ -368,6 +399,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         report_data = list(order_items)
 
         return Response(report_data)
+
 
 class OrderStatusUpdateViewSet(viewsets.GenericViewSet):
     queryset = Order.objects.all()

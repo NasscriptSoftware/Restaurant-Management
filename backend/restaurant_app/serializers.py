@@ -11,6 +11,10 @@ from restaurant_app.models import *
 
 User = get_user_model()
 
+class SidebarItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SidebarItem
+        fields = '__all__'
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
