@@ -323,6 +323,18 @@ UNFOLD = {
                     },
                 ],
             },
+                        {
+                "title": _("Chairs"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Chairs"),
+                        "icon": "chair",
+                        "link": reverse_lazy("admin:restaurant_app_chairs_changelist"),
+                    },
+                ],
+            },
             {
                 "title": _("Mess"),
                 "separator": True,

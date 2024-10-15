@@ -60,6 +60,7 @@ admin.site.register(Bill, UnflodModelAdmin)
 admin.site.register(Notification, UnflodModelAdmin)
 admin.site.register(Floor, UnflodModelAdmin)
 admin.site.register(Table, UnflodModelAdmin)
+admin.site.register(Chairs, UnflodModelAdmin)
 admin.site.register(Coupon, UnflodModelAdmin)
 
 @admin.register(Menu)

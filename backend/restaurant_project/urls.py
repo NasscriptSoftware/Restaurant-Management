@@ -6,6 +6,7 @@ from django.urls import path, include
 
 from rest_framework_simplejwt.views import TokenRefreshView
 from restaurant_app.views import (
+    ChairsViewSet,
     OnlineOrderViewSet,
     toggle_sidebar_item_active,
     CategoryViewSet,
@@ -69,6 +70,9 @@ router.register(r"menus", MenuViewSet, basename="menus")
 router.register(r"menu-items", MenuItemViewSet, basename="menu_items")
 router.register(r"messes", MessViewSet, basename="messes")
 router.register(r'mess-transactions', MessTransactionViewSet, basename="mess-transactions")
+
+#Chair Mangement
+router.register(r'chairs', ChairsViewSet)
 
 # Credit User URLs
 router.register(r"credit-users", CreditUserViewSet, basename="credit_users")

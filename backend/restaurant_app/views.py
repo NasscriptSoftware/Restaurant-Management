@@ -150,6 +150,14 @@ class DishVariantViewSet(viewsets.ModelViewSet):
 
 
 class OnlineOrderViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing OnlineOrder data.
+
+    This ViewSet provides CRUD operations (Create, Read, Update, Delete) for the `OnlineOrder` model.
+    It is primarily used by third-party online order platforms like Zomato, Swiggy, etc., to integrate 
+    and manage order data in the system.
+
+    """
     queryset = OnlineOrder.objects.all()  
     serializer_class = OnlineOrderSerializer
 
@@ -799,3 +807,31 @@ class CreditTransactionViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         except CreditTransaction.DoesNotExist:
             return Response({"error": "No transactions found for the given credit_user"}, status=status.HTTP_404_NOT_FOUND)
+
+
+from rest_framework import viewsets
+from .models import Chairs
+from .serializers import ChairsSerializer
+
+class ChairsViewSet(viewsets.ModelViewSet):
+    """
+    A ModelViewSet for managing chair bookings.
+    
+    Use Case:
+    ---------
+    This view is particularly useful for systems or apps that handle chair 
+    reservations or bookings for customers, such as for events, restaurants, 
+    or conferences. It allows easy integration with APIs for creating, 
+    updating, or retrieving chair booking information.
+
+    Endpoints:
+    ----------
+    - GET /chairs/ : List all chair bookings.
+    - GET /chairs/<id>/ : Retrieve a single chair booking.
+    - POST /chairs/ : Create a new chair booking.
+    - PUT /chairs/<id>/ : Update a chair booking.
+    - DELETE /chairs/<id>/ : Delete a chair booking.
+
+    """
+    queryset = Chairs.objects.all()
+    serializer_class = ChairsSerializer

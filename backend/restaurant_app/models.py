@@ -641,3 +641,29 @@ def create_ledger_for_credit_user(sender, instance, created, **kwargs):
             print("MainGroup 'Sundry Debtors' does not exist.")
 
 
+class Chairs(models.Model):
+    """
+    Chairs model to manage chair bookings.
+
+    Fields:
+    -------
+    - chair_name: Name or identifier of the chair being booked.
+    - customer_name: Name of the customer who booked the chair.
+    - customer_mob: Mobile number of the customer.
+    - start_time: The start time of the chair booking.
+    - end_time: The end time of the chair booking.
+    - amount: The amount charged for the chair booking.
+    - is_active: Indicates if the chair booking is currently active.
+    - order: Reference to the related order.
+    """
+    chair_name = models.CharField(max_length=100)
+    customer_name = models.CharField(max_length=100,blank=True, null=True)
+    customer_mob = models.CharField(max_length=15, blank=True, null=True)
+    start_time = models.DateTimeField(blank=True, null=True) 
+    end_time = models.DateTimeField(blank=True, null=True) 
+    amount = models.DecimalField(max_digits=8, decimal_places=2,null=True,blank=True)
+    is_active = models.BooleanField(default=True)
+    order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='chairs', blank=True, null=True)
+
+    def __str__(self):
+        return self.chair_name

@@ -527,3 +527,27 @@ class CreditTransactionSerializer(serializers.ModelSerializer):
         if obj.credit_user:
             return CreditUserSerializer(obj.credit_user).data
         return None
+
+
+class ChairsSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Chairs model.
+
+    This serializer handles the serialization and deserialization of Chair 
+    model instances for API communication. It ensures that the chair booking 
+    details, including the associated order, are correctly processed.
+
+    Fields:
+    -------
+    - chair_name: Name or identifier of the chair being booked.
+    - customer_name: Name of the customer who booked the chair.
+    - customer_mob: Mobile number of the customer.
+    - start_time: The start time of the chair booking.
+    - end_time: The end time of the chair booking.
+    - amount: The amount charged for the chair booking.
+    - is_active: Indicates if the chair booking is currently active.
+    - order: Reference to the related order.
+    """
+    class Meta:
+        model = Chairs
+        fields = '__all__'
