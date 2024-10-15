@@ -108,6 +108,32 @@ class DishVariant(models.Model):
     def __str__(self):
         return f"{self.name} ({self.dish.name})"
 
+class OnlineOrder(models.Model):
+    """
+    Model representing an online third party platform for ordering with a name, percentage, and reference.
+
+    Attributes:
+    -----------
+    name : CharField
+        Name of the online order taking third party service.
+    percentage : DecimalField
+        The percentage associated with the order of the third party service.
+    reference : CharField
+        A reference or identifier for the order of the third party service.
+    """
+    
+    name = models.CharField(max_length=255)
+    percentage = models.DecimalField(max_digits=5, decimal_places=2)  # e.g., 12.34%
+    reference = models.CharField(max_length=255)
+    logo = models.ImageField(upload_to='logos/', blank=True, null=True) 
+
+    def __str__(self):
+        return f"{self.name} - {self.reference}"
+
+    class Meta:
+        verbose_name = "Online Order"
+        verbose_name_plural = "Online Orders"
+        ordering = ['name']
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -121,6 +147,8 @@ class Order(models.Model):
         ("takeaway", "Takeaway"),
         ("dining", "Dining"),
         ("delivery", "Delivery"),
+        ("onlinedelivery", "OnlineDelivery"),
+
     ]
 
     PAYMENT_METHOD_CHOICES = [
@@ -155,7 +183,12 @@ class Order(models.Model):
     delivery_driver_id = models.IntegerField(null=True, blank=True)
     credit_user_id = models.IntegerField(null=True, blank=True)
     kitchen_note = models.TextField(blank=True)
-
+    online_order = models.ForeignKey(
+        'OnlineOrder', 
+        on_delete=models.SET_NULL,  
+        null=True,  
+        blank=True  
+    )
     class Meta:
         ordering = ("-created_at",)
 

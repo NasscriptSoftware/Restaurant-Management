@@ -118,6 +118,12 @@ class DishVariantSerializer(serializers.ModelSerializer):
         model = DishVariant
         fields = ['id', 'name','dish']
 
+
+class OnlineOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OnlineOrder
+        fields = ['id', 'name', 'percentage', 'reference', 'logo']
+
 class OrderItemSerializer(serializers.ModelSerializer):
     dish = serializers.PrimaryKeyRelatedField(queryset=Dish.objects.all())
 

@@ -295,6 +295,11 @@ UNFOLD = {
                         "icon": "shopping_cart",
                         "link": reverse_lazy("admin:restaurant_app_order_changelist"),
                     },
+                                        {
+                        "title": _("Online ThirdParty Order"),
+                        "icon": "shopping_cart",
+                        "link": reverse_lazy("admin:restaurant_app_onlineorder_changelist"),
+                    },
                     {
                         "title": _("Order Items"),
                         "icon": "inventory_2",

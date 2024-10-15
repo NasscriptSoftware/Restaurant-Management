@@ -53,6 +53,7 @@ class CustomUserAdmin(UnflodModelAdmin):
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Category, UnflodModelAdmin)
 admin.site.register(Dish, UnflodModelAdmin)
+admin.site.register(OnlineOrder, UnflodModelAdmin)
 admin.site.register(Order, UnflodModelAdmin)
 admin.site.register(OrderItem, UnflodModelAdmin)
 admin.site.register(Bill, UnflodModelAdmin)

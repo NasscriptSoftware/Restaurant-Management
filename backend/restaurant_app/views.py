@@ -148,6 +148,12 @@ class DishVariantViewSet(viewsets.ModelViewSet):
         
         return queryset
 
+
+class OnlineOrderViewSet(viewsets.ModelViewSet):
+    queryset = OnlineOrder.objects.all()  
+    serializer_class = OnlineOrderSerializer
+
+
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
