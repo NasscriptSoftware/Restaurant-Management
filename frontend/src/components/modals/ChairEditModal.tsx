@@ -37,7 +37,9 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : 
+               (name === 'start_time' || name === 'end_time') ? value : 
+               value
     }));
   };
 
@@ -120,7 +122,7 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
                       type="datetime-local"
                       name="start_time"
                       id="start_time"
-                      value={format(parseISO(formData.start_time), "yyyy-MM-dd'T'HH:mm")}
+                      value={formData.start_time ? format(parseISO(formData.start_time), "yyyy-MM-dd'T'HH:mm") : ''}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     />
@@ -133,7 +135,7 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
                       type="datetime-local"
                       name="end_time"
                       id="end_time"
-                      value={format(parseISO(formData.end_time), "yyyy-MM-dd'T'HH:mm")}
+                      value={formData.end_time ? format(parseISO(formData.end_time), "yyyy-MM-dd'T'HH:mm") : ''}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     />
