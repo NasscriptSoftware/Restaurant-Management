@@ -10,8 +10,12 @@ import { useDishes } from "../hooks/useDishes";
 import { useOrders } from "../hooks/useOrders";
 import MemoModal from "@/components/modals/MemoModal";
 import KitchenNoteModal from "@/components/modals/KitchenNoteModal";
-import { Dish, Category, OrderFormData, DeliveryDriver } from "../types";
-import { fetchDeliveryDrivers, getCategories } from "../services/api";
+import { Dish, Category, OrderFormData, DeliveryDriver } from "../types/index";
+import {
+  fetchDeliveryDrivers,
+  getCategories,
+  fetchOnlineOrders,
+} from "../services/api";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -41,14 +45,25 @@ import {
   updateQuantity,
 } from "@/features/slices/orderSlice";
 
-type OrderType = "dining" | "takeaway" | "delivery";
+type OrderType = "dining" | "takeaway" | "delivery" | "onlinedelivery";
 
 export type OrderDish = Dish & { quantity: number; variants: any[] };
+
+// ... existing imports ...
+
+// Add this type definition
+type OnlineOrder = {
+  id: string | number;
+  name: string;
+  logo: string;
+
+  // Add other relevant fields
+};
 
 const DishesPage: React.FC = () => {
   const dispatch = useDispatch();
   const orderItems = useSelector((state: RootState) => state.order.items);
-  const { dishes, isLoading, isError } = useDishes();  
+  const { dishes, isLoading, isError } = useDishes();
 
   const { createOrder } = useOrders();
   const { data: categories } = useQuery<Category[]>(
@@ -59,11 +74,17 @@ const DishesPage: React.FC = () => {
     "deliveryDrivers",
     fetchDeliveryDrivers
   );
+  const { data: onlinedeliveryList } = useQuery<{ results: OnlineOrder[] }>(
+    "onlinedelivery",
+    fetchOnlineOrders
+  );
 
   const [isOrderVisible, setIsOrderVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [orderType, setOrderType] = useState<OrderType>("dining");
   const [searchQuery, setSearchQuery] = useState("");
+  const [onlineDeliveryData, setOnlineDeliveryData] =
+    useState<OnlineOrder | null>(null);
   const [selectedDriver, setSelectedDriver] = useState<DeliveryDriver | null>(
     null
   );
@@ -79,6 +100,17 @@ const DishesPage: React.FC = () => {
   const [kitchenNote, setKitchenNote] = useState("");
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleValueChange = (value: OrderType) => {
+    setOrderType(value);
+    if (value === "onlinedelivery") {
+      setIsModalOpen(true);
+    } else {
+      setIsModalOpen(false);
+    }
+  };
   const navigate = useNavigate();
 
   const data = dishes || [];
@@ -161,6 +193,13 @@ const DishesPage: React.FC = () => {
           orderType === "delivery" && selectedDriver ? selectedDriver.id : null,
         kitchen_note: kitchenNote,
       };
+
+      // Add online_order only if orderType is "onlinedelivery"
+      if (orderType === "onlinedelivery" && onlineDeliveryData) {
+        orderData.online_order = JSON.stringify(onlineDeliveryData.id);
+      }
+
+      console.log("orderData", orderData);
 
       createOrder(orderData);
       setShowSuccessModal(true);
@@ -363,8 +402,61 @@ const DishesPage: React.FC = () => {
                       Delivery
                     </Label>
                   </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem
+                      value="onlinedelivery"
+                      id="onlinedelivery"
+                      className="h-5 w-5"
+                    />
+                    <Label htmlFor="onlinedelivery" className="text-sm">
+                      Online Order
+                    </Label>
+                  </div>
                 </RadioGroup>
               </div>
+
+              {orderType === "onlinedelivery" && (
+                <div className="mt-4">
+                  <Label className="text-sm font-medium mb-2 block">Select Online Order Platform</Label>
+                  <Command className="rounded-lg border shadow-sm">
+                    <CommandInput placeholder="Search platforms..." className="h-9" />
+                    <CommandList>
+                      <CommandEmpty>No platforms found.</CommandEmpty>
+                      <CommandGroup>
+                        {onlinedeliveryList?.results.map((onlineOrder) => (
+                          <CommandItem
+                            key={onlineOrder.id}
+                            value={onlineOrder.name}
+                            onSelect={() => {
+                              setOnlineDeliveryData(onlineOrder);
+                              setOpenDriverSelect(false);
+                            }}
+                            className="flex items-center space-x-2 py-2 px-2 cursor-pointer hover:bg-gray-100 transition-colors"
+                          >
+                            <div className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden border border-gray-200">
+                              <img
+                                src={onlineOrder.logo}
+                                alt={onlineOrder.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-grow">
+                              <p className="font-medium">{onlineOrder.name}</p>
+                            </div>
+                            <Check
+                              className={`flex-shrink-0 h-5 w-5 text-green-500 ${
+                                onlineDeliveryData?.id === onlineOrder.id
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              }`}
+                            />
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </div>
+              )}
               {orderType === "delivery" && (
                 <>
                   <div className="mt-4 flex flex-col gap-2">
@@ -420,7 +512,7 @@ const DishesPage: React.FC = () => {
                         >
                           {selectedDriver
                             ? selectedDriver.username
-                            : "Select driver..."}
+                            : "Select driver..."}{" "}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>

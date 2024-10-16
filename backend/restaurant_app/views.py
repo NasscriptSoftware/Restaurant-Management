@@ -835,3 +835,4 @@ class ChairsViewSet(viewsets.ModelViewSet):
     """
     queryset = Chairs.objects.all()
     serializer_class = ChairsSerializer
+    pagination_class = None

@@ -22,7 +22,7 @@ export interface OrderItem {
 
 export interface Order {
   kitchen_note: ReactNode;
-  kitchen_note: any;
+  kitchen_note: string;
   detail: Order;
   id: number;
   created_at: string;
@@ -88,7 +88,7 @@ export interface OrderFormData {
   items: OrderItem[];
   total_amount: number;
   status: "pending" | "approved" | "cancelled" | "delivered";
-  order_type: "dining" | "takeaway" | "delivery";
+  order_type: "dining" | "takeaway" | "delivery" | "onlinedelivery";
   payment_method?: "cash" | "bank" | "cash-bank" | "credit";
   bank_amount?: number;
   cash_amount?: number | string;
@@ -99,6 +99,7 @@ export interface OrderFormData {
   delivery_driver_id: number | null;
   credit_user_id?: number | null;
   kitchen_note?: string;
+  online_order?: string | null;
 }
 
 // Analytics types
@@ -336,5 +337,22 @@ export type CreditUserForm = {
   mobile_number: string;
   limit_amount: string;
   time_period: Date | null;
+  is_active: boolean;
+};
+
+// Chair
+export type Chair = {
+  id: number;
+  name: string;
+  is_available: boolean;
+  is_booked: boolean;
+  is_booked_by_user: boolean;
+  order: Order;
+  chair_name: string;
+  customer_name: string;
+  customer_mob: string;
+  start_time: string;
+  end_time: string;
+  amount: string;
   is_active: boolean;
 };

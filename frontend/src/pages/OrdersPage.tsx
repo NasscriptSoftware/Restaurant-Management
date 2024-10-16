@@ -10,7 +10,7 @@ import {
 } from "@/services/api";
 import KitchenPrint from "../components/Orders/KitchenPrint";
 import SalesPrint from "../components/Orders/SalesPrint";
-import { CreditUser } from "@/types";
+import { CreditUser } from "@/types/index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
