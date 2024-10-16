@@ -18,16 +18,16 @@ interface Chair {
 
 export default function ChairsPage() {
   const [chairs, setChairs] = useState<Chair[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const fetchChairs = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get<{ results: Chair[] }>("/chairs/");
+      const response = await api.get<Chair[]>("/chairs/");
       console.log('response', response);
-      setChairs(response.data.results);
+      setChairs(response.data);
       setError(null);
     } catch (error) {
       console.error("Error fetching chairs:", error);
