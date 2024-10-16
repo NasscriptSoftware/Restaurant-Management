@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ChairEditModal from "../modals/ChairEditModal";
-import { parseISO, format, isValid } from 'date-fns';
+import { parseISO, format, isValid, differenceInSeconds } from 'date-fns';
 
 interface ChairsProps {
   id: number;
@@ -31,6 +31,8 @@ export default function Chairs({
 }: ChairsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [remainingTime, setRemainingTime] = useState<string>('');
+  const [clockEmoji, setClockEmoji] = useState<string>('🕛');
 
   const handleEditClick = () => {
     setIsModalOpen(true);
@@ -44,18 +46,62 @@ export default function Chairs({
 
   const formatTime = (timeString: string): string => {
     if (!timeString) return 'N/A';
-    console.log(timeString);
     const date = parseISO(timeString);
     return isValid(date) ? format(date, 'p') : 'N/A';
   };
 
+  useEffect(() => {
+    const updateRemainingTime = () => {
+      if (start_time && end_time) {
+        const now = new Date();
+        const endDate = parseISO(end_time);
+        
+        if (!isValid(endDate)) {
+          setRemainingTime('Invalid end time');
+          setClockEmoji('❌');
+          return;
+        }
+
+        const diffInSeconds = differenceInSeconds(endDate, now);
+        
+        if (diffInSeconds > 0) {
+          const hours = Math.floor(diffInSeconds / 3600);
+          const minutes = Math.floor((diffInSeconds % 3600) / 60);
+          const seconds = diffInSeconds % 60;
+          setRemainingTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+          
+          // Update clock emoji
+          const clockEmojis = ['🕛', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚'];
+          setClockEmoji(clockEmojis[seconds % 12]);
+        } else {
+          setRemainingTime('Time up!');
+          setClockEmoji('⏰');
+        }
+      } else {
+        setRemainingTime('');
+        setClockEmoji('');
+      }
+    };
+
+    updateRemainingTime();
+    const timer = setInterval(updateRemainingTime, 1000);
+
+    return () => clearInterval(timer);
+  }, [start_time, end_time]);
+
   return (
     <>
       <div
-        className={`bg-white p-4 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 ${is_active ? 'border-green-500 border-2' : 'border-red-500 border-2'}`}
+        className={`bg-white p-4 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 ${is_active ? 'border-green-500 border-2' : 'border-red-500 border-2'} relative`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
+        {remainingTime && (
+          <div className="absolute top-2 right-2 bg-gray-200 rounded-full px-2 py-1 text-xs font-medium flex items-center">
+            <span className="mr-1 animate-pulse">{clockEmoji}</span>
+            <span className="animate-blink">{remainingTime}</span>
+          </div>
+        )}
         <h3 className="text-xl font-bold mb-2">{chair_name}</h3>
         <div className="space-y-1">
           <p className="text-sm">
@@ -68,12 +114,9 @@ export default function Chairs({
             <span className="font-medium">Time:</span> {`${formatTime(start_time)} - ${formatTime(end_time)}`}
           </p>
           <p className="text-sm">
-            <span className="font-medium">Amount:</span> {amount || 'N/A'}
-          </p>
-          <p className="text-sm">
-            <span className="font-medium">Status:</span>{" "}
+            <span className="font-medium">Availability:</span>{" "}
             <span className={is_active ? "text-green-500" : "text-red-500"}>
-              {is_active ? "Active" : "Inactive"}
+              {is_active ? "Unoccupied" : "Occupied"}
             </span>
           </p>
         </div>
@@ -94,8 +137,8 @@ export default function Chairs({
           chair_name,
           customer_name,
           customer_mob,
-          start_time,
-          end_time,
+          start_time: start_time || '',
+          end_time: end_time || '',
           amount,
           is_active,
         }}
