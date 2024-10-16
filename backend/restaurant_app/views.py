@@ -1,5 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal
+from urllib import response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters, permissions, status
 from rest_framework.views import APIView
@@ -414,6 +415,61 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         return Response(report_data)
 
+    @action(detail=False, methods=['GET'], url_path='online-delivery-report')
+    def online_delivery_report(self, request):
+        """
+        Retrieve a report of online delivery orders within a specified date range.
+
+        This endpoint allows third-party online order-taking platforms (like Zomato) to generate a report
+        based on online delivery orders. Users can specify a date range to filter the results.
+
+        Query Parameters:
+        ------------------
+        - from_date (required): Start date for filtering the orders (YYYY-MM-DD).
+        - to_date (required): End date for filtering the orders (YYYY-MM-DD).
+
+        Response Fields:
+        -----------------
+        - onlineordername: Name of the online order.
+        - percentage: Percentage associated with the online order.
+        - invoice: Invoice number of the order.
+        - date: Creation date of the order.
+        - order_type: Type of the order.
+        - payment_method: Method of payment used.
+        - order_status: Current status of the order.
+        - total_amount: Total amount of the order.
+
+        Returns:
+        --------
+        A JSON response containing a list of online delivery orders matching the specified criteria.
+        """
+        from_date = request.query_params.get('from_date')
+        to_date = request.query_params.get('to_date')
+
+        if not from_date or not to_date:
+            return Response({'error': 'from_date and to_date parameters are required.'}, status=400)
+
+        orders = self.queryset.filter(
+            created_at__date__gte=from_date,
+            created_at__date__lte=to_date,
+            order_type='onlinedelivery'
+        ).select_related('online_order')  # Fetch related online order details
+
+        report_data = [
+            {
+                'onlineordername': order.online_order.name if order.online_order else None,
+                'percentage': order.online_order.percentage if order.online_order else None,
+                'invoice': order.invoice_number,
+                'date': order.created_at.date(),
+                'order_type': order.order_type,
+                'payment_method': order.payment_method,
+                'order_status': order.status,
+                'total_amount': order.total_amount,
+            }
+            for order in orders
+        ]
+
+        return Response(report_data)
 
 class OrderStatusUpdateViewSet(viewsets.GenericViewSet):
     queryset = Order.objects.all()
@@ -816,7 +872,7 @@ from .serializers import ChairsSerializer
 class ChairsViewSet(viewsets.ModelViewSet):
     """
     A ModelViewSet for managing chair bookings.
-    
+
     Use Case:
     ---------
     This view is particularly useful for systems or apps that handle chair 

@@ -22,6 +22,7 @@ import {
   ArrowRightLeft,
   ChartColumn,
   CalendarRange,
+  Armchair,
 } from "lucide-react"; // Import the icons you'll use
 import LogoutBtn from "./LogoutBtn";
 import NotificationBadge from "./NotificationBadge";
@@ -43,6 +44,7 @@ const iconMap = {
   arrowrightleft: ArrowRightLeft,
   chartcolumn: ChartColumn,
   calendarrange: CalendarRange,
+  armchair : Armchair,
 };
 
 interface MenuItem {

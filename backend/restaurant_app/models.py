@@ -662,6 +662,7 @@ class Chairs(models.Model):
     start_time = models.DateTimeField(blank=True, null=True) 
     end_time = models.DateTimeField(blank=True, null=True) 
     amount = models.DecimalField(max_digits=8, decimal_places=2,null=True,blank=True)
+    
     is_active = models.BooleanField(default=True)
     order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='chairs', blank=True, null=True)
 

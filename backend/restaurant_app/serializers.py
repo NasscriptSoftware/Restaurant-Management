@@ -161,7 +161,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "delivery_driver",
             "credit_user_id",
             "delivery_order_status",
-            "kitchen_note"
+            "kitchen_note", 
+            "online_order"
         ]
 
     def create(self, validated_data):
