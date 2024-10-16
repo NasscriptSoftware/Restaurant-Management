@@ -197,6 +197,20 @@ class OrderViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+
+    @action(detail=True, methods=['delete'], url_path='remove-item/(?P<item_id>[^/.]+)')
+    def remove_item(self, request, pk=None, item_id=None):
+        try:
+            order = self.get_object()  # Retrieve the order
+            order_item = OrderItem.objects.get(id=item_id, order=order)  # Find the item in this order
+
+            order_item.delete()  # Delete the item
+
+            return Response({"message": "Order item removed successfully."}, status=status.HTTP_200_OK)
+
+        except OrderItem.DoesNotExist:
+            return Response({"error": "Order item not found."}, status=status.HTTP_404_NOT_FOUND)
+
     def get_queryset_by_time_range(self, time_range):
         end_date = timezone.now()
         if time_range == "day":
@@ -418,15 +432,15 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'], url_path='online-delivery-report')
     def online_delivery_report(self, request):
         """
-        Retrieve a report of online delivery orders within a specified date range.
+        Retrieve a report of online delivery orders, optionally within a specified date range.
 
         This endpoint allows third-party online order-taking platforms (like Zomato) to generate a report
         based on online delivery orders. Users can specify a date range to filter the results.
 
         Query Parameters:
         ------------------
-        - from_date (required): Start date for filtering the orders (YYYY-MM-DD).
-        - to_date (required): End date for filtering the orders (YYYY-MM-DD).
+        - from_date (optional): Start date for filtering the orders (YYYY-MM-DD).
+        - to_date (optional): End date for filtering the orders (YYYY-MM-DD).
 
         Response Fields:
         -----------------
@@ -438,6 +452,8 @@ class OrderViewSet(viewsets.ModelViewSet):
         - payment_method: Method of payment used.
         - order_status: Current status of the order.
         - total_amount: Total amount of the order.
+        - percentage_amount: The percentage value of total_amount based on the percentage.
+        - balance_amount: Calculated balance amount (total_amount - percentage_amount).
 
         Returns:
         --------
@@ -446,30 +462,43 @@ class OrderViewSet(viewsets.ModelViewSet):
         from_date = request.query_params.get('from_date')
         to_date = request.query_params.get('to_date')
 
-        if not from_date or not to_date:
-            return Response({'error': 'from_date and to_date parameters are required.'}, status=400)
+        # If both dates are provided, apply the date filter
+        if from_date and to_date:
+            orders = self.queryset.filter(
+                created_at__date__gte=from_date,
+                created_at__date__lte=to_date,
+                order_type='onlinedelivery'
+            ).select_related('online_order')
+        else:
+            # If no date filters are provided, return all 'onlinedelivery' orders
+            orders = self.queryset.filter(
+                order_type='onlinedelivery'
+            ).select_related('online_order')
 
-        orders = self.queryset.filter(
-            created_at__date__gte=from_date,
-            created_at__date__lte=to_date,
-            order_type='onlinedelivery'
-        ).select_related('online_order')  # Fetch related online order details
+        report_data = []
+        for order in orders:
+            percentage = order.online_order.percentage if order.online_order else 0
+            total_amount = order.total_amount
 
-        report_data = [
-            {
+            # Calculate percentage_amount and balance_amount correctly
+            percentage_amount = (percentage / 100) * total_amount if percentage > 0 else 0
+            balance_amount = total_amount - percentage_amount
+
+            report_data.append({
                 'onlineordername': order.online_order.name if order.online_order else None,
-                'percentage': order.online_order.percentage if order.online_order else None,
+                'percentage': percentage,
                 'invoice': order.invoice_number,
                 'date': order.created_at.date(),
                 'order_type': order.order_type,
                 'payment_method': order.payment_method,
                 'order_status': order.status,
-                'total_amount': order.total_amount,
-            }
-            for order in orders
-        ]
+                'total_amount': total_amount,
+                'percentage_amount': percentage_amount,  # Correctly calculated percentage amount
+                'balance_amount': balance_amount,        # Correct balance amount after deduction
+            })
 
         return Response(report_data)
+
 
 class OrderStatusUpdateViewSet(viewsets.GenericViewSet):
     queryset = Order.objects.all()

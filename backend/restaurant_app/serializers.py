@@ -129,7 +129,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = ["dish", "quantity","is_newly_added","variants"]
+        fields = ["id","dish", "quantity","is_newly_added","variants"]
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -162,7 +162,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "credit_user_id",
             "delivery_order_status",
             "kitchen_note", 
-            "online_order"
+            "online_order",
+            "chair_amount"
         ]
 
     def create(self, validated_data):
