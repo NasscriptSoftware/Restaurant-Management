@@ -89,11 +89,28 @@ interface Sales {
   customer_phone_number: string;
 }
 
+interface OnlineDeliveryReport {
+  id: number;
+  order_id: string;
+  onlineordername: string;
+  percentage: number;
+  invoice: string;
+  date: string;
+  order_type: string;
+  payment_method: string;
+  order_status: string;
+  total_amount: number;
+  percentage_amount: number;
+  balance_amount: number;
+  created_at: string;
+}
+
 const ReportPage: React.FC = () => {
-  const [reportType, setReportType] = useState<"sales" | "mess" | "product">("sales");
+  const [reportType, setReportType] = useState<"sales" | "mess" | "product" | "onlineDelivery">("sales");
   const [reports, setReports] = useState<SalesReport[]>([]);
   const [messReports, setMessReports] = useState<MessReport[]>([]);
   const [productReports, setProductReports] = useState<ProductReport[]>([]);
+  const [onlineDeliveryReports, setOnlineDeliveryReports] = useState<OnlineDeliveryReport[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [fromDate, setFromDate] = useState<Date | null>(new Date());
   const [toDate, setToDate] = useState<Date | null>(new Date());
@@ -128,6 +145,9 @@ const ReportPage: React.FC = () => {
           break;
         case "product":
           baseUrl = `${import.meta.env.VITE_APP_API_URL}/orders/product_wise_report/`;
+          break;
+        case "onlineDelivery":
+          baseUrl = `${import.meta.env.VITE_APP_API_URL}/orders/online-delivery-report/`;
           break;
       }
 
@@ -176,6 +196,9 @@ const ReportPage: React.FC = () => {
             break;
           case "product":
             setProductReports(data);
+            break;
+          case "onlineDelivery":
+            setOnlineDeliveryReports(data);
             break;
         }
         setCurrentPage(1);
@@ -238,6 +261,9 @@ const ReportPage: React.FC = () => {
           break;
         case "Delivery":
           filter = { order_type: "delivery" };
+          break;
+        case "Online Delivery":
+          filter = { order_type: "onlinedelivery" };
           break;
         case "Cash":
           filter = { payment_method: "cash" };
@@ -344,37 +370,44 @@ const ReportPage: React.FC = () => {
   const openModal = (driverId: string) => {
     setSelectedDriverId(driverId);
     setIsModalOpen(true);
-};
+  };
 
-const closeModal = () => {
+  const closeModal = () => {
     setIsModalOpen(false);
     setSelectedDriverId(null);
-};
+  };
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedReports = reports.slice(startIndex, startIndex + itemsPerPage);
   const paginatedMessReports = messReports.slice(startIndex, startIndex + itemsPerPage);
   const paginatedProductReports = productReports.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedOnlineDeliveryReports = onlineDeliveryReports.slice(startIndex, startIndex + itemsPerPage);
 
   const totalAmount =
     reportType === "sales"
       ? reports.reduce((acc, report) => acc + parseFloat(report.total_amount.toString()), 0)
       : reportType === "mess"
         ? messReports.reduce((acc, report) => acc + parseFloat(report.grand_total.toString()), 0)
-        : productReports.reduce((acc, report) => acc + parseFloat(report.total_amount.toString()), 0);
+        : reportType === "product"
+          ? productReports.reduce((acc, report) => acc + parseFloat(report.total_amount.toString()), 0)
+          : onlineDeliveryReports.reduce((acc, report) => acc + report.total_amount, 0);
 
   const totalCashAmount =
     reportType === "sales"
       ? reports.reduce((acc, report) => acc + parseFloat(report.cash_amount.toString()), 0)
       : reportType === "mess"
         ? messReports.reduce((acc, report) => acc + parseFloat(report.cash_amount.toString()), 0)
-        : productReports.reduce((acc, report) => acc + parseFloat(report.cash_amount.toString()), 0);
+        : reportType === "product"
+          ? productReports.reduce((acc, report) => acc + parseFloat(report.cash_amount.toString()), 0)
+          : onlineDeliveryReports.reduce((acc, report) => acc + (report.payment_method === "cash" ? report.total_amount : 0), 0);
 
   const totalCardAmount =
     reportType === "sales"
       ? reports.reduce((acc, report) => acc + parseFloat(report.bank_amount.toString()), 0)
       : reportType === "mess"
         ? messReports.reduce((acc, report) => acc + parseFloat(report.bank_amount.toString()), 0)
-        : productReports.reduce((acc, report) => acc + parseFloat(report.bank_amount.toString()), 0);
+        : reportType === "product"
+          ? productReports.reduce((acc, report) => acc + parseFloat(report.bank_amount.toString()), 0)
+          : onlineDeliveryReports.reduce((acc, report) => acc + (report.payment_method === "bank" ? report.total_amount : 0), 0);
 
   const totalBankAmount = reports
     .filter((report) => report.payment_method === "bank")
@@ -390,10 +423,11 @@ const closeModal = () => {
         <Card>
           <CardContent className="p-6">
             <Tabs defaultValue="sales" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3 lg:w-auto">
+              <TabsList className="grid w-full grid-cols-4 lg:w-auto">
                 <TabsTrigger value="sales" onClick={() => setReportType("sales")} className="data-[state=active]:bg-purple-600 bg-white rounded-l-lg data-[state=active]:text-white border border-purple-600">Sales Report</TabsTrigger>
                 <TabsTrigger value="mess" onClick={() => setReportType("mess")} className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600">Mess Report</TabsTrigger>
-                <TabsTrigger value="product" onClick={() => setReportType("product")} className="data-[state=active]:bg-purple-600 bg-white rounded-r-lg data-[state=active]:text-white border border-purple-600">Product Report</TabsTrigger>
+                <TabsTrigger value="product" onClick={() => setReportType("product")} className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600">Product Report</TabsTrigger>
+                <TabsTrigger value="onlineDelivery" onClick={() => setReportType("onlineDelivery")} className="data-[state=active]:bg-purple-600 bg-white rounded-r-lg data-[state=active]:text-white border border-purple-600">Online Delivery Report</TabsTrigger>
               </TabsList>
 
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
@@ -428,10 +462,11 @@ const closeModal = () => {
                 </div>
 
                 <SalesPrint
-                  reportType={reportType}
+                  reportType={reportType as "sales" | "mess" | "product" | "onlineDelivery"}
                   reports={reports}
                   messReports={messReports}
                   productReports={productReports}
+                  onlineDeliveryReports={onlineDeliveryReports}
                   totalAmount={totalAmount}
                   totalCashAmount={totalCashAmount}
                   totalCardAmount={totalCardAmount}
@@ -447,7 +482,7 @@ const closeModal = () => {
                 </Button>
                 {reportType === "sales" && (
                   <>
-                    {["Dining", "Takeaway", "Delivery", "Cash", "Bank", "Cash-Bank", "Credit", "Delivered"].map((type) => (
+                    {["Dining", "Takeaway", "Delivery","Online Delivery", "Cash", "Bank", "Cash-Bank", "Credit", "Delivered"].map((type) => (
                       <Button
                         key={type}
                         variant={activeButton === type ? "default" : "outline"}
@@ -506,9 +541,7 @@ const closeModal = () => {
                           <td className="p-2">{report.invoice_number}</td>
                           <td className="p-2">{report.customer_phone_number || "N/A"}</td>
                           <td className="p-2">{format(new Date(report.created_at), "dd-MM-yyyy")}</td>
-                          {/* <td className="p-2 capitalize">{report.order_type}</td> */}
                           <td className="p-2 capitalize" onClick={() => openModal(report.delivery_driver_id)}>{report.order_type}</td>
-
                           <td className="p-2 capitalize">{report.payment_method}</td>
                           <td className="p-2 capitalize">{report.status}</td>
                           <td className="p-2">{report.total_amount}</td>
@@ -549,7 +582,6 @@ const closeModal = () => {
                         <th className="p-2 text-left">Start Date</th>
                         <th className="p-2 text-left">End Date</th>
                         <th className="p-2 text-left">Payment Method</th>
-                        <th className="p-2 text-left">Order Status</th>
                         <th className="p-2 text-left">Transactions</th>
                         <th className="p-2 text-left">Actions</th>
                       </tr>
@@ -566,7 +598,6 @@ const closeModal = () => {
                           <td className="p-2">{format(new Date(report.start_date), "dd-MM-yyyy")}</td>
                           <td className="p-2">{format(new Date(report.end_date), "dd-MM-yyyy")}</td>
                           <td className="p-2">{report.payment_method}</td>
-                          <td className="p-2">{report.status}</td>
                           <td className="p-2">
                             <Button variant="ghost" size="sm" onClick={() => handleMobileClick(report)}>
                               <Eye className="w-4 h-4" />
@@ -618,6 +649,43 @@ const closeModal = () => {
                   </table>
                 </div>
               </TabsContent>
+
+              <TabsContent value="onlineDelivery" className="space-y-4">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-muted">
+                        <th className="p-2 text-left">Name</th>
+                        <th className="p-2 text-left">Percentage</th>
+                        <th className="p-2 text-left">Invoice</th>
+                        <th className="p-2 text-left">Date</th>
+                        <th className="p-2 text-left">Order Type</th>
+                        <th className="p-2 text-left">Payment Method</th>
+                        <th className="p-2 text-left">Order Status</th>
+                        <th className="p-2 text-left">Total Amount</th>
+                        <th className="p-2 text-left">Percentage Amount</th>
+                        <th className="p-2 text-left">Balance Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedOnlineDeliveryReports.map((report, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="p-2">{report.onlineordername}</td>
+                          <td className="p-2">{report.percentage}%</td>
+                          <td className="p-2">{report.invoice}</td>
+                          <td className="p-2">{format(new Date(report.date), "dd-MM-yyyy")}</td>
+                          <td className="p-2 capitalize">{report.order_type}</td>
+                          <td className="p-2 capitalize">{report.payment_method}</td>
+                          <td className="p-2 capitalize">{report.order_status}</td>
+                          <td className="p-2">{report.total_amount}</td>
+                          <td className="p-2">{report.percentage_amount}</td>
+                          <td className="p-2">{report.balance_amount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
@@ -626,16 +694,16 @@ const closeModal = () => {
           <CardContent className="p-6">
             <div className="flex flex-col items-end space-y-2">
               <p className="font-semibold text-right">
-                Cash Amount: <span className="font-normal">₹{totalCashAmount.toFixed(2)}</span>
+                Cash Amount: <span className="font-normal">{totalCashAmount.toFixed(2)}</span>
               </p>
               <p className="font-semibold text-right">
-                Bank Amount: <span className="font-normal">₹{totalBankAmount.toFixed(2)}</span>
+                Bank Amount: <span className="font-normal">{totalBankAmount.toFixed(2)}</span>
               </p>
               <p className="font-semibold text-right">
-                Credit Amount: <span className="font-normal">₹{totalCreditAmount.toFixed(2)}</span>
+                Credit Amount: <span className="font-normal">{totalCreditAmount.toFixed(2)}</span>
               </p>
               <p className="font-semibold text-right">
-                Total Amount: <span className="font-normal">₹{totalAmount.toFixed(2)}</span>
+                Total Amount: <span className="font-normal">{totalAmount.toFixed(2)}</span>
               </p>
             </div>
           </CardContent>
@@ -648,7 +716,9 @@ const closeModal = () => {
               ? reports.length
               : reportType === "mess"
                 ? messReports.length
-                : productReports.length) / itemsPerPage
+                : reportType === "product"
+                  ? productReports.length
+                  : onlineDeliveryReports.length) / itemsPerPage
           )}
           onPageChange={setCurrentPage}
         />
@@ -687,9 +757,9 @@ const closeModal = () => {
         )}
         
 
-            {isModalOpen && (
-                <DriverDetailsModal driverId={selectedDriverId!} closeModal={closeModal} />
-            )}
+        {isModalOpen && (
+          <DriverDetailsModal driverId={selectedDriverId!} closeModal={closeModal} />
+        )}
       </div>
     </Layout>
   );

@@ -39,14 +39,31 @@ export interface MessReport {
   bank_amount: string;
 }
 
+interface OnlineDeliveryReport {
+  id: number;
+  order_id: string;
+  onlineordername: string;
+  percentage: number;
+  invoice: string;
+  date: string;
+  order_type: string;
+  payment_method: string;
+  order_status: string;
+  total_amount: number;
+  percentage_amount: number;
+  balance_amount: number;
+  created_at: string;
+}
+
 interface SalesPrintProps {
-  reportType: 'sales' | 'mess' | 'product';  // Include 'product' in reportType
+  reportType: "sales" | "mess" | "product" | "onlineDelivery";
   reports: SalesReport[];
   messReports: MessReport[];
   productReports?: ProductReport[];  // Add productReports as an optional prop
   totalAmount: number;
   totalCashAmount: number;
   totalCardAmount: number;
+  onlineDeliveryReports: OnlineDeliveryReport[];
   // Other props...
 }
 
@@ -58,6 +75,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
   totalAmount,
   totalCashAmount,
   totalCardAmount,
+  onlineDeliveryReports,
 }) => {
   const printContent = () => {
     const printWindow = window.open("", "_blank");
@@ -89,7 +107,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
         </style>
       </head>
       <body>
-        <h1>${reportType === "sales" ? "Sales Report" : reportType === "mess" ? "Mess Report" : "Product Report"}</h1>
+        <h1>${reportType === "sales" ? "Sales Report" : reportType === "mess" ? "Mess Report" : reportType === "product" ? "Product Report" : "Online Delivery Report"}</h1>
         ${
           reportType === "sales"
             ? ` 
@@ -251,6 +269,58 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
                 <td colspan="6"></td>
                 <td>Grand Total:</td>
                 <td>₹${totalAmount.toFixed(2)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        `
+            : reportType === "onlineDelivery"
+            ? `
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Order ID</th>
+                <th>Online Order Name</th>
+                <th>Percentage</th>
+                <th>Invoice</th>
+                <th>Date</th>
+                <th>Order Type</th>
+                <th>Payment Method</th>
+                <th>Order Status</th>
+                <th>Total Amount</th>
+                <th>Percentage Amount</th>
+                <th>Balance Amount</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${onlineDeliveryReports
+                .map(
+                  (report) => `
+                <tr>
+                  <td>${report.id}</td>
+                  <td>${report.order_id}</td>
+                  <td>${report.onlineordername}</td>
+                  <td>${report.percentage}%</td>
+                  <td>${report.invoice}</td>
+                  <td>${new Date(report.date).toLocaleDateString()}</td>
+                  <td>${report.order_type}</td>
+                  <td>${report.payment_method}</td>
+                  <td>${report.order_status}</td>
+                  <td>₹${report.total_amount.toFixed(2)}</td>
+                  <td>₹${report.percentage_amount.toFixed(2)}</td>
+                  <td>₹${report.balance_amount.toFixed(2)}</td>
+                  <td>${new Date(report.created_at).toLocaleString()}</td>
+                </tr>
+              `
+                )
+                .join("")}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="9"></td>
+                <td colspan="2">Grand Total:</td>
+                <td colspan="2">₹${totalAmount.toFixed(2)}</td>
               </tr>
             </tfoot>
           </table>
