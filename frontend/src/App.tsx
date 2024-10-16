@@ -16,6 +16,7 @@ import PasscodeLoginPage from "./pages/PasscodeLoginPage";
 import { DeliveryDriverOrdersPage } from "./pages/deliveryDriver/DeliveryDriverOrdersPage";
 import { DeliveryDriverProfile } from "./pages/deliveryDriver/DeliveryDriverProfile";
 import CreditUsersPage from "./pages/CreditUsersPage";
+import ChairsPage from "./pages/ChairsPage";
 
 const queryClient = new QueryClient();
 
@@ -104,6 +105,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={["staff", "admin"]}>
                       <DiningTablePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/chairs"
+                  element={
+                    <ProtectedRoute allowedRoles={["staff", "admin"]}>
+                      <ChairsPage />
                     </ProtectedRoute>
                   }
                 />
