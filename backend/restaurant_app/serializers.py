@@ -551,4 +551,14 @@ class ChairsSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Chairs
-        fields = '__all__'
+        fields = [
+            "id",
+            "chair_name",
+            "customer_name",
+            "customer_mob",
+            "start_time",
+            "end_time",
+            "amount",
+            "is_active",
+            "order"
+        ]

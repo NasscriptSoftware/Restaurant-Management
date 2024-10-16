@@ -12,7 +12,8 @@ import {
   DeliveryDriver,
   PaginatedResponse,
   CreditUser,
-} from "../types";
+  Chair,
+} from "../types/index";
 import store from "@/features/store";
 import { setTokenExpired } from "@/features/slices/authSlice";
 
@@ -260,4 +261,20 @@ export const fetchCreditUsers = async () => {
 export const fetchActiveCreditUsers = async () => {
   const response = await api.get(`/credit-users/get_active_users/`);
   return response.data.data;
+};
+export const fetchOnlineOrders = async () => {
+  const response = await api.get(`/online-orders/`);
+  return response.data;
+};
+
+export const fetchChairs = async (): Promise<Chair[]> => {
+  try {
+    const response = await api.get<Chair[]>('/chairs/');
+    return response.data;
+     console.log(" responce.daF");
+     
+  } catch (error) {
+    console.error("Error fetching chairs:", error);
+    throw error;
+  }
 };

@@ -1,20 +1,28 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Swal from "sweetalert2";
-import { Order, Dish, CreditUser } from "../../types";
+import { Order, Dish, CreditUser, DeliveryDriver, Chair } from "../../types/index";
 import OrderItems from "./OrderItems";
 import { useReactToPrint } from "react-to-print";
 import KitchenPrint from "./KitchenPrint";
 import SalesPrint from "./SalesPrint";
 import AddProductModal from "./AddProductModal";
 import PrintConfirmationModal from "./PrintConfirmationModal";
-import { api, updateOrderStatusNew } from "../../services/api";
+import { api, fetchChairs, updateOrderStatusNew } from "../../services/api";
 import ReactSelect from "react-select";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "../ui/hover-card";
-import { BadgeInfo, Bike, HandPlatter, Mail, Phone, PlusCircle, ShoppingBag } from "lucide-react";
+import {
+  BadgeInfo,
+  Bike,
+  HandPlatter,
+  Mail,
+  Phone,
+  PlusCircle,
+  ShoppingBag,
+} from "lucide-react";
 import { CreditUserModal } from "../modals/CreditUserModal";
 import { Button } from "../ui/button"; // Assuming you have a Button component
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"; // Assuming you have Popover components
@@ -27,9 +35,11 @@ import {
   CommandItem,
   CommandList,
 } from "../ui/command"; // Assuming you have a Command component and related subcomponents
-import { DeliveryDriver } from "@/types";
+// import { DeliveryDriver } from "@/types";
 import { useQuery } from "react-query";
 import { fetchDeliveryDrivers } from "@/services/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Input } from "../ui/input";
 // import { string } from "yup";
 // import { object } from "yup";
 
@@ -63,7 +73,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   onCreditUserChange,
   logoInfo,
 }) => {
-  const [status, setStatus] = useState(initialOrder.status);
+  const [status, setStatus] = useState<string>(initialOrder.status);
   const [showModal, setShowModal] = useState(false);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -75,15 +85,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const [bankAmount, setBankAmount] = useState(0);
   const [order, setOrder] = useState<Order>(initialOrder);
 
-  const kitchenPrintRef = useRef(null);
-  const salesPrintRef = useRef(null);
+  const kitchenPrintRef = useRef<HTMLDivElement>(null);
+  const salesPrintRef = useRef<HTMLDivElement>(null);
   const [selectedCreditUser, setSelectedCreditUser] =
     useState<CreditUser | null>(null);
   const [isCreditUserModalOpen, setIsCreditUserModalOpen] = useState(false);
-
-  // for changing the order type
-  // const orderTypeDisplay = order?.order_type || "N/A";
-  // type OrderType = "dining" | "takeaway" | "delivery";
 
   const [showOrderTypeModal, setShowOrderTypeModal] = useState(false);
   const [newOrderType, setNewOrderType] = useState<OrderType>(order.order_type);
@@ -94,12 +100,37 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const [selectedDriver, setSelectedDriver] = useState<DeliveryDriver | null>(
     null
   );
+  const [chairs, setChairs] = useState<Chair[]>([]);
   const [openDriverSelect, setOpenDriverSelect] = useState<boolean>(false);
+  const [chairData, setChairData] = useState({
+    chair_name: "",
+    customer_name: "",
+    customer_mob: "",
+    start_time: "",
+    end_time: "",
+    amount: "",
+    is_active: true,
+  });
 
   const { data: deliveryDriversList } = useQuery<{ results: DeliveryDriver[] }>(
     "deliveryDrivers",
     fetchDeliveryDrivers
   );
+
+  console.log(chairs);
+
+  useEffect(() => {
+    const loadChairs = async () => {
+      try {
+        const fetchedChairs = await fetchChairs();
+        setChairs(fetchedChairs);
+      } catch (error) {
+        console.error("Failed to load chairs:", error);
+      }
+    };
+
+    loadChairs();
+  }, []);
 
   // Separate print handlers
   const handlePrintKitchenBill = useReactToPrint({
@@ -114,7 +145,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const newStatus = e.target.value;
-    // setStatus(newStatus);
 
     if (newStatus === "approved") {
       setBillType("kitchen");
@@ -124,7 +154,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
       try {
         await updateOrderStatusNew(order.id, "approved");
-        onStatusUpdated(); // Refresh orders after status change
+        onStatusUpdated();
       } catch (error) {
         console.error("Error updating status to approved:", error);
         Swal.fire("Error", "Failed to update status to approved.", "error");
@@ -145,7 +175,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
             await updateOrderStatusNew(order.id, "cancelled");
             setStatus("cancelled");
             Swal.fire("Cancelled!", "The order has been cancelled.", "success");
-            onStatusUpdated(); // Refresh orders after status change
+            onStatusUpdated();
           } catch (error) {
             console.error("Error cancelling order:", error);
             Swal.fire(
@@ -155,7 +185,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
             );
           }
         } else {
-          setStatus(order.status); // Revert to previous status if canceled
+          setStatus(order.status);
         }
       });
     } else {
@@ -164,10 +194,10 @@ const OrderCard: React.FC<OrderCardProps> = ({
           order.id,
           newStatus as "pending" | "approved" | "cancelled" | "delivered"
         );
-        onStatusUpdated(); // Refresh orders after status change
+        onStatusUpdated();
       } catch (error) {
         console.error("Error updating status:", error);
-        setStatus(order.status); // Revert status if update failed
+        setStatus(order.status);
       }
     }
   };
@@ -191,7 +221,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
     try {
       const newTotalAmount = products.reduce(
         (sum, product) => sum + product.quantity * product.dish.price,
-        order.total_amount // Start from the existing total amount
+        order.total_amount
       );
 
       const response = await api.put(`/orders/${order.id}/`, {
@@ -199,7 +229,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           dish: product.dish.id,
           quantity: product.quantity,
           total_amount: product.quantity * product.dish.price,
-          is_newly_added: true, // Mark as newly added
+          is_newly_added: true,
         })),
         total_amount: newTotalAmount.toFixed(2),
       });
@@ -207,13 +237,12 @@ const OrderCard: React.FC<OrderCardProps> = ({
       if (response.status === 200) {
         setShowAddProductModal(false);
 
-        // Fetch the updated order data after adding the product
         const updatedOrderResponse = await api.get(`/orders/${order.id}/`);
         if (updatedOrderResponse.status === 200) {
           const updatedOrder = updatedOrderResponse.data;
           setOrder(updatedOrder);
         }
-        onStatusUpdated(); // Refresh orders after adding product
+        onStatusUpdated();
       }
     } catch (error) {
       console.error("Failed to add products to the order:", error);
@@ -227,7 +256,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       handlePrintSalesBill();
     }
     setShowModal(false);
-    onStatusUpdated(); // Refresh orders after status change
+    onStatusUpdated();
   };
 
   const handlePaymentMethodChange = (method: PaymentType) => {
@@ -254,20 +283,19 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
   const handlePaymentSubmit = async () => {
     try {
-      let additionalData;
+      let additionalData: any = {};
 
-      // Prepare the payload based on the selected payment method
       if (paymentMethod === "cash") {
         additionalData = {
           payment_method: "cash",
-          cash_amount: order.total_amount, // Set the entire amount to cash
-          bank_amount: 0, // Explicitly set to 0 to avoid NULL constraint issues
+          cash_amount: order.total_amount,
+          bank_amount: 0,
         };
       } else if (paymentMethod === "bank") {
         additionalData = {
           payment_method: "bank",
-          cash_amount: 0, // Explicitly set to 0
-          bank_amount: order.total_amount, // Set the entire amount to bank
+          cash_amount: 0,
+          bank_amount: order.total_amount,
         };
       } else if (paymentMethod === "cash-bank") {
         additionalData = {
@@ -278,15 +306,13 @@ const OrderCard: React.FC<OrderCardProps> = ({
       } else if (paymentMethod === "credit") {
         additionalData = {
           payment_method: "credit",
-          cash_amount: 0, // Explicitly set to 0
-          bank_amount: 0, // Explicitly set to 0
+          cash_amount: 0,
+          bank_amount: 0,
           credit_user_id: selectedCreditUser
             ? selectedCreditUser.id
             : undefined,
         };
       }
-
-      // Send the updated status and additional payment-related data to the API
 
       const response = await updateOrderStatusNew(
         order.id,
@@ -296,11 +322,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
       if (response && response.detail) {
         const UpdatedOrder = await api.get(`/orders/${initialOrder.id}`);
-        setOrder(UpdatedOrder.data)
-       console.log("UpdatedOrder",UpdatedOrder);
-       
+        setOrder(UpdatedOrder.data);
+        console.log("UpdatedOrder", UpdatedOrder);
+
         const billsResponse = await api.post("/bills/", {
-          order_id: order.id, // Use order_id here
+          order_id: order.id,
           total_amount: order.total_amount,
           paid: true,
         });
@@ -310,12 +336,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
           setStatus("delivered");
           disableAllActions();
 
-          // Trigger the print confirmation modal
           setShowPrintConfirmationModal(true);
 
-          // Trigger the order list refresh after payment submission
-          onStatusUpdated(); // Refresh orders after status change
-          // window.location.reload();
+          onStatusUpdated();
         } else {
           throw new Error("Failed to create the bill");
         }
@@ -326,11 +349,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
       setStatus("delivered");
       disableAllActions();
 
-      // Trigger the print confirmation modal
       setShowPrintConfirmationModal(true);
 
-      // Trigger the order list refresh after payment submission
-      onStatusUpdated(); // Refresh orders after status change
+      onStatusUpdated();
     } catch (error) {
       console.error("Failed to update payment method and status:", error);
       Swal.fire(
@@ -343,8 +364,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
   const handlePrintConfirmation = () => {
     setBillType("sales");
-    setShowModal(true); // Show the print modal
-    setShowPrintConfirmationModal(false); // Close the print confirmation modal
+    setShowModal(true);
+    setShowPrintConfirmationModal(false);
   };
 
   const handleCreditUserCreated = (newCreditUser: CreditUser | undefined) => {
@@ -354,7 +375,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
     onCreditUserChange();
   };
 
-  // for changing the order type
   const handleOrderTypeChange = async () => {
     if (order.status === "delivered") {
       Swal.fire(
@@ -382,13 +402,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
         order_type: newOrderType,
         ...deliveryData,
       });
-      
 
       if (response.status === 200) {
         const updatedOrderData = response.data;
         setOrder(updatedOrderData);
 
-        
         setShowOrderTypeModal(false);
         window.location.reload();
       } else {
@@ -397,6 +415,40 @@ const OrderCard: React.FC<OrderCardProps> = ({
     } catch (error) {
       console.error("Failed to update order type:", error);
       Swal.fire("Error", "Failed to update order type.", "error");
+    }
+  };
+
+  const [isChairModalOpen, setIsChairModalOpen] = useState(false);
+
+  const handleChairInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setChairData({ ...chairData, [e.target.name]: e.target.value });
+  };
+
+  const handleChairSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const chairId = chairs.find(
+        (chair) => chair.chair_name === chairData.chair_name
+      )?.id;
+
+      if (!chairId) {
+        console.error("Chair not found");
+        return;
+      }
+
+      await api.put(`/chairs/${chairId}/`, {
+        ...chairData,
+        order: order.id,
+        is_active: false,
+      });
+
+      setIsChairModalOpen(false);
+      onStatusUpdated();
+      console.log("Chair updated successfully");
+    } catch (error) {
+      console.error("Failed to update chair:", error);
     }
   };
 
@@ -615,6 +667,15 @@ const OrderCard: React.FC<OrderCardProps> = ({
               order?.order_type?.slice(1)}
           </Button>
         )}
+        {order?.order_type === "dining" && (
+          <Button
+            variant="secondary"
+            className="font-bold italic flex gap-2 items-center"
+            onClick={() => setIsChairModalOpen(true)}
+          >
+            select chair
+          </Button>
+        )}
 
         <span className="text-lg font-semibold text-gray-800">
           Total: QAR {order.total_amount}
@@ -685,7 +746,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
             </h3>
             <select
               value={paymentMethod}
-              onChange={(e) => handlePaymentMethodChange(e.target.value)}
+              onChange={(e) =>
+                handlePaymentMethodChange(e.target.value as PaymentType)
+              }
               className="border rounded-md p-2 w-full mb-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="cash">Cash</option>
@@ -802,7 +865,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                   name="orderType"
                   value="dining"
                   checked={newOrderType === "dining"}
-                  onChange={(e) => setNewOrderType(e.target.value)}
+                  onChange={(e) => setNewOrderType(e.target.value as OrderType)}
                   className="h-5 w-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2 rounded-full transition duration-200 ease-in-out"
                 />
                 <span className="text-base text-gray-700">Dining</span>
@@ -814,7 +877,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                   name="orderType"
                   value="takeaway"
                   checked={newOrderType === "takeaway"}
-                  onChange={(e) => setNewOrderType(e.target.value)}
+                  onChange={(e) => setNewOrderType(e.target.value as OrderType)}
                   className="h-5 w-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2 rounded-full transition duration-200 ease-in-out"
                 />
                 <span className="text-base text-gray-700">Takeaway</span>
@@ -826,8 +889,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
                   name="orderType"
                   value="delivery"
                   checked={newOrderType === "delivery"}
-                  onChange={(e) => setNewOrderType(e.target.value)}
-                  className="h-5 w-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2 rounded-full transition duration-200 ease-in-out"
+                  onChange={(e) => setNewOrderType(e.target.value as OrderType)}
+                  className="h-5 w-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2 rounded-full"
                 />
                 <span className="text-base text-gray-700">Delivery</span>
               </label>
@@ -979,6 +1042,124 @@ const OrderCard: React.FC<OrderCardProps> = ({
           <SalesPrint order={order} dishes={dishes} logoInfo={logoInfo} />
         </div>
       </div>
+
+      {/* Add this near the end of the component, before the closing div */}
+      <Dialog open={isChairModalOpen} onOpenChange={setIsChairModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Chair</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleChairSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="chair_name"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Chair Name
+              </label>
+              <select
+                id="chair_name"
+                name="chair_name"
+                value={chairData.chair_name}
+                onChange={handleChairInputChange}
+                required
+                className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              >
+                <option value="">Select a chair</option>
+
+                {chairs && chairs.length > 0 ? (
+                  chairs
+                    .filter((chair) => chair.is_active)
+                    .map((chair) => (
+                      <option key={chair.id} value={chair.chair_name}>
+                        {chair.chair_name}
+                      </option>
+                    ))
+                ) : (
+                  <option value="" disabled>
+                    No active chairs available
+                  </option>
+                )}
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="customer_name"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Customer Name
+              </label>
+              <Input
+                id="customer_name"
+                name="customer_name"
+                value={chairData.customer_name}
+                onChange={handleChairInputChange}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="customer_mob"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Customer Mobile
+              </label>
+              <Input
+                id="customer_mob"
+                name="customer_mob"
+                value={chairData.customer_mob}
+                onChange={handleChairInputChange}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="start_time"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Start Time
+              </label>
+              <Input
+                id="start_time"
+                name="start_time"
+                type="datetime-local"
+                value={chairData.start_time}
+                onChange={handleChairInputChange}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="end_time"
+                className="block text-sm font-medium text-gray-700"
+              >
+                End Time
+              </label>
+              <Input
+                id="end_time"
+                name="end_time"
+                type="datetime-local"
+                value={chairData.end_time}
+                onChange={handleChairInputChange}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="amount"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Amount
+              </label>
+              <Input
+                id="amount"
+                name="amount"
+                type="number"
+                step="0.01"
+                value={chairData.amount}
+                onChange={handleChairInputChange}
+              />
+            </div>
+            <Button type="submit">Save Chair Booking</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
