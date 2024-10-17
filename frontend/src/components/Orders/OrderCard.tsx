@@ -1,6 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import Swal from "sweetalert2";
-import { Order, Dish, CreditUser, DeliveryDriver, Chair } from "../../types/index";
+import {
+  Order,
+  Dish,
+  CreditUser,
+  DeliveryDriver,
+  Chair,
+} from "../../types/index";
 import OrderItems from "./OrderItems";
 import { useReactToPrint } from "react-to-print";
 import KitchenPrint from "./KitchenPrint";
@@ -20,6 +26,7 @@ import {
   HandPlatter,
   Mail,
   Phone,
+  Plus,
   PlusCircle,
   ShoppingBag,
 } from "lucide-react";
@@ -40,6 +47,7 @@ import { useQuery } from "react-query";
 import { fetchDeliveryDrivers } from "@/services/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
+import AddOptionsModal from "./AddOptionsModal";
 // import { string } from "yup";
 // import { object } from "yup";
 
@@ -57,6 +65,7 @@ interface OrderCardProps {
     phoneNumber: string;
     location: string;
   } | null;
+  chairs: Chair[];
 }
 
 type OrderType = "dining" | "takeaway" | "delivery" | string;
@@ -72,10 +81,12 @@ const OrderCard: React.FC<OrderCardProps> = ({
   onStatusUpdated,
   onCreditUserChange,
   logoInfo,
+  chairs,
 }) => {
   const [status, setStatus] = useState<string>(initialOrder.status);
   const [showModal, setShowModal] = useState(false);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [showAddOptionsModal, setShowAddOptionsModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showPrintConfirmationModal, setShowPrintConfirmationModal] =
     useState(false);
@@ -100,7 +111,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const [selectedDriver, setSelectedDriver] = useState<DeliveryDriver | null>(
     null
   );
-  const [chairs, setChairs] = useState<Chair[]>([]);
   const [openDriverSelect, setOpenDriverSelect] = useState<boolean>(false);
   const [chairData, setChairData] = useState({
     chair_name: "",
@@ -116,21 +126,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
     "deliveryDrivers",
     fetchDeliveryDrivers
   );
-
-  console.log(chairs);
-
-  useEffect(() => {
-    const loadChairs = async () => {
-      try {
-        const fetchedChairs = await fetchChairs();
-        setChairs(fetchedChairs);
-      } catch (error) {
-        console.error("Failed to load chairs:", error);
-      }
-    };
-
-    loadChairs();
-  }, []);
 
   // Separate print handlers
   const handlePrintKitchenBill = useReactToPrint({
@@ -215,6 +210,14 @@ const OrderCard: React.FC<OrderCardProps> = ({
     setShowPaymentModal(false);
   };
 
+  const handleItemDeleted = (deletedItemAmount: number) => {
+    setOrder(prevOrder => ({
+      ...prevOrder,
+      total_amount: Number((prevOrder.total_amount - deletedItemAmount).toFixed(2))
+    }));
+    onStatusUpdated();
+  };
+
   const handleAddProductSubmit = async (
     products: { dish: Dish; quantity: number }[]
   ) => {
@@ -257,6 +260,39 @@ const OrderCard: React.FC<OrderCardProps> = ({
     }
     setShowModal(false);
     onStatusUpdated();
+  };
+
+  const handleAddOptionsSubmit = async (
+    options: { option: any; quantity: number }[]
+  ) => {
+    try {
+      const newTotalAmount = options.reduce(
+        (sum, { option, quantity }) => sum + quantity * option.price,
+        order.total_amount
+      );
+
+      const response = await api.put(`/orders/${order.id}/`, {
+        options: options.map(({ option, quantity }) => ({
+          option_id: option.id,
+          quantity: quantity,
+          total_amount: quantity * option.price,
+        })),
+        total_amount: newTotalAmount.toFixed(2),
+      });
+
+      if (response.status === 200) {
+        setShowAddOptionsModal(false);
+
+        const updatedOrderResponse = await api.get(`/orders/${order.id}/`);
+        if (updatedOrderResponse.status === 200) {
+          const updatedOrder = updatedOrderResponse.data;
+          setOrder(updatedOrder);
+        }
+        onStatusUpdated();
+      }
+    } catch (error) {
+      console.error("Failed to add options to the order:", error);
+    }
   };
 
   const handlePaymentMethodChange = (method: PaymentType) => {
@@ -471,6 +507,15 @@ const OrderCard: React.FC<OrderCardProps> = ({
         </div>
 
         <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3 mt-4 sm:mt-0">
+          <div>
+            <button
+              onClick={() => setShowAddOptionsModal(true)}
+              className="text-gray-700 hover:text-blue-500 focus:outline-none"
+              title="Add Options"
+            >
+              <Plus size={24} />
+            </button>
+          </div>
           {/* Print Icon for Kitchen Bill */}
           {status === "approved" && (
             <button
@@ -573,11 +618,14 @@ const OrderCard: React.FC<OrderCardProps> = ({
               key={index}
               orderItem={item}
               dishes={dishes}
-              isNewlyAdded={item.is_newly_added} // Pass the newly added status
+              isNewlyAdded={item.is_newly_added}
+              orderId={order.id}
+              onItemDeleted={handleItemDeleted}
+              order_status={order.status}
             />
           ))
         ) : (
-          <p>No items found for this order.</p> // You can display a message or handle it in another way
+          <p>No items found for this order.</p>
         )}
       </div>
       <div className="mt-4 flex justify-between items-center">
@@ -727,6 +775,12 @@ const OrderCard: React.FC<OrderCardProps> = ({
         <AddProductModal
           onClose={() => setShowAddProductModal(false)}
           onSubmit={handleAddProductSubmit}
+        />
+      )}
+      {showAddOptionsModal && (
+        <AddOptionsModal
+          onClose={() => setShowAddOptionsModal(false)}
+          onSubmit={handleAddOptionsSubmit}
         />
       )}
 

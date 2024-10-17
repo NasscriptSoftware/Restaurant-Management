@@ -204,7 +204,17 @@ class OrderViewSet(viewsets.ModelViewSet):
             order = self.get_object()  # Retrieve the order
             order_item = OrderItem.objects.get(id=item_id, order=order)  # Find the item in this order
 
-            order_item.delete()  # Delete the item
+            # Check if this is the last item in the order
+            if order.items.count() == 1:
+                # If it's the last item, delete the entire order
+                order.delete()
+                return Response({"message": "Order deleted as it was the last item."}, status=status.HTTP_200_OK)
+            else:
+                # If it's not the last item, just delete the order item
+                order_item.delete()
+
+            # Recalculate the order total
+            order.recalculate_total()
 
             return Response({"message": "Order item removed successfully."}, status=status.HTTP_200_OK)
 
