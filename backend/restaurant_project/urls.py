@@ -9,6 +9,7 @@ from restaurant_app.views import (
     ChairsViewSet,
     FOCProductViewSet,
     OnlineOrderViewSet,
+    UserViewSet,
     toggle_sidebar_item_active,
     CategoryViewSet,
     DishViewSet,
@@ -51,6 +52,9 @@ from transactions_app.views import (CashCountSheetViewSet, NatureGroupViewSet,
  )
 
 router = DefaultRouter()
+#User Management
+router.register(r'users', UserViewSet)
+
 
 router.register(r"login", LoginViewSet, basename="login")
 router.register(r"dishes", DishViewSet, basename="dishes")

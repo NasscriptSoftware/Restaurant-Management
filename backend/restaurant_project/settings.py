@@ -273,6 +273,11 @@ UNFOLD = {
                         "icon": "lunch_dining",
                         "link": reverse_lazy("admin:restaurant_app_dish_changelist"),
                     },
+                                        {
+                        "title": _("Dishes Sizes"),
+                        "icon": "lunch_dining",
+                        "link": reverse_lazy("admin:restaurant_app_dishsize_changelist"),
+                    },
                     {
                         "title": _("Dish Varients"),
                         "icon": "format_list_bulleted",

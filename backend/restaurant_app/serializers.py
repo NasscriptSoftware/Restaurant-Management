@@ -22,6 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
+            "id",
             "username",
             "email",
             "role",
@@ -100,7 +101,14 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
+class DishSizeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DishSize
+        fields = ['size', 'price']
+
+
 class DishSerializer(serializers.ModelSerializer):
+    sizes = DishSizeSerializer(many=True, read_only=True, source='size')  
     class Meta:
         model = Dish
         fields = [
@@ -110,6 +118,7 @@ class DishSerializer(serializers.ModelSerializer):
             "price",
             "image",
             "category",
+            "sizes"
         ]
 
 
@@ -163,7 +172,9 @@ class OrderSerializer(serializers.ModelSerializer):
             "delivery_order_status",
             "kitchen_note", 
             "online_order",
-            "chair_amount"
+            "chair_amount",
+            "chair_details",
+            "foc_products",
         ]
 
     def create(self, validated_data):

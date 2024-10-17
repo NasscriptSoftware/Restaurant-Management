@@ -113,7 +113,15 @@ class LogoInfoViewSet(viewsets.ModelViewSet):
     queryset = LogoInfo.objects.all()
     serializer_class = LogoInfoSerializer
 
-    
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing users in the system.
+
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -508,6 +516,48 @@ class OrderViewSet(viewsets.ModelViewSet):
             })
 
         return Response(report_data)
+    
+    @action(detail=True, methods=['GET'], url_path='staff-user-order-report')
+    def staf_user_order_report(self, request, pk=None):
+        """
+        Retrieve all orders placed by a specific user, filtered by an optional date range.
+
+        Query Parameters:
+        -----------------
+        - from_date (optional): Start date for filtering the orders (YYYY-MM-DD).
+        - to_date (optional): End date for filtering the orders (YYYY-MM-DD).
+
+        Response Fields:
+        ----------------
+        - List of orders, including details like invoice number, created date, status, total amount, 
+          order type, payment method, and items.
+        """
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found.'}, status=404)
+        
+        from_date = request.query_params.get('from_date')
+        to_date = request.query_params.get('to_date')
+        
+        orders = Order.objects.filter(user=user)
+
+        # Apply date filtering if both `from_date` and `to_date` are provided
+        if from_date:
+            from_date_parsed = parse_date(from_date)
+            if from_date_parsed:
+                orders = orders.filter(created_at__date__gte=from_date_parsed)
+
+        if to_date:
+            to_date_parsed = parse_date(to_date)
+            if to_date_parsed:
+                orders = orders.filter(created_at__date__lte=to_date_parsed)
+
+        # Prefetch related items and dishes
+        orders = orders.prefetch_related('items', 'items__dish')
+        
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data)
 
 
 class OrderStatusUpdateViewSet(viewsets.GenericViewSet):

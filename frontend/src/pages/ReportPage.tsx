@@ -3,7 +3,7 @@ import Layout from "../components/Layout/Layout";
 import PaginationControls from "../components/Layout/PaginationControls";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { RotateCcw, Eye, Pencil } from "lucide-react";
+import { RotateCcw, Eye, Pencil, User, Users } from "lucide-react";
 import SalesPrint from "@/components/SalesReport/SalesPrint";
 import { api } from "@/services/api";
 import TransactionsModal from "@/components/Mess/TransactionsModal";
@@ -105,8 +105,37 @@ interface OnlineDeliveryReport {
   created_at: string;
 }
 
+// Update the StaffReport interface
+interface StaffReport {
+  id: number;
+  invoice_number: string;
+  customer_phone_number: string;
+  created_at: string;
+  order_type: string;
+  payment_method: string;
+  status: string;
+  total_amount: number;
+  cash_amount: number;
+  bank_amount: number;
+  staff_name: string;
+}
+
+interface StaffReportResponse {
+  results: StaffReport[];
+  count?: number;
+  next?: string | null;
+  previous?: string | null;
+}
+
+// Define the StaffUser interface
+interface StaffUser {
+  id: number;
+  username: string;
+  role: string;
+}
+
 const ReportPage: React.FC = () => {
-  const [reportType, setReportType] = useState<"sales" | "mess" | "product" | "onlineDelivery">("sales");
+  const [reportType, setReportType] = useState<"sales" | "mess" | "product" | "onlineDelivery" | "staff">("sales");
   const [reports, setReports] = useState<SalesReport[]>([]);
   const [messReports, setMessReports] = useState<MessReport[]>([]);
   const [productReports, setProductReports] = useState<ProductReport[]>([]);
@@ -126,12 +155,28 @@ const ReportPage: React.FC = () => {
   const [currentMember, setCurrentMember] = useState<SalesReport | MessReport | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+  const [adminUsers, setAdminUsers] = useState<StaffUser[]>([]);
+  const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
+  const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
+  const [staffReports, setStaffReports] = useState<StaffReport[]>([]);
+  const [currentStaffPage, setCurrentStaffPage] = useState<number>(1); // Add state for staff pagination
+  const staffItemsPerPage = 10; // Define items per page for staff reports
 
   const itemsPerPage = 10;
 
   useEffect(() => {
     fetchDataWithFilter({});
   }, [reportType, fromDate, toDate, showCancelledOrders]);
+
+  useEffect(() => {
+    if (reportType === "staff") {
+      fetchStaffUsers();
+    }
+  }, [reportType]);
+
+  useEffect(() => {
+    console.log("Staff reports updated:", staffReports);
+  }, [staffReports]);
 
   const fetchDataWithFilter = async (filter: Record<string, string>) => {
     try {
@@ -207,6 +252,42 @@ const ReportPage: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching reports:", error);
+    }
+  };
+
+  const fetchStaffUsers = async () => {
+    try {
+      const response = await api.get("/users/");
+      const allUsers = response.data.results;
+      setAdminUsers(allUsers.filter((user: StaffUser) => user.role === "admin"));
+      setStaffUsers(allUsers.filter((user: StaffUser) => user.role === "staff"));
+    } catch (error) {
+      console.error("Error fetching staff users:", error);
+    }
+  };
+
+  const fetchStaffReport = async (staffId: number | null) => {
+    try {
+      const url = staffId
+        ? `${import.meta.env.VITE_APP_API_URL}/orders/${staffId}/staff-user-order-report/`
+        : `${import.meta.env.VITE_APP_API_URL}/orders/staff-user-order-report/`;
+      const response = await api.get<StaffReportResponse>(url);
+      console.log("Staff report response:", response.data);
+      
+      // Directly set the state with the received data
+      setStaffReports(response.data);
+      console.log("Staff reports set:", response.data);
+      
+      // If there's still pagination metadata, set it here
+      if ('count' in response.data && 'next' in response.data && 'previous' in response.data) {
+        setStaffReportMeta({
+          count: response.data.count,
+          next: response.data.next,
+          previous: response.data.previous,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching staff report:", error);
     }
   };
 
@@ -320,6 +401,11 @@ const ReportPage: React.FC = () => {
     fetchDataWithFilter(filter);
   };
 
+  const handleStaffButtonClick = (staffId: number | null) => {
+    setSelectedStaffId(staffId);
+    fetchStaffReport(staffId);
+  };
+
   const handleReportUpdate = (updatedReport: SalesReport) => {
     setReports((prevReports) =>
       prevReports.map((report) =>
@@ -381,6 +467,8 @@ const ReportPage: React.FC = () => {
   const paginatedMessReports = messReports.slice(startIndex, startIndex + itemsPerPage);
   const paginatedProductReports = productReports.slice(startIndex, startIndex + itemsPerPage);
   const paginatedOnlineDeliveryReports = onlineDeliveryReports.slice(startIndex, startIndex + itemsPerPage);
+  const staffStartIndex = (currentStaffPage - 1) * staffItemsPerPage; // Calculate start index for staff reports
+  const paginatedStaffReports = staffReports.slice(staffStartIndex, staffStartIndex + staffItemsPerPage); // Paginate staff reports
 
   const totalAmount =
     reportType === "sales"
@@ -423,11 +511,12 @@ const ReportPage: React.FC = () => {
         <Card>
           <CardContent className="p-6">
             <Tabs defaultValue="sales" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-4 lg:w-auto">
+              <TabsList className="grid w-full grid-cols-5 lg:w-auto">
                 <TabsTrigger value="sales" onClick={() => setReportType("sales")} className="data-[state=active]:bg-purple-600 bg-white rounded-l-lg data-[state=active]:text-white border border-purple-600">Sales Report</TabsTrigger>
                 <TabsTrigger value="mess" onClick={() => setReportType("mess")} className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600">Mess Report</TabsTrigger>
                 <TabsTrigger value="product" onClick={() => setReportType("product")} className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600">Product Report</TabsTrigger>
-                <TabsTrigger value="onlineDelivery" onClick={() => setReportType("onlineDelivery")} className="data-[state=active]:bg-purple-600 bg-white rounded-r-lg data-[state=active]:text-white border border-purple-600">Online Delivery Report</TabsTrigger>
+                <TabsTrigger value="onlineDelivery" onClick={() => setReportType("onlineDelivery")} className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600">Online Delivery Report</TabsTrigger>
+                <TabsTrigger value="staff" onClick={() => setReportType("staff")} className="data-[state=active]:bg-purple-600 bg-white rounded-r-lg data-[state=active]:text-white border border-purple-600">Staff Report</TabsTrigger>
               </TabsList>
 
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
@@ -462,11 +551,12 @@ const ReportPage: React.FC = () => {
                 </div>
 
                 <SalesPrint
-                  reportType={reportType as "sales" | "mess" | "product" | "onlineDelivery"}
+                  reportType={reportType as "sales" | "mess" | "product" | "onlineDelivery" | "staff"}
                   reports={reports}
                   messReports={messReports}
                   productReports={productReports}
                   onlineDeliveryReports={onlineDeliveryReports}
+                  staffReports={staffReports}
                   totalAmount={totalAmount}
                   totalCashAmount={totalCashAmount}
                   totalCardAmount={totalCardAmount}
@@ -655,7 +745,7 @@ const ReportPage: React.FC = () => {
                   <table className="w-full">
                     <thead>
                       <tr className="bg-muted">
-                        <th className="p-2 text-left">Name</th>
+                        <th className="p-2 text-left">Online Order Name</th>
                         <th className="p-2 text-left">Percentage</th>
                         <th className="p-2 text-left">Invoice</th>
                         <th className="p-2 text-left">Date</th>
@@ -686,6 +776,70 @@ const ReportPage: React.FC = () => {
                   </table>
                 </div>
               </TabsContent>
+
+              <TabsContent value="staff" className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={selectedStaffId === null ? "default" : "outline"}
+                      onClick={() => handleStaffButtonClick(null)}
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      All Staff
+                    </Button>
+                    {[...adminUsers, ...staffUsers].map((user) => (
+                      <Button
+                        key={user.id}
+                        variant={selectedStaffId === user.id ? "default" : "outline"}
+                        onClick={() => handleStaffButtonClick(user.id)}
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        {user.username}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-muted">
+                        <th className="p-2 text-left">Invoice</th>
+                        <th className="p-2 text-left">Date</th>
+                        <th className="p-2 text-left">Order Type</th>
+                        <th className="p-2 text-left">Payment Method</th>
+                        <th className="p-2 text-left">Order Status</th>
+                        <th className="p-2 text-left">Total Amount</th>
+                        <th className="p-2 text-left">Cash Amount</th>
+                        <th className="p-2 text-left">Bank Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.isArray(paginatedStaffReports) && paginatedStaffReports.length > 0 ? (
+                        paginatedStaffReports.map((report, index) => (
+                          <tr key={index} className="border-b">
+                            <td className="p-2">{report.invoice_number}</td>
+                            <td className="p-2">{report.created_at ? format(new Date(report.created_at), "dd-MM-yyyy") : "N/A"}</td>
+                            <td className="p-2 capitalize">{report.order_type}</td>
+                            <td className="p-2 capitalize">{report.payment_method}</td>
+                            <td className="p-2 capitalize">{report.status}</td>
+                            <td className="p-2">{report.total_amount}</td>
+                            <td className="p-2">
+                              {report.cash_amount != null ? report.cash_amount : "N/A"}
+                            </td>
+                            <td className="p-2">
+                              {report.bank_amount != null ? report.bank_amount : "N/A"}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={10} className="p-2 text-center">No staff reports available</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
@@ -710,17 +864,25 @@ const ReportPage: React.FC = () => {
         </Card>
 
         <PaginationControls
-          currentPage={currentPage}
+          currentPage={reportType === "staff" ? currentStaffPage : currentPage}
           totalPages={Math.ceil(
-            (reportType === "sales"
+            (reportType === "staff"
+              ? staffReports.length
+              : reportType === "sales"
               ? reports.length
               : reportType === "mess"
-                ? messReports.length
-                : reportType === "product"
-                  ? productReports.length
-                  : onlineDeliveryReports.length) / itemsPerPage
+              ? messReports.length
+              : reportType === "product"
+              ? productReports.length
+              : onlineDeliveryReports.length) / itemsPerPage
           )}
-          onPageChange={setCurrentPage}
+          onPageChange={(page) => {
+            if (reportType === "staff") {
+              setCurrentStaffPage(page);
+            } else {
+              setCurrentPage(page);
+            }
+          }}
         />
 
         {isTransactionsModalOpen && currentMember && (
@@ -765,4 +927,4 @@ const ReportPage: React.FC = () => {
   );
 };
 
-export default ReportPage;
+export default ReportPage;  

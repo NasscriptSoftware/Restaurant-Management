@@ -4,6 +4,7 @@ import { parseISO, format, isValid, differenceInSeconds } from 'date-fns';
 
 interface ChairsProps {
   id: number;
+  order:number;
   chair_name: string;
   customer_name: string | null;
   customer_mob: string | null;
@@ -65,6 +66,7 @@ function useRemainingTime(start_time: string, end_time: string) {
 
 export default function Chairs({
   id,
+  order,
   chair_name,
   customer_name,
   customer_mob,
@@ -109,7 +111,7 @@ export default function Chairs({
             <span className="animate-blink">{remainingTime}</span>
           </div>
         )}
-        <h3 className="text-xl font-bold mb-2">{chair_name}</h3>
+        <h3 className="text-xl font-bold mb-2">{chair_name} {order?`OrderId : ${order}`:""}</h3>
         <div className="space-y-1">
           <p className="text-sm">
             <span className="font-medium">Customer:</span> {customer_name || 'N/A'}

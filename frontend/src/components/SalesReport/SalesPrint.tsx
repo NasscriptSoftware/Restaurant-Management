@@ -55,15 +55,30 @@ interface OnlineDeliveryReport {
   created_at: string;
 }
 
+interface StaffReport {
+  id: number;
+  invoice_number: string;
+  customer_phone_number: string;
+  created_at: string;
+  order_type: string;
+  payment_method: string;
+  status: string;
+  total_amount: number;
+  cash_amount: number;
+  bank_amount: number;
+  staff_name: string;
+}
+
 interface SalesPrintProps {
-  reportType: "sales" | "mess" | "product" | "onlineDelivery";
+  reportType: "sales" | "mess" | "product" | "onlineDelivery" | "staff";
   reports: SalesReport[];
   messReports: MessReport[];
   productReports?: ProductReport[];  // Add productReports as an optional prop
   totalAmount: number;
   totalCashAmount: number;
   totalCardAmount: number;
-  onlineDeliveryReports: OnlineDeliveryReport[];
+  onlineDeliveryReports: OnlineDeliveryReport[];  
+  staffReports:StaffReport[];
   // Other props...
 }
 
@@ -76,6 +91,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
   totalCashAmount,
   totalCardAmount,
   onlineDeliveryReports,
+  staffReports, // Ensure staffReports is included in the props
 }) => {
   const printContent = () => {
     const printWindow = window.open("", "_blank");
@@ -107,7 +123,64 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
         </style>
       </head>
       <body>
-        <h1>${reportType === "sales" ? "Sales Report" : reportType === "mess" ? "Mess Report" : reportType === "product" ? "Product Report" : "Online Delivery Report"}</h1>
+        <h1>${reportType === "sales" ? "Sales Report" : reportType === "mess" ? "Mess Report" : reportType === "product" ? "Product Report" : reportType === "staff" ? "Staff Report" : "No report"}</h1>
+        ${
+          reportType === "staff"
+            ? `
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Invoice No</th>
+                <th>Date</th>
+                <th>Order Type</th>
+                <th>Payment Type</th>
+                <th>Status</th>
+                <th>Total Amount</th>
+                <th>Cash</th>
+                <th>Bank</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${staffReports
+                .map(
+                  (report) => `
+                <tr>
+                  <td>${report.id}</td>
+                  <td>${report.invoice_number}</td>
+                  <td>${new Date(report.created_at).toLocaleDateString()}</td>
+                  <td>${report.order_type}</td>
+                  <td>${report.payment_method}</td>
+                  <td>${report.status}</td>
+                  <td>${report.total_amount}</td>
+                  <td>${report.cash_amount}</td>
+                  <td>${report.bank_amount}</td>
+                </tr>
+              `
+                )
+                .join("")}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="8"></td>
+                <td>Total Cash:</td>
+                <td>₹${totalCashAmount.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td colspan="8"></td>
+                <td>Total Card:</td>
+                <td>₹${totalCardAmount.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td colspan="8"></td>
+                <td>Grand Total:</td>
+                <td>₹${totalAmount.toFixed(2)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        `
+            : ""
+        }
         ${
           reportType === "sales"
             ? ` 

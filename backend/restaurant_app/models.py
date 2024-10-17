@@ -87,11 +87,12 @@ class Dish(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to="images/", default="default_dish_image.jpg")
-    price = models.DecimalField(max_digits=6, decimal_places=2)
+    price = models.DecimalField(
+        max_digits=6, decimal_places=2, null=True, blank=True, help_text="Base price if no variants are available"
+    )
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name="dishes"
     )
-
     class Meta:
         verbose_name = "Dish"
         verbose_name_plural = "Dishes"
@@ -100,8 +101,24 @@ class Dish(models.Model):
     def __str__(self):
         return self.name
 
+class DishSize(models.Model):
+    dish = models.ForeignKey(Dish, on_delete=models.CASCADE, related_name="size")
+    size = models.CharField(max_length=20)
+    price = models.DecimalField(max_digits=6, decimal_places=2)
+
+    class Meta:
+        verbose_name = "Dish Size"
+        verbose_name_plural = "Dish Sizes"
+
+    def __str__(self):
+        if self.size:
+            return f"Size: {self.size} - Price: {self.price}"
+        return f"Size Price: {self.price}"
 
 class DishVariant(models.Model):
+    """
+    Model representing Memo for dish
+    """
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE, related_name="variants")
     name = models.CharField(max_length=200)
 
@@ -134,6 +151,22 @@ class OnlineOrder(models.Model):
         verbose_name = "Online Order"
         verbose_name_plural = "Online Orders"
         ordering = ['name']
+
+class FOCProduct(models.Model):
+    """
+    FOCProduct (Free of Cost Product) model.
+
+    Fields:
+    -------
+    - name: Name of the free product.
+    - quantity: Quantity of the free product provided.
+    """
+    name = models.CharField(max_length=255)
+    quantity = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"{self.name} - {self.quantity}"
+
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -194,8 +227,12 @@ class Order(models.Model):
         decimal_places=2,
         default=0.00,
     )
+    chair_details = models.JSONField(default=list, blank=True)
+    foc_products = models.ManyToManyField(FOCProduct, blank=True)
+
     class Meta:
         ordering = ("-created_at",)
+
 
     def __str__(self):
         return f"{self.id} - {self.created_at} - {self.order_type}"
@@ -680,17 +717,4 @@ class Chairs(models.Model):
         return self.chair_name
 
 
-class FOCProduct(models.Model):
-    """
-    FOCProduct (Free of Cost Product) model.
 
-    Fields:
-    -------
-    - name: Name of the free product.
-    - quantity: Quantity of the free product provided.
-    """
-    name = models.CharField(max_length=255)
-    quantity = models.PositiveIntegerField()
-
-    def __str__(self):
-        return f"{self.name} - {self.quantity}"

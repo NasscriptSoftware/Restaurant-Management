@@ -209,3 +209,4 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
     </Transition>
   );
 }
+

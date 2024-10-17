@@ -7,6 +7,7 @@ import Chairs from "@/components/Chairs/Chairs";
 
 interface Chair {
   id: number;
+  order:number;
   chair_name: string;
   customer_name: string | null;
   customer_mob: string | null;
@@ -79,6 +80,7 @@ export default function ChairsPage() {
                   <Chairs
                     key={chair.id}
                     id={chair.id} 
+                    order={chair.order}
                     chair_name={chair.chair_name}
                     customer_name={chair.customer_name ?? ''}
                     customer_mob={chair.customer_mob ?? ''}
