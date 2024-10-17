@@ -323,7 +323,7 @@ UNFOLD = {
                     },
                 ],
             },
-                        {
+            {
                 "title": _("Chairs"),
                 "separator": True,
                 "collapsible": True,
@@ -332,6 +332,18 @@ UNFOLD = {
                         "title": _("Chairs"),
                         "icon": "chair",
                         "link": reverse_lazy("admin:restaurant_app_chairs_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("FOC Products"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("FOC Products Management"),
+                        "icon": "lunch_dining",
+                        "link": reverse_lazy("admin:restaurant_app_focproduct_changelist"),
                     },
                 ],
             },

@@ -921,3 +921,22 @@ class ChairsViewSet(viewsets.ModelViewSet):
     queryset = Chairs.objects.all()
     serializer_class = ChairsSerializer
     pagination_class = None
+
+
+class FOCProductViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for FOCProduct model.
+
+    Provides basic CRUD operations for managing free of cost products (FOCProduct).
+    
+    Actions:
+    --------
+    - list: Retrieve all free of cost products.
+    - create: Add a new free of cost product.
+    - retrieve: Get a specific free of cost product by its ID.
+    - update: Update an existing free of cost product.
+    - partial_update: Partially update an existing free of cost product.
+    - destroy: Delete a free of cost product.
+    """
+    queryset = FOCProduct.objects.all()
+    serializer_class = FOCProductSerializer

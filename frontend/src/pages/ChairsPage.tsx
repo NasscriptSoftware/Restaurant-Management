@@ -86,7 +86,7 @@ export default function ChairsPage() {
                     end_time={chair.end_time ?? ''}
                     amount={chair.amount ?? 0}
                     is_active={chair.is_active}
-                    onModalOpen={handleModalOpen}
+                    onModalOpen={handleModalOpen} 
                     onModalClose={handleModalClose}
                     onUpdate={handleUpdate}
                   />

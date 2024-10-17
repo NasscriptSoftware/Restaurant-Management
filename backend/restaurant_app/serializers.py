@@ -563,3 +563,18 @@ class ChairsSerializer(serializers.ModelSerializer):
             "is_active",
             "order"
         ]
+
+
+class FOCProductSerializer(serializers.ModelSerializer):
+    """
+    Serializer for FOCProduct model.
+    
+    Fields:
+    -------
+    - id: Auto-generated primary key.
+    - name: Name of the free product.
+    - quantity: Quantity of the free product provided.
+    """
+    class Meta:
+        model = FOCProduct
+        fields = ['id', 'name', 'quantity']

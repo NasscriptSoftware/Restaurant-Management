@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { api } from '@/services/api';
-import { parseISO, format, isValid } from 'date-fns';
+import { parseISO, format } from 'date-fns';
 
 interface ChairEditModalProps {
   isOpen: boolean;
@@ -22,36 +22,55 @@ interface ChairEditModalProps {
 
 export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: ChairEditModalProps) {
   const [formData, setFormData] = useState(chair);
+  const initialRender = useRef(true);
 
   useEffect(() => {
-    setFormData(chair);
-  }, [chair]);
-
-  const formatDateTimeForInput = (dateTimeString: string): string => {
-    if (!dateTimeString) return '';
-    const date = parseISO(dateTimeString);
-    return isValid(date) ? format(date, "p") : '';
-  };
+    if (initialRender.current) {
+      initialRender.current = false;
+    } else if (isOpen) {
+      setFormData(chair);
+    }
+  }, [isOpen, chair]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
+    let newValue: string | boolean | number | null = value;
+
+    if (type === 'checkbox') {
+      newValue = checked;
+    } else if (type === 'number') {
+      newValue = value === '' ? null : Number(value);
+    } else if (type === 'datetime-local') {
+      newValue = value === '' ? null : new Date(value).toISOString();
+    }
+
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : 
-               (name === 'start_time' || name === 'end_time') ? value : 
-               value
+      [name]: newValue
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.put(`/chairs/${chair.id}/`, formData);
+      const submissionData = {
+        ...formData,
+        start_time: formData.start_time || null,
+        end_time: formData.end_time || null,
+        amount: formData.amount
+      };
+      await api.put(`/chairs/${chair.id}/`, submissionData);
       onUpdate();
       onClose();
     } catch (error) {
       console.error('Error updating chair:', error);
     }
+  };
+
+  const formatDateTime = (dateTimeString: string | null) => {
+    if (!dateTimeString) return '';
+    const date = parseISO(dateTimeString);
+    return format(date, "yyyy-MM-dd'T'HH:mm");
   };
 
   return (
@@ -122,7 +141,7 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
                       type="datetime-local"
                       name="start_time"
                       id="start_time"
-                      value={formData.start_time ? format(parseISO(formData.start_time), "yyyy-MM-dd'T'HH:mm") : ''}
+                      value={formatDateTime(formData.start_time)}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     />
@@ -135,7 +154,7 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
                       type="datetime-local"
                       name="end_time"
                       id="end_time"
-                      value={formData.end_time ? format(parseISO(formData.end_time), "yyyy-MM-dd'T'HH:mm") : ''}
+                      value={formatDateTime(formData.end_time)}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     />
@@ -148,7 +167,7 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
                       type="number"
                       name="amount"
                       id="amount"
-                      value={formData.amount || ''}
+                      value={formData.amount === null ? '' : formData.amount}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     />

@@ -16,39 +16,10 @@ interface ChairsProps {
   onUpdate: () => void;
 }
 
-export default function Chairs({
-  id,
-  chair_name,
-  customer_name,
-  customer_mob,
-  start_time,
-  end_time,
-  amount,
-  is_active,
-  onModalOpen,
-  onModalClose,
-  onUpdate,
-}: ChairsProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+// Custom hook for timer logic
+function useRemainingTime(start_time: string, end_time: string) {
   const [remainingTime, setRemainingTime] = useState<string>('');
   const [clockEmoji, setClockEmoji] = useState<string>('🕛');
-
-  const handleEditClick = () => {
-    setIsModalOpen(true);
-    onModalOpen();
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    onModalClose();
-  };
-
-  const formatTime = (timeString: string): string => {
-    if (!timeString) return 'N/A';
-    const date = parseISO(timeString);
-    return isValid(date) ? format(date, 'p') : 'N/A';
-  };
 
   useEffect(() => {
     const updateRemainingTime = () => {
@@ -88,6 +59,42 @@ export default function Chairs({
 
     return () => clearInterval(timer);
   }, [start_time, end_time]);
+
+  return { remainingTime, clockEmoji };
+}
+
+export default function Chairs({
+  id,
+  chair_name,
+  customer_name,
+  customer_mob,
+  start_time,
+  end_time,
+  amount,
+  is_active,
+  onModalOpen,
+  onModalClose,
+  onUpdate,
+}: ChairsProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const { remainingTime, clockEmoji } = useRemainingTime(start_time, end_time);
+
+  const handleEditClick = () => {
+    setIsModalOpen(true);
+    onModalOpen();
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    onModalClose();
+  };
+
+  const formatTime = (timeString: string): string => {
+    if (!timeString) return 'N/A';
+    const date = parseISO(timeString);
+    return isValid(date) ? format(date, 'p') : 'N/A';
+  };
 
   return (
     <>

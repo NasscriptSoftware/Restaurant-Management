@@ -673,3 +673,19 @@ class Chairs(models.Model):
 
     def __str__(self):
         return self.chair_name
+
+
+class FOCProduct(models.Model):
+    """
+    FOCProduct (Free of Cost Product) model.
+
+    Fields:
+    -------
+    - name: Name of the free product.
+    - quantity: Quantity of the free product provided.
+    """
+    name = models.CharField(max_length=255)
+    quantity = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"{self.name} - {self.quantity}"
