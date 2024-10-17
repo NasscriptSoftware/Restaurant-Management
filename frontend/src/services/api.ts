@@ -266,6 +266,10 @@ export const fetchOnlineOrders = async () => {
   const response = await api.get(`/online-orders/`);
   return response.data;
 };
+export const fetchFocProducts  = async () => {
+  const response = await api.get(`/focproducts/`);
+  return response.data;
+};
 
 export const fetchChairs = async (): Promise<Chair[]> => {
   try {

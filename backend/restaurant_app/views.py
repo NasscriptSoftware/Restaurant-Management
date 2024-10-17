@@ -954,7 +954,6 @@ class CreditTransactionViewSet(viewsets.ModelViewSet):
             return Response({"error": "No transactions found for the given credit_user"}, status=status.HTTP_404_NOT_FOUND)
 
 
-from rest_framework import viewsets
 from .models import Chairs
 from .serializers import ChairsSerializer
 
@@ -1000,3 +999,4 @@ class FOCProductViewSet(viewsets.ModelViewSet):
     """
     queryset = FOCProduct.objects.all()
     serializer_class = FOCProductSerializer
+    pagination_class = None

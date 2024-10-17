@@ -146,6 +146,8 @@ class OrderSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     delivery_order_status = serializers.CharField(source="delivery_order.status", read_only=True)
     delivery_driver = DriverSerializer(source='delivery_order.driver', read_only=True)
+    foc_products = serializers.PrimaryKeyRelatedField(many=True, queryset=FOCProduct.objects.all(), required=False)
+    foc_product_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -175,10 +177,22 @@ class OrderSerializer(serializers.ModelSerializer):
             "chair_amount",
             "chair_details",
             "foc_products",
+            "foc_product_details"
+        ]
+
+    def get_foc_product_details(self, obj):
+        return [
+            {
+                'name': foc_product.name,
+                'quantity': foc_product.quantity
+            }
+            for foc_product in obj.foc_products.all()
+            if foc_product.name is not None
         ]
 
     def create(self, validated_data):
         items_data = validated_data.pop("items")
+        foc_products_data = validated_data.pop("foc_products", [])
         user = self.context["request"].user
         order = Order.objects.create(user=user, **validated_data)
         total_amount = 0
@@ -192,12 +206,13 @@ class OrderSerializer(serializers.ModelSerializer):
             total_amount += order.delivery_charge
 
         order.total_amount = total_amount
+        order.foc_products.set(foc_products_data)
         order.save()
         return order
 
     def update(self, instance, validated_data):
-        
         items_data = validated_data.pop("items", None)
+        foc_products_data = validated_data.pop("foc_products", None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         # Start by resetting the total amount to 0
@@ -220,6 +235,11 @@ class OrderSerializer(serializers.ModelSerializer):
 
         # Update the total amount
         instance.total_amount = total_amount
+
+        # Update FOC products if provided
+        if foc_products_data is not None:
+            instance.foc_products.set(foc_products_data)
+
         instance.save()
         return instance
     
@@ -586,6 +606,7 @@ class FOCProductSerializer(serializers.ModelSerializer):
     - name: Name of the free product.
     - quantity: Quantity of the free product provided.
     """
+
     class Meta:
         model = FOCProduct
         fields = ['id', 'name', 'quantity']

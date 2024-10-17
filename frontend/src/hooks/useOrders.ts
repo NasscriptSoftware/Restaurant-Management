@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { getOrders, createOrder, fetchOrders } from '../services/api';
-import { UseOrdersReturn, OrderFormData, Order } from '../types';
+import { UseOrdersReturn, OrderFormData, Order } from '../types/index';
 import { api } from "../services/api";
 
 

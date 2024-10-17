@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "react-query";
-import { Check, ChevronsUpDown, CircleCheck, Search } from "lucide-react";
+import { Check, ChevronsUpDown, CircleCheck, Search, Image, ImageOff } from "lucide-react";
 import { motion } from "framer-motion";
 import Layout from "../components/Layout/Layout";
 import DishList from "../components/Dishes/DishList";
@@ -103,6 +103,12 @@ const DishesPage: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [showImage, setShowImage] = useState(() => {
+    // Retrieve the value from localStorage on initial render
+    const savedShowImage = localStorage.getItem('showImage');
+    return savedShowImage !== null ? JSON.parse(savedShowImage) : true;
+  });
+
   const handleValueChange = (value: OrderType) => {
     setOrderType(value);
     if (value === "onlinedelivery") {
@@ -139,6 +145,11 @@ const DishesPage: React.FC = () => {
     localStorage.setItem("orderItems", JSON.stringify(orderItems));
   }, [orderItems]);
 
+  useEffect(() => {
+    // Save showImage to localStorage whenever it changes
+    localStorage.setItem('showImage', JSON.stringify(showImage));
+  }, [showImage]);
+
   const handleAddDish = (dish: Dish) => {
     dispatch(addItem({ ...dish, quantity: 1, variants: [] }));
     setIsOrderVisible(true);
@@ -168,9 +179,9 @@ const DishesPage: React.FC = () => {
           return;
         }
       }
-
       const orderData: OrderFormData = {
         items: orderItems.map((item) => ({
+          id: item.id,
           dish: item.id,
           quantity: item.quantity || 0,
           variants: item.variants.map((variant) => ({
@@ -283,9 +294,31 @@ const DishesPage: React.FC = () => {
                 placeholder="Search products..."
                 className="w-full sm:w-64 mr-2"
               />
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" className="mr-2">
                 <Search className="h-4 w-4" />
               </Button>
+              <motion.div 
+                className="relative w-28 h-8 bg-[#6f42c1] rounded-full p-1 cursor-pointer"
+                onClick={() => setShowImage(!showImage)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.div 
+                  className="absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] bg-white rounded-full shadow-lg flex items-center justify-center"
+                  animate={{ left: showImage ? '2px' : 'calc(50% + 0px)' }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                >
+                  {showImage ? (
+                    <Image size={12} className="text-[#6f42c1]" />
+                  ) : (
+                    <ImageOff size={12} className="text-[#6f42c1]" />
+                  )}
+                </motion.div>
+                <div className="h-full flex items-center justify-around text-white text-[10px] font-bold">
+                  <span className={showImage ? 'invisible' : ''}></span>
+                  <span className={!showImage ? 'invisible' : ''}></span>
+                </div>
+              </motion.div>
             </div>
           </div>
           <div className="flex flex-wrap gap-2 mb-8">
@@ -307,7 +340,7 @@ const DishesPage: React.FC = () => {
               </Button>
             ))}
           </div>
-          <DishList dishes={filteredDishes} onAddDish={handleAddDish} />
+          <DishList dishes={filteredDishes} onAddDish={handleAddDish} showImage={showImage} />
           {orderItems.length > 0 &&
             !isMemoModalOpen &&
             !isKitchenNoteModalOpen && (

@@ -1,217 +1,193 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { api } from "@/services/api";
+import { fetchFocProducts, api } from "@/services/api";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, X, Plus, Minus } from "lucide-react";
+import { Option, Order } from "@/types/index";
 
-// Define the Option type
-interface Option {
-  id: string | number;
-  name: string;
-  price: number;
-}
-
-// Define the props for the AddOptionsModal component
 interface AddOptionsModalProps {
   onClose: () => void;
-  onSubmit: (options: { option: Option; quantity: number }[]) => void;
+  onSubmit: (updatedOrder: Order) => void;
+  orderId: number;
 }
 
 const AddOptionsModal: React.FC<AddOptionsModalProps> = ({
   onClose,
   onSubmit,
+  orderId,
 }) => {
-  const [optionSearch, setOptionSearch] = useState<string>("");
-  const [suggestions, setSuggestions] = useState<Option[]>([]);
-  const [addedOptions, setAddedOptions] = useState<
-    { option: Option; quantity: number }[]
-  >([]);
-  const [totalAmount, setTotalAmount] = useState<number>(0);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [addedOptions, setAddedOptions] = useState<Option[]>([]);
+  const [allFocProducts, setAllFocProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (optionSearch.length > 1) {
-        try {
-          const response = await api.get(
-            `search-options/?search=${optionSearch}`
-          );
-          if (response && response.data && response.data.results) {
-            setSuggestions(response.data.results);
-          } else {
-            setSuggestions([]);
-          }
-        } catch (error) {
-          console.error("Error fetching option suggestions:", error);
-          setSuggestions([]);
+    const fetchAllFocProducts = async () => {
+      try {
+        const response = await fetchFocProducts();
+        if (response) {
+          setAllFocProducts(response);
         }
-      } else {
-        setSuggestions([]);
+      } catch (error) {
+        console.error("Error fetching FOC products:", error);
       }
     };
 
-    fetchSuggestions();
-  }, [optionSearch]);
+    fetchAllFocProducts();
+  }, []);
+
+  const filteredFocProducts = allFocProducts.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleAddOption = (option: Option) => {
     setAddedOptions((prevOptions) => {
-      const existingOption = prevOptions.find(
-        (item) => item.option.id === option.id
-      );
-
+      const existingOption = prevOptions.find((item) => item.id === option.id);
       if (existingOption) {
-        return prevOptions.map((item) =>
-          item.option.id === option.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+        return prevOptions;
       } else {
-        return [...prevOptions, { option, quantity: 1 }];
+        return [...prevOptions, option];
       }
     });
 
-    setOptionSearch("");
-    setSuggestions([]);
-    inputRef.current?.focus();
+    setSearchTerm("");
   };
 
-  const handleQuantityChange = (index: number, quantity: number) => {
-    setAddedOptions((prevOptions) => {
-      const updatedOptions = [...prevOptions];
-      updatedOptions[index].quantity = Math.max(quantity, 1);
-      return updatedOptions;
-    });
+  const handleRemoveOption = (id: number) => {
+    setAddedOptions((prevOptions) => prevOptions.filter((item) => item.id !== id));
   };
 
-  const handleRemoveOption = (index: number) => {
-    setAddedOptions((prevOptions) => prevOptions.filter((_, i) => i !== index));
-  };
+  const handleFinalSubmit = async () => {
+    try {
+      if (orderId === undefined) {
+        throw new Error('Order ID is undefined');
+      }
 
-  const calculateTotal = () => {
-    const totalValue = addedOptions.reduce(
-      (sum, item) => sum + item.quantity * item.option.price,
-      0
-    );
-    setTotalAmount(totalValue);
-  };
+      const focProductIds = addedOptions.map(option => option.id);
+      const payload = { foc_products: focProductIds };
+      console.log('Sending payload:', payload);
 
-  useEffect(() => {
-    calculateTotal();
-  }, [addedOptions]);
+      const response = await api.patch(`/orders/${orderId}/`, payload);
 
-  const handleFinalSubmit = () => {
-    onSubmit(addedOptions);
-    onClose();
+      if (response.status !== 200) {
+        throw new Error(`Failed to update order: ${response.statusText}`);
+      }
+
+      const updatedOrder = response.data;
+      console.log('Updated order:', updatedOrder);
+
+      onSubmit(updatedOrder); // Call onSubmit with the updated order
+      onClose();
+    } catch (error) {
+      console.error('Error updating order with FOC products:', error);
+      // Add user-facing error handling here, e.g., show an error message
+    }
   };
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Add FOC to Order</DialogTitle>
-          <DialogDescription>
-            Search and add options to your order.
-          </DialogDescription>
+          <DialogTitle className="text-2xl font-bold">Add FOC to Order</DialogTitle>
+          <p>{orderId}</p>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
+        <div className="flex-grow overflow-hidden flex flex-col">
+          <div className="mb-4 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <Input
-              id="option-search"
-              value={optionSearch}
-              ref={inputRef}
-              onChange={(e) => setOptionSearch(e.target.value)}
-              placeholder="Search option..."
-              className="col-span-3 w-[100%]"
+              placeholder="Search FOC products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-10"
             />
+            {searchTerm && (
+              <Button
+                onClick={() => setSearchTerm("")}
+                variant="ghost"
+                size="sm"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
-          {suggestions.length > 0 && (
-            <ul className="border rounded mb-4 max-h-40 overflow-y-auto col-span-3 col-start-2">
-              {suggestions.map((option) => (
-                <li
-                  key={option.id}
-                  onClick={() => handleAddOption(option)}
-                  className="p-2 cursor-pointer hover:bg-gray-100"
-                >
-                  {option.name} - QAR {option.price}
-                </li>
-              ))}
-            </ul>
-          )}
-          {addedOptions.length > 0 && (
-            <div className="col-span-4">
-              <h4 className="text-sm font-medium mb-2">Added Options:</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Option</th>
-                      <th className="text-left p-2">Qty</th>
-                      <th className="text-left p-2">Price</th>
-                      <th className="text-left p-2">Total</th>
-                      <th className="text-left p-2">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {addedOptions.map((item, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="p-2">{item.option.name}</td>
-                        <td className="p-2">
-                          <Input
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) =>
-                              handleQuantityChange(
-                                index,
-                                parseInt(e.target.value)
-                              )
-                            }
-                            className="w-16 text-center"
-                            min="1"
-                          />
-                        </td>
-                        <td className="p-2">QAR {item.option.price}</td>
-                        <td className="p-2">
-                          QAR {(item.quantity * item.option.price).toFixed(2)}
-                        </td>
-                        <td className="p-2">
-                          <Button
-                            onClick={() => handleRemoveOption(index)}
-                            variant="destructive"
-                            size="sm"
-                          >
-                            Remove
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <div className="flex-grow overflow-hidden flex gap-4">
+            <div className="flex-1 overflow-y-auto pr-2">
+              <h4 className="text-lg font-semibold mb-2">Available FOC Products</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <AnimatePresence>
+                  {filteredFocProducts.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.2 }}
+                      className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                    >
+                      <h3 className="font-semibold text-lg mb-2">{item.name}</h3>
+                      <p className="text-sm text-gray-600 mb-4">Quantity: {item.quantity}</p>
+                      <Button
+                        onClick={() => handleAddOption(item)}
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> Add to Order
+                      </Button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             </div>
-          )}
-        </div>
-        <DialogFooter>
-          <div className="flex justify-between items-center w-full">
-            <span className="text-lg font-semibold">
-              Total: QAR {totalAmount.toFixed(2)}
-            </span>
-            <div className="flex space-x-2">
-              <Button onClick={onClose} variant="outline">
-                Cancel
-              </Button>
-              <Button onClick={handleFinalSubmit} variant="default">
-                Add to Order
-              </Button>
+            <div className="w-px bg-gray-200" />
+            <div className="flex-1 overflow-y-auto pl-2">
+              <h4 className="text-lg font-semibold mb-2">Added Options</h4>
+              <AnimatePresence>
+                {addedOptions.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="bg-gray-50 p-4 rounded-lg shadow-sm mb-4"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-semibold">{item.name}</h3>
+                        <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                      </div>
+                      <Button
+                        onClick={() => handleRemoveOption(item.id)}
+                        variant="destructive"
+                        size="sm"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={onClose} variant="outline">
+            Cancel
+          </Button>
+          <Button onClick={handleFinalSubmit} variant="default">
+            Add to Order
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

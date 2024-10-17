@@ -165,6 +165,15 @@ const OrdersPage: React.FC = () => {
     }
   };
 
+  const handleOrderUpdated = (updatedOrder: Order) => {
+    setFilteredOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order.id === updatedOrder.id ? updatedOrder : order
+      )
+    );
+    refetchOrders();
+  };
+
   const handlePrintSalesBills = async () => {
     try {
       // First, update the status of each selected order to "delivered"
@@ -405,6 +414,7 @@ const OrdersPage: React.FC = () => {
               onStatusUpdated={refetchOrders}
               logoInfo={logoInfo}
               chairs={chairs}
+              onOrderUpdated={handleOrderUpdated}
             />
           ))}
           <PaginationControls

@@ -22,9 +22,6 @@ export interface OrderItem {
 }
 
 export interface Order {
-  kitchen_note: ReactNode;
-  kitchen_note: string;
-  detail: Order;
   id: number;
   created_at: string;
   total_amount: number;
@@ -51,6 +48,7 @@ export interface Order {
   customer_name: number;
   address: string;
   detail: string;
+  foc_product_details: FOCProduct[];
 }
 
 export interface Bill {
@@ -358,10 +356,32 @@ export type Chair = {
   is_active: boolean;
 };
 
- export type Option = {
+export type Option = {
   id: number;
   name: string;
   price: number;
   is_active: boolean;
-  } 
+  quantity: number;
+};
 
+export interface DishListProps {
+  dishes: Dish[];
+  onAddDish: (dish: Dish) => void;
+  showImage: boolean;
+}
+// Add this to your existing types or create a new file if it doesn't exist
+export interface SettingsState {
+  showImage: boolean;
+}
+
+// You can also include other types here
+export interface RootState {
+  auth: any; // Replace 'any' with the actual type of your auth state
+  order: any; // Replace 'any' with the actual type of your order state
+  settings: SettingsState;
+}
+
+export interface FOCProduct {
+  name: string;
+  quantity: number;
+}
