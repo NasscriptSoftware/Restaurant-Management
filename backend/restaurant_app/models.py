@@ -211,6 +211,11 @@ class Order(models.Model):
 
     def is_delivery_order(self):
         return self.order_type == "delivery"
+    
+    def recalculate_total(self):
+        total_amount = sum(item.quantity * item.dish.price for item in self.items.all())
+        self.total_amount = total_amount
+        self.save(update_fields=["total_amount"])
 
 
 class OrderItem(models.Model):

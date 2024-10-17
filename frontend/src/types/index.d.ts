@@ -18,6 +18,7 @@ export interface OrderItem {
   dish: number;
   quantity: number;
   variants?: { variantId: number; name: string; quantity: number }[];
+  id: number;
 }
 
 export interface Order {
@@ -356,3 +357,11 @@ export type Chair = {
   amount: string;
   is_active: boolean;
 };
+
+ export type Option = {
+  id: number;
+  name: string;
+  price: number;
+  is_active: boolean;
+  } 
+

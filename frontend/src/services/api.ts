@@ -271,10 +271,10 @@ export const fetchChairs = async (): Promise<Chair[]> => {
   try {
     const response = await api.get<Chair[]>('/chairs/');
     return response.data;
-     console.log(" responce.daF");
      
   } catch (error) {
     console.error("Error fetching chairs:", error);
     throw error;
   }
 };
+ 

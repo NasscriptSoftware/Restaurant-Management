@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Dish } from "../../types";
+import { Dish } from "../../types/index";
 import { api } from "../../services/api";
 
 interface AddProductModalProps {

@@ -7,10 +7,11 @@ import {
   api,
   fetchActiveCreditUsers,
   updateOrderStatusNew,
+  fetchChairs,
 } from "@/services/api";
 import KitchenPrint from "../components/Orders/KitchenPrint";
 import SalesPrint from "../components/Orders/SalesPrint";
-import { CreditUser } from "@/types/index";
+import { Chair, CreditUser, Order } from "@/types/index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ const PaginationControls = lazy(
 const OrdersPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [creditUsers, setCreditUsers] = useState<CreditUser[]>([]);
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -37,6 +38,20 @@ const OrdersPage: React.FC = () => {
     phoneNumber: string;
     location: string;
   } | null>(null);
+  const [chairs, setChairs] = useState<Chair[]>([]);
+
+  useEffect(() => {
+    const loadChairs = async () => {
+      try {
+        const fetchedChairs = await fetchChairs();
+        setChairs(fetchedChairs);
+      } catch (error) {
+        console.error("Failed to load chairs:", error);
+      }
+    };
+
+    loadChairs();
+  }, []);
 
   useEffect(() => {
     loadCreditCardUsers();
@@ -389,6 +404,7 @@ const OrdersPage: React.FC = () => {
               onOrderSelection={setSelectedOrders}
               onStatusUpdated={refetchOrders}
               logoInfo={logoInfo}
+              chairs={chairs}
             />
           ))}
           <PaginationControls
