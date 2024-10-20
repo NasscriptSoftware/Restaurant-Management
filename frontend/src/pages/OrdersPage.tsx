@@ -98,6 +98,7 @@ const OrdersPage: React.FC = () => {
     isError: ordersError,
     refetch: refetchOrders,
   } = usePaginatedOrders(currentPage);
+console.log("orders", orders);
 
   const {
     dishes,
@@ -415,6 +416,7 @@ const OrdersPage: React.FC = () => {
               logoInfo={logoInfo}
               chairs={chairs}
               onOrderUpdated={handleOrderUpdated}
+              
             />
           ))}
           <PaginationControls

@@ -14,7 +14,12 @@ import KitchenPrint from "./KitchenPrint";
 import SalesPrint from "./SalesPrint";
 import AddProductModal from "./AddProductModal";
 import PrintConfirmationModal from "./PrintConfirmationModal";
-import { api, fetchChairs, updateOrderStatusNew } from "../../services/api";
+import {
+  api,
+  fetchChairs,
+  fetchOnlineOrderData,
+  updateOrderStatusNew,
+} from "../../services/api";
 import ReactSelect from "react-select";
 import {
   HoverCard,
@@ -27,10 +32,12 @@ import {
   HandPlatter,
   Mail,
   Phone,
-  Plus,
   PlusCircle,
   ShoppingBag,
   Gift,
+  Armchair,
+  Banknote,
+  Coffee,
 } from "lucide-react";
 import { CreditUserModal } from "../modals/CreditUserModal";
 import { Button } from "../ui/button"; // Assuming you have a Button component
@@ -51,9 +58,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import AddOptionsModal from "./AddOptionsModal";
 
-// import { string } from "yup";
-// import { object } from "yup";
-
 interface OrderCardProps {
   order: Order;
   dishes: Dish[];
@@ -71,12 +75,17 @@ interface OrderCardProps {
   } | null;
   chairs: Chair[];
 }
-
+interface OnlineOrderData {
+  id: number;
+  order_id: number;
+  order_type: string;
+  // Add other fields as needed
+}
 type OrderType = "dining" | "takeaway" | "delivery" | string;
 
 type PaymentType = "cash" | "bank" | "cash-bank" | "credit" | string;
 
-const  OrderCard: React.FC<OrderCardProps> = ({
+const OrderCard: React.FC<OrderCardProps> = ({
   order: initialOrder,
   dishes,
   creditUsers,
@@ -89,25 +98,28 @@ const  OrderCard: React.FC<OrderCardProps> = ({
   onOrderUpdated,
 }) => {
   const [status, setStatus] = useState<string>(initialOrder.status);
-  const [showModal, setShowModal] = useState(false);
-  const [showAddProductModal, setShowAddProductModal] = useState(false);
-  const [showAddOptionsModal, setShowAddOptionsModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [showAddProductModal, setShowAddProductModal] =
+    useState<boolean>(false);
+  const [showAddOptionsModal, setShowAddOptionsModal] =
+    useState<boolean>(false);
+  const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
   const [showPrintConfirmationModal, setShowPrintConfirmationModal] =
-    useState(false);
+    useState<boolean>(false);
   const [billType, setBillType] = useState<"kitchen" | "sales">("kitchen");
   const [paymentMethod, setPaymentMethod] = useState<PaymentType>("cash");
-  const [cashAmount, setCashAmount] = useState(0);
-  const [bankAmount, setBankAmount] = useState(0);
+  const [cashAmount, setCashAmount] = useState<number>(0);
+  const [bankAmount, setBankAmount] = useState<number>(0);
   const [order, setOrder] = useState<Order>(initialOrder);
 
   const kitchenPrintRef = useRef<HTMLDivElement>(null);
   const salesPrintRef = useRef<HTMLDivElement>(null);
   const [selectedCreditUser, setSelectedCreditUser] =
     useState<CreditUser | null>(null);
-  const [isCreditUserModalOpen, setIsCreditUserModalOpen] = useState(false);
+  const [isCreditUserModalOpen, setIsCreditUserModalOpen] =
+    useState<boolean>(false);
 
-  const [showOrderTypeModal, setShowOrderTypeModal] = useState(false);
+  const [showOrderTypeModal, setShowOrderTypeModal] = useState<boolean>(false);
   const [newOrderType, setNewOrderType] = useState<OrderType>(order.order_type);
   const [customerName, setCustomerName] = useState<string>("");
   const [deliveryAddress, setDeliveryAddress] = useState<string>("");
@@ -131,6 +143,19 @@ const  OrderCard: React.FC<OrderCardProps> = ({
     "deliveryDrivers",
     fetchDeliveryDrivers
   );
+
+  const [onlineOrderData, setOnlineOrderData] =
+    useState<OnlineOrderData | null>(null);
+
+  useEffect(() => {
+    if (order.order_type === "onlinedelivery" && order.online_order) {
+      fetchOnlineOrderData(order.online_order)
+        .then((data) => setOnlineOrderData(data))
+        .catch((error) =>
+          console.error("Error fetching online order data:", error)
+        );
+    }
+  }, [order.order_type, order.online_order]);
 
   // Separate print handlers
   const handlePrintKitchenBill = useReactToPrint({
@@ -224,7 +249,7 @@ const  OrderCard: React.FC<OrderCardProps> = ({
     setOrder((prevOrder) => ({
       ...prevOrder,
       total_amount: Number(
-        (prevOrder.total_amount - deletedItemAmount).toFixed(2)
+        (Number(prevOrder.total_amount) - deletedItemAmount).toFixed(2)
       ),
     }));
     onStatusUpdated();
@@ -234,9 +259,9 @@ const  OrderCard: React.FC<OrderCardProps> = ({
     products: { dish: Dish; quantity: number }[]
   ) => {
     try {
-      const newTotalAmount = products.reduce(
+      const newTotalAmount = products.reduce<number>(
         (sum, product) => sum + product.quantity * product.dish.price,
-        order.total_amount
+        Number(order.total_amount)
       );
 
       const response = await api.put(`/orders/${order.id}/`, {
@@ -275,24 +300,28 @@ const  OrderCard: React.FC<OrderCardProps> = ({
 
   const handlePaymentMethodChange = (method: PaymentType) => {
     setPaymentMethod(method);
+    const totalAmount = parseFloat(order.total_amount.toString());
+
     if (method === "cash-bank") {
-      setCashAmount(order.total_amount / 2);
-      setBankAmount(order.total_amount / 2);
+      setCashAmount(totalAmount / 2);
+      setBankAmount(totalAmount / 2);
     } else {
-      setCashAmount(order.total_amount);
+      setCashAmount(totalAmount);
       setBankAmount(0);
     }
   };
 
   const handleCashAmountChange = (amount: number) => {
+    const totalAmount = parseFloat(order.total_amount.toString());
+
     if (amount < 0) {
       amount = 0;
     }
-    if (amount > order.total_amount) {
-      amount = order.total_amount;
+    if (amount > totalAmount) {
+      amount = totalAmount;
     }
     setCashAmount(amount);
-    setBankAmount(order.total_amount - amount);
+    setBankAmount(totalAmount - amount);
   };
 
   const handlePaymentSubmit = async () => {
@@ -452,20 +481,77 @@ const  OrderCard: React.FC<OrderCardProps> = ({
         return;
       }
 
-      await api.put(`/chairs/${chairId}/`, {
+      // Calculate total time
+      const startTime = new Date(chairData.start_time);
+      const endTime = new Date(chairData.end_time);
+
+      // Calculate the difference in milliseconds
+      const timeDiff = endTime.getTime() - startTime.getTime();
+
+      // Convert to hours and minutes
+      const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+      // Format the time difference
+      const totalTime = `${hours.toString().padStart(2, "0")}:${minutes
+        .toString()
+        .padStart(2, "0")}`;
+
+      // Calculate chair amount (assuming the amount is per hour)
+      const totalHours = hours + minutes / 60;
+      const chairAmount = totalHours * parseFloat(chairData.amount);
+
+      // Create chair details object
+      const chairDetails = {
+        chair_id: chairId,
+        chair_name: chairData.chair_name,
+        customer_name: chairData.customer_name,
+        customer_mob: chairData.customer_mob,
+        start_time: chairData.start_time,
+        end_time: chairData.end_time,
+        amount: chairAmount.toFixed(2),
+        total_time: totalTime,
+      };
+
+      // Update chair data
+      const updatedChairData = {
         ...chairData,
         order: order.id,
         is_active: false,
-      });
+        amount: chairAmount.toFixed(2),
+        total_time: totalTime,
+      };
 
+      await api.patch(`/chairs/${chairId}/`, updatedChairData);
+
+      // Update order with new chair details and amount
+      const updatedOrder: Order = {
+        ...order,
+        chair_amount: (
+          parseFloat(order.chair_amount || "0") + chairAmount
+        ).toFixed(2),
+        total_amount: (
+          parseFloat(order.total_amount.toString()) + chairAmount
+        ).toFixed(2),
+        chair_details: [...(order.chair_details || []), chairDetails],
+      };
+
+      // Update the order in the backend with chair details
+      await api.patch(`/orders/${order.id}/`, {
+        chair_amount: updatedOrder.chair_amount,
+        total_amount: updatedOrder.total_amount,
+        chair_details: updatedOrder.chair_details,
+      });
+      console.log("totAmount", updatedOrder.total_amount);
+
+      setOrder(updatedOrder);
       setIsChairModalOpen(false);
       onStatusUpdated();
-      console.log("Chair updated successfully");
+      console.log("Chair and order updated successfully");
     } catch (error) {
-      console.error("Failed to update chair:", error);
+      console.error("Failed to update chair and order:", error);
     }
   };
-
   return (
     <div
       key={order.id}
@@ -488,10 +574,10 @@ const  OrderCard: React.FC<OrderCardProps> = ({
           <div>
             <button
               onClick={() => setShowAddOptionsModal(true)}
-              className="text-gray-700 hover:text-blue-500 focus:outline-none"
+              className="text-gray-700 hover:text-red-500 focus:outline-none"
               title="Add Options"
             >
-              <Plus size={24} />
+              <Coffee size={26} />
             </button>
           </div>
           {/* Print Icon for Kitchen Bill */}
@@ -562,7 +648,7 @@ const  OrderCard: React.FC<OrderCardProps> = ({
     ${
       status === "delivered" || status === "cancelled"
         ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-        : "bg-blue-500 text-white hover:bg-blue-600"
+        : "bg-[#6f42c1] text-white hover:bg-[#6f42c1]"
     }`}
             disabled={status === "delivered" || status === "cancelled"}
           >
@@ -606,140 +692,211 @@ const  OrderCard: React.FC<OrderCardProps> = ({
           <p>No items found for this order.</p>
         )}
 
-        <div className="mt-4">
+        <div className="mt-6">
           {order.foc_product_details &&
             order.foc_product_details.length > 0 && (
-              <div className="bg-green-50 border border-green-200 rounded-md p-3">
-                <h4 className="text-sm font-semibold text-green-700 flex items-center mb-2">
-                  <Gift size={16} className="mr-2" />
-                  Free of Charge Products
+              <div className="bg-blue-50 rounded-2xl p-6 shadow-lg border border-blue-200 transition-all duration-300 hover:shadow-xl">
+                <h4 className="text-2xl font-bold text-blue-800 flex items-center mb-4">
+                  <Gift size={28} className="mr-3 text-blue-500" />
+                  <span>Complimentary Items</span>
                 </h4>
-                <ul className="space-y-1">
+                <div className="space-y-3">
                   {order.foc_product_details.map(
                     (product: FOCProduct, index: number) => (
-                      <li
+                      <div
                         key={index}
-                        className="text-sm text-green-600 flex justify-between"
+                        className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm hover:bg-blue-100 transition-all duration-200"
                       >
-                        <span>{product.name}</span>
-                        <span className="font-medium">{product.quantity}</span>
-                      </li>
+                        <span className="text-blue-700 font-medium">
+                          {product.name}
+                        </span>
+                        <span className="bg-blue-200 text-blue-800 px-4 py-1 rounded-full text-sm font-semibold">
+                          x{product.quantity}
+                        </span>
+                      </div>
                     )
                   )}
-                </ul>
+                </div>
+                <div className="mt-5 text-center">
+                  <p className="text-sm text-blue-600 font-medium">
+                    These special items are complimentary. Enjoy!
+                  </p>
+                </div>
               </div>
             )}
         </div>
       </div>
       <div className="mt-4 flex justify-between items-center">
-        {order?.order_type === "delivery" && (
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <Button variant="link">
-                <BadgeInfo size={16} className="mr-1" />
-                <span>Delivery Status</span>
-              </Button>
-            </HoverCardTrigger>
-            <HoverCardContent className="w-48 p-4">
-              <div className="space-y-2">
-                {/* Delivery Status */}
-                <div className="flex items-center space-x-2">
-                  {order?.delivery_order_status === "pending" ? (
-                    <span className="h-2 w-2 rounded-full bg-yellow-500" />
-                  ) : order?.delivery_order_status === "delivered" ? (
-                    <span className="h-2 w-2 rounded-full bg-green-500" />
-                  ) : order?.delivery_order_status === "accepted" ||
-                    order?.delivery_order_status === "in_progress" ? (
-                    <span className="h-2 w-2 rounded-full bg-indigo-500" />
-                  ) : (
-                    <span className="h-2 w-2 rounded-full bg-red-500" />
-                  )}
-                  <span className="text-sm font-semibold capitalize">
-                    {order?.delivery_order_status?.replace("_", " ")}
-                  </span>
-                </div>
+        <div className="flex items-center space-x-2">
+          {order?.order_type === "delivery" && (
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105"
+                >
+                  <BadgeInfo size={18} className="mr-1 animate-bounce" />
+                  <span>Delivery Info</span>
+                </Button>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80 p-6 bg-white rounded-lg shadow-xl border border-blue-100">
+                <div className="space-y-4">
+                  {/* Delivery Status */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-600">
+                      Status:
+                    </span>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        order?.delivery_order_status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : order?.delivery_order_status === "delivered"
+                          ? "bg-green-100 text-green-800"
+                          : order?.delivery_order_status === "accepted" ||
+                            order?.delivery_order_status === "in_progress"
+                          ? "bg-indigo-100 text-indigo-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {order?.delivery_order_status
+                        ?.replace("_", " ")
+                        .toUpperCase()}
+                    </span>
+                  </div>
 
-                {/* Delivery Driver Details */}
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Bike size={16} className="text-gray-500" />
-                    <span className="text-sm font-medium">
-                      {order?.delivery_driver?.username}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Phone size={16} className="text-gray-500" />
-                    <span className="text-sm font-medium">
-                      {order?.delivery_driver?.mobile_number}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Mail size={16} className="text-gray-500" />
-                    <span className="text-sm font-medium">
-                      {order?.delivery_driver?.email}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Total Amount */}
-                <div className="flex flex-col justify-between items-start pt-2 border-t mt-2">
-                  <div>
-                    <div className="text-sm font-bold">
-                      {order?.customer_phone_number}
+                  {/* Delivery Driver Details */}
+                  <div className="space-y-2 bg-gray-50 p-3 rounded-md">
+                    <h4 className="font-semibold text-gray-700">
+                      Driver Details
+                    </h4>
+                    <div className="grid grid-cols-[20px_1fr] gap-2 items-center text-sm">
+                      <Bike size={16} className="text-gray-400" />
+                      <span>{order?.delivery_driver?.username || "N/A"}</span>
+                      <Phone size={16} className="text-gray-400" />
+                      <span>
+                        {order?.delivery_driver?.mobile_number || "N/A"}
+                      </span>
+                      <Mail size={16} className="text-gray-400" />
+                      <span>{order?.delivery_driver?.email || "N/A"}</span>
                     </div>
-                    <div className="text-sm font-bold">{order?.address}</div>
+                  </div>
+
+                  {/* Customer Details */}
+                  <div className="space-y-2 bg-gray-50 p-3 rounded-md">
+                    <h4 className="font-semibold text-gray-700">
+                      Customer Details
+                    </h4>
+                    <div className="grid grid-cols-[20px_1fr] gap-2 items-center text-sm">
+                      <Phone size={16} className="text-gray-400" />
+                      <span>{order?.customer_phone_number || "N/A"}</span>
+                      <Mail size={16} className="text-gray-400" />
+                      <span>{order?.address || "N/A"}</span>
+                    </div>
                   </div>
                 </div>
+              </HoverCardContent>
+            </HoverCard>
+          )}
+
+          {order?.order_type === "dining" && (
+            <Button
+              variant="outline"
+              className="font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105"
+              onClick={() => setShowOrderTypeModal(true)}
+            >
+              <HandPlatter size={18} className="animate-bounce" />
+              {order?.order_type?.charAt(0).toUpperCase() +
+                order?.order_type?.slice(1)}
+            </Button>
+          )}
+
+          {order?.order_type === "takeaway" && (
+            <Button
+              variant="outline"
+              className="font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105"
+              onClick={() => setShowOrderTypeModal(true)}
+            >
+              <ShoppingBag size={18} className="animate-bounce" />
+              <span className="tracking-wide">
+                {order?.order_type?.charAt(0).toUpperCase() +
+                  order?.order_type?.slice(1)}
+              </span>
+            </Button>
+          )}
+          {order?.order_type === "onlinedelivery" && onlineOrderData && (
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                className="font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105"
+              >
+                <Bike size={18} className="animate-bounce" />
+                <span className="tracking-wide">{onlineOrderData.name}</span>
+                {onlineOrderData.logo && (
+                  <div className="w-10 h-10 relative overflow-hidden rounded-full">
+                    <img
+                      src={onlineOrderData.logo}
+                      alt={`${onlineOrderData.name} logo`}
+                      className="w-full h-full object-contain  "
+                    />
+                  </div>
+                )}
+              </Button>
+            </div>
+          )}
+          {order?.order_type === "dining" && (
+            <Button
+              variant="outline"
+              className={`
+                font-semibold text-sm px-5 py-2.5 rounded-full
+                bg-gradient-to-r from-purple-200 to-purple-300 text-purple-800
+                hover:from-purple-300 hover:to-purple-400
+                transition-all duration-300 shadow-md hover:shadow-lg
+                flex items-center gap-3 transform hover:scale-105
+                ${
+                  order.status === "delivered"
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer"
+                }
+              `}
+              onClick={() => setIsChairModalOpen(true)}
+              disabled={order.status === "delivered"}
+            >
+              <Armchair size={18} className="animate-bounce" />
+              <span className="tracking-wide">Select Chair</span>
+            </Button>
+          )}
+        </div>
+        <div className="mt-6 bg-gray-50 rounded-lg p-4 shadow-inner">
+          <div className="flex flex-col space-y-2">
+            {order.order_type === "dining" &&
+            order.chair_amount &&
+            parseFloat(order.chair_amount) > 0 ? (
+              <div className="flex items-center space-x-2">
+                <Banknote size={24} className="text-green-500 animate-pulse" />
+                <span className="text-base font-medium text-gray-700">
+                  Chair Amount:
+                </span>
+                <span className="text-lg font-semibold text-purple-600">
+                  QAR {parseFloat(order.chair_amount).toFixed(2)}
+                </span>
               </div>
-            </HoverCardContent>
-          </HoverCard>
-        )}
-
-        {order?.order_type === "dining" && (
-          <Button
-            variant="secondary"
-            className="font-bold italic flex gap-2 items-center"
-            onClick={() => setShowOrderTypeModal(true)}
-          >
-            <HandPlatter size={18} />
-            {order?.order_type?.charAt(0).toUpperCase() +
-              order?.order_type?.slice(1)}
-          </Button>
-        )}
-
-        {order?.order_type === "takeaway" && (
-          <Button
-            variant="secondary"
-            className="font-bold italic flex gap-2 items-center"
-            onClick={() => setShowOrderTypeModal(true)}
-          >
-            <ShoppingBag size={18} />
-            {order?.order_type?.charAt(0).toUpperCase() +
-              order?.order_type?.slice(1)}
-          </Button>
-        )}
-        {order?.order_type === "dining" && (
-          <Button
-            variant="secondary"
-            className={`font-bold italic flex gap-2 items-center ${
-              order.status === "delivered" ? "opacity-50" : ""
-            }`}
-            onClick={() => setIsChairModalOpen(true)}
-            disabled={order.status === "delivered"}
-            style={{
-              cursor: order.status === "delivered" ? "not-allowed" : "pointer",
-            }}
-          >
-            Select Chair
-          </Button>
-        )}
-
-        <span className="text-lg font-semibold text-gray-800">
-          Total: QAR {order.total_amount}
-        </span>
-        {/* <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
-            {order.order_type}
-          </h2> */}
+            ) : null}
+            <div className="flex items-center space-x-2">
+              <Banknote size={24} className="text-green-500 animate-pulse" />
+              <span className="text-base font-medium text-gray-700">
+                Total Amount:
+              </span>
+              <span className="text-xl font-bold text-green-600">
+                QAR{" "}
+                {(
+                  (order.order_type === "dining" && order.chair_amount
+                    ? parseFloat(order.chair_amount)
+                    : 0) + parseFloat(order.total_amount.toString())
+                ).toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {showModal && (
@@ -853,6 +1010,7 @@ const  OrderCard: React.FC<OrderCardProps> = ({
             {paymentMethod === "credit" && (
               <div className="mt-4">
                 <div className="flex justify-between">
+                  {" "}
                   <label className="block text-gray-700 mb-1">
                     Select Credit User
                   </label>

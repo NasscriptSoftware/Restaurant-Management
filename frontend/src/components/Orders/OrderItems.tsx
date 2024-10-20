@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { OrderItem, Dish } from "../../types/index";
+import React, { useState, useEffect } from "react";
+import { OrderItem, Dish, DishSize } from "../../types/index";
 import { Trash } from "lucide-react";
 import { Button } from "../ui/button";
-import { api } from "../../services/api";
+import { api, fetchDishSizes } from "../../services/api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,8 +35,18 @@ const OrderItems: React.FC<OrderItemsProps> = ({
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
+  const [dishSize, setDishSize] = useState<DishSize | null>(null);
   const dish = dishes ? dishes.find((d) => d.id === orderItem.dish) : undefined;
   const { refetch: refetchOrder } = useOrder(orderId);
+
+  useEffect(() => {
+    if (orderItem.dish_size) {
+      fetchDishSizes(orderItem.dish_size)
+        .then((data) => setDishSize(data))
+        .catch((error) => console.error("Error fetching dish size:", error));
+    }
+  }, [orderItem.dish_size]);
+
   if (!dish || isDeleted) {
     return null;
   }
@@ -74,6 +84,11 @@ const OrderItems: React.FC<OrderItemsProps> = ({
           >
             {dish.name}
           </h4>
+          {dishSize && (
+            <p>
+              Size: {dishSize.size} 
+            </p>
+          )}
           <p className="text-sm text-gray-600">
             Quantity: {orderItem.quantity}
           </p>
@@ -86,7 +101,10 @@ const OrderItems: React.FC<OrderItemsProps> = ({
         <div>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" disabled={isDeleting || order_status === "delivered"}>
+              <Button
+                variant="ghost"
+                disabled={isDeleting || order_status === "delivered"}
+              >
                 {isDeleting ? "Deleting..." : <Trash />}
               </Button>
             </AlertDialogTrigger>
@@ -94,7 +112,8 @@ const OrderItems: React.FC<OrderItemsProps> = ({
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete this item from the order.
+                  This action cannot be undone. This will permanently delete
+                  this item from the order.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -107,9 +126,13 @@ const OrderItems: React.FC<OrderItemsProps> = ({
           </AlertDialog>
         </div>
         <p className="font-semibold">
-          QAR {(dish.price * orderItem.quantity).toFixed(2)}
+          QAR {(
+            (dishSize ? (dishSize.price as any) : dish.price) * orderItem.quantity
+          ).toFixed(2)}
         </p>
-        <p className="text-sm text-gray-600">QAR {dish.price} each</p>
+        <p className="text-sm text-gray-600">
+          QAR {dishSize ? Number(dishSize.price).toFixed(2) : (dish.price)} each
+        </p>
       </div>
     </div>
   );

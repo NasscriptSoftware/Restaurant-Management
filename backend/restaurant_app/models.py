@@ -112,8 +112,8 @@ class DishSize(models.Model):
 
     def __str__(self):
         if self.size:
-            return f"Size: {self.size} - Price: {self.price}"
-        return f"Size Price: {self.price}"
+            return f" Dish : {self.dish.name} - Size: {self.size} - Price: {self.price}"
+        return f"Size Price: {self.price} "
 
 class DishVariant(models.Model):
     """
@@ -250,7 +250,11 @@ class Order(models.Model):
         return self.order_type == "delivery"
     
     def recalculate_total(self):
-        total_amount = sum(item.quantity * item.dish.price for item in self.items.all())
+        total_amount = sum(
+            item.dish_size.price if item.dish_size else item.dish.price
+            for item in self.items.all()
+        )
+        total_amount += self.delivery_charge
         self.total_amount = total_amount
         self.save(update_fields=["total_amount"])
 
@@ -258,12 +262,14 @@ class Order(models.Model):
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
+    dish_size = models.ForeignKey(DishSize, on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
     is_newly_added = models.BooleanField(default=False)
     variants = models.JSONField(default=list)
 
     def __str__(self):
-        return f"{self.order.id} - {self.dish} - {self.quantity}"
+        size_info = f" - {self.dish_size.size}" if self.dish_size else ""
+        return f"{self.order.id} - {self.dish}{size_info} - {self.quantity}"
 
 
 class Bill(models.Model):
@@ -715,6 +721,7 @@ class Chairs(models.Model):
 
     def __str__(self):
         return self.chair_name
+
 
 
 

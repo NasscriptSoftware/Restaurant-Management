@@ -8,9 +8,10 @@ export interface Dish {
   id: number;
   name: string;
   description: string;
-  price: number;
+  price: string;
   image: string;
-  category: number | Category;
+  category: number;
+  sizes: Size[];
 }
 
 export interface OrderItem {
@@ -19,12 +20,18 @@ export interface OrderItem {
   quantity: number;
   variants?: { variantId: number; name: string; quantity: number }[];
   id: number;
+  total_amount: number;
+  dish_size?: {
+    id: number;
+    size: string;
+    price: number;
+  };
 }
 
 export interface Order {
   id: number;
   created_at: string;
-  total_amount: number;
+  total_amount: string | number;
   status: "pending" | "approved" | "cancelled" | "delivered";
   bill_generated: boolean;
   items: OrderItem[];
@@ -49,6 +56,8 @@ export interface Order {
   address: string;
   detail: string;
   foc_product_details: FOCProduct[];
+  chair_amount?: string;
+  chair_details?: ChairDetail[];
 }
 
 export interface Bill {
@@ -84,7 +93,18 @@ export interface DishFormData {
 }
 
 export interface OrderFormData {
-  items: OrderItem[];
+  items: {
+    id: number;
+    dish: number;
+    quantity: number;
+    variants: {
+      variantId: number;
+      name: string;
+      quantity: number;
+    }[];
+    is_newly_added: boolean;
+    size?: number | null;
+  }[];
   total_amount: number;
   status: "pending" | "approved" | "cancelled" | "delivered";
   order_type: "dining" | "takeaway" | "delivery" | "onlinedelivery";
@@ -190,6 +210,10 @@ export interface UseDishesReturn {
   addDishToOrder: (id: number, quantity: number) => void;
   page: number;
   setPage: (page: number) => void;
+}
+export interface Size {
+  size: string;
+  price: string;
 }
 
 export interface UseOrdersReturn {
@@ -384,4 +408,23 @@ export interface RootState {
 export interface FOCProduct {
   name: string;
   quantity: number;
+}
+
+export interface ChairDetail {
+  chair_name: string;
+  start_time: string;
+  end_time: string;
+  amount: string;
+  total_time: string;
+}
+
+export interface Size {
+  size: string;
+  price: string;
+}
+
+export interface DishSize {
+  id: number;
+  size: string;
+  price: string;
 }

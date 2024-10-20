@@ -4,16 +4,17 @@ import { Button } from "@/components/ui/button";
 
 interface OrderItemProps {
   orderItem: {
-    id: number;
+    id: number | string;
     name: string;
     price: number | string;
     image: string;
     quantity: number;
     category: string | number;
+    selectedSize?: { size: string; price: string };
   };
-  incrementQuantity: (id: number) => void;
-  decrementQuantity: (id: number) => void;
-  removeItem: (id: number) => void;
+  incrementQuantity: (id: number | string) => void;
+  decrementQuantity: (id: number | string) => void;
+  removeItem: (id: number | string) => void;
 }
 
 const OrderItem: React.FC<OrderItemProps> = ({
@@ -40,8 +41,11 @@ const OrderItem: React.FC<OrderItemProps> = ({
         />
         <div className="ml-4 flex-grow">
           <h4 className="font-semibold text-lg">{orderItem.name}</h4>
+          {orderItem.selectedSize && (
+            <p className="text-sm text-gray-500">Size: {orderItem.selectedSize.size}</p>
+          )}
           <span className="text-red-500 font-medium">
-            QAR {orderItem.price}
+            QAR {parseFloat(orderItem.price.toString()).toFixed(2)}
           </span>
         </div>
       </div>
@@ -66,7 +70,7 @@ const OrderItem: React.FC<OrderItemProps> = ({
           </Button>
         </div>
         <span className="font-semibold text-lg text-green-600">
-          QAR {(Number(orderItem.price) * orderItem.quantity).toFixed(2)}
+          QAR {(parseFloat(orderItem.price.toString()) * orderItem.quantity).toFixed(2)}
         </span>
       </div>
     </div>

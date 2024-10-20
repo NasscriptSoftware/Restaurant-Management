@@ -1,3 +1,4 @@
+
 import React from "react";
 import { DishItemProps } from "../../types/index";
 import { Plus, ChefHat } from "lucide-react";
@@ -7,6 +8,11 @@ interface DishItemWithToggleProps extends DishItemProps {
   showImage: boolean;
 }
 
+interface Size {
+  size: string;
+  price: string;
+}
+
 const DishItem: React.FC<DishItemWithToggleProps> = ({
   dish,
   onAddDish,
@@ -14,11 +20,11 @@ const DishItem: React.FC<DishItemWithToggleProps> = ({
 }) => {
   return (
     <div
-      className="group relative bg-gradient-to-br from-#6f42c1-50 to-amber-50 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+      className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col h-full"
       onClick={() => onAddDish(dish)}
     >
       {showImage && (
-        <div className="relative h-48 overflow-hidden">
+        <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
           <img
             src={dish.image}
             alt={dish.name}
@@ -29,54 +35,59 @@ const DishItem: React.FC<DishItemWithToggleProps> = ({
           </div>
         </div>
       )}
-      <div className="p-5">
-        <h3 className="text-2xl font-bold mb-3 text-gray-800">{dish.name}</h3>
-
-        {/* New variant button design */}
-        <div className="flex flex-col space-y-2 mb-4">
-          {["Small", "Medium", "Large"].map((size) => (
-            <div
-              key={size}
-              className="flex items-center justify-between bg-white rounded-full px-4 py-2 shadow-sm hover:shadow-md transition-shadow duration-200"
-            >
-              <span className="text-sm font-medium text-gray-700">{size}</span>
-              <div className="flex items-center">
-                <span className="text-sm font-bold text-[#6f42c1;] mr-2">
-                  QAR {dish.price}
-                </span>
-                <button
-                  className="bg-[#6f42c1;] text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-[#6f42c1;] transition-colors duration-200"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddDish(dish);
-                  }}
-                >
-                  <Plus size={14} />
-                </button>
-              </div>
-            </div>
-          ))}
+      <div className="p-4 sm:p-5 flex-grow flex flex-col justify-between">
+        <div>
+          <h3 className="text-xl sm:text-2xl font-bold mb-2 text-gray-800">
+            {dish.name}
+          </h3>
+          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+            {dish.description}
+          </p>
         </div>
-
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-          {dish.description}
-        </p>
-
-        <div className="flex justify-between items-center">
-          <span className="text-md font-bold text-[#6f42c1;]">
-            QAR {dish.price}
-          </span>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddDish(dish);
-            }}
-            className="bg-[#6f42c1;] hover:bg-[#6f42c1;] text-white transition-colors duration-200"
-          >
-            <Plus size={18} className="mr-1" /> Add to Order
-          </Button>
+        <div className="space-y-3">
+          {dish.sizes && dish.sizes.length > 0 ? (
+            dish.sizes.map((size: Size) => (
+              <div
+                key={size.size}
+                className="flex items-center justify-between bg-gray-100 rounded-full px-3 py-1.5 sm:px-4 sm:py-2"
+              >
+                <span className="text-xs sm:text-[0.725rem] font-bold text-gray-700">
+                  {size.size}
+                </span>
+                <div className="flex items-center">
+                  <span className="text-xs sm:text-[0.725rem] font-bold text-purple-700 mr-1">
+                    QAR {size.price}
+                  </span>
+                  <button
+                    className="bg-purple-600 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center hover:bg-purple-700 transition-colors duration-200"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddDish({ ...dish, sizes: [size], price: size.price });
+                    }}
+                  >
+                    <Plus size={12} />
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="mt-4 flex justify-between items-center">
+              <span className="text-sm sm:text-md font-bold text-purple-700">
+                QAR {dish.price}
+              </span>
+              <Button
+                variant="default"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddDish({ ...dish, price: dish.price });
+                }}
+                className="bg-purple-600 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center hover:bg-purple-700 transition-colors duration-200"
+              >
+                <Plus size={16} />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

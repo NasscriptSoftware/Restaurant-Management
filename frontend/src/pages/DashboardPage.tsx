@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import { fetchDashboardData } from "@/services/api";
 import DashboardCard from "@/components/Dashboard/DashboardCard";
-import { DashboardData } from "@/types";
+import { DashboardData } from "@/types/index";
 import {
   TrendingUpIcon,
   ShoppingCartIcon,
@@ -121,7 +121,7 @@ const RestaurantDashboard: React.FC = () => {
     <Layout>
       <div className="p-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-          <h1 className="text-3xl font-bold mb-2 sm:mb-0">Dashboard</h1>
+          <h1 className="text-3xl font-bold mb-2 sm:mb-0 ml-10 ">Dashboard</h1>
           <Select onValueChange={setTimeRange} defaultValue={timeRange}>
             <SelectTrigger className="w-full sm:w-[180px] outline-none ring-offset-0">
               <SelectValue placeholder="Select time range" />

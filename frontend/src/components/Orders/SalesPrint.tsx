@@ -1,5 +1,5 @@
 import React from "react";
-import { Order, Dish } from "../../types";
+import { Order, Dish } from "../../types/index";
 
 interface SalesPrintProps {
   order: Order;
@@ -22,7 +22,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
     };
     return date.toLocaleDateString(undefined, options);
   };
-  
+
   const formatTime = (datetime: string) => {
     const date = new Date(datetime);
     const options: Intl.DateTimeFormatOptions = {
@@ -105,6 +105,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
           </tbody>
         </table>
       </div>
+
       <div className="print-summary mt-4">
         <div className="flex justify-between">
           <span>Total Quantity:</span>
@@ -115,6 +116,33 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
           <span className="font-bold">QAR {order.total_amount}</span>
         </div>
       </div>
+      {order.foc_product_details.length > 0 && (
+        <div className="mt-4">
+          <div className="flex items-center justify-center mb-2">
+            <hr className="flex-grow border-gray-300" />
+            <span className="mx-4 text-red-500 font-semibold">
+              Foc Products
+            </span>
+            <hr className="flex-grow border-gray-300" />
+          </div>
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="text-left">Item</th>
+                <th className="text-right">Qty</th>
+              </tr>
+            </thead>
+            <tbody>
+              {order.foc_product_details.map((item: any, index: number) => (
+                <tr key={index}>
+                  <td className="text-left">{item.name}</td>
+                  <td className="text-right">{item.quantity}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
