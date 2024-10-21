@@ -61,6 +61,14 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
     fetchSizes();
   }, [order.items]);
 
+  const calculateGrandTotal = () => {
+    let total = parseFloat(order.total_amount);
+    if (order.chair_amount) {
+      total += parseFloat(order.chair_amount);
+    }
+    return total.toFixed(2);
+  };
+
   return (
     // <div className="print-container w-76 p-4 text-sm bg-white border-2 border-dashed rounded-lg mx-auto">
     <div className="print-container w-full max-w-md mx-auto p-4 mt-5 text-sm bg-white border-2 border-dashed rounded-lg">
@@ -142,25 +150,26 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
           </tbody>
         </table>
       </div>
-     
+      {order.chair_details && order.chair_details.length > 0 && (
         <div className="mt-4">
           <div className="flex items-center justify-center mb-2">
             <hr className="flex-grow border-gray-300" />
-            <span className="mx-4 text-red-500 font-semibold text-xs"> {/* Reduced font size */}
+            <span className="mx-4 text-red-500 font-semibold text-xs">
               Chair Details
             </span>
             <hr className="flex-grow border-gray-300" />
           </div>
-          <table className="w-full text-xs"> {/* Added text-xs class for smaller text */}
+          <table className="w-full text-xs">
             <thead>
               <tr>
-                <th className="text-left w-1/3">Chair</th> {/* Added width class */}
-                <th className="text-center w-1/3">Time</th> {/* Changed to text-center and added width */}
-                <th className="text-right w-1/3">Total Hours</th> {/* Added width class */}
+                <th className="text-left w-1/4">Chair</th>
+                <th className="text-center w-1/4">Time</th>
+                <th className="text-right w-1/4">Total Hours</th>
+                <th className="text-right w-1/4">Amount</th>
               </tr>
             </thead>
             <tbody>
-            {order.chair_details?.map((chair,index) => {
+            {order.chair_details?.map((chair, index) => {
                 const formatTime = (dateTimeString: string) => {
                   const date = new Date(dateTimeString);
                   return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
@@ -169,17 +178,20 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
                 return (
                   <tr key={index}>
                     <td className="text-left">{chair.chair_name}</td>
-                    <td className="text-center text-xs"> {/* Changed to text-center */}
+                    <td className="text-center">
                       {formatTime(chair.start_time)} - {formatTime(chair.end_time)}
                     </td>
                     <td className="text-right">{chair.total_time}</td>
+                    <td className="text-right">
+                      {index === 0 && order.chair_amount ? `QAR ${order.chair_amount}` : '-'}
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-
+      )}
         
   
       <div className="print-summary mt-4">
@@ -190,6 +202,16 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
         <div className="flex justify-between mt-2">
           <span>Total Amount:</span>
           <span className="font-bold">QAR {order.total_amount}</span>
+        </div>
+        {order.chair_details && order.chair_details.length > 0 && (
+          <div className="flex justify-between mt-2">
+            <span>Chair Amount:</span>
+            <span className="font-bold">QAR {order.chair_amount}</span>
+          </div>
+        )}
+        <div className="flex justify-between mt-2 text-lg font-bold">
+          <span>Grand Total:</span>
+          <span>QAR {calculateGrandTotal()}</span>
         </div>
       </div>
 

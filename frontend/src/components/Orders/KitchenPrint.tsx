@@ -26,7 +26,10 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
 
       const sizes = await Promise.all(sizePromises);
       const sizeMap = sizes.reduce((acc, size, index) => {
-        acc[order.items[index].dish_size] = size;
+        const item = order.items.find((item) => item.dish_size === size.id);
+        if (item) {
+          acc[item.dish_size] = size;
+        }
         return acc;
       }, {});
 
@@ -84,7 +87,6 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
                   <span className="text-xs ml-1">({sizeDetails.size})</span>
                 )}
               </td>
-             
               <td className="print-item-quantity text-right">
                 x {item.quantity}
               </td>
@@ -104,12 +106,17 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
         ? order.items.filter((item) => item.is_newly_added)
         : [];
 
+      // Add chair_amount to the total
+      if (order.chair_amount) {
+        total += parseFloat(order.chair_amount);
+      }
+
       return {
         renderedRegularItems: renderItems(regularItems),
         renderedNewlyAddedItems: renderItems(newlyAddedItems),
         grandTotal: total,
       };
-    }, [order.items, dishes, dishSizes]);
+    }, [order.items, dishes, dishSizes, order.chair_amount]);
 
   return (
     <div className="print-container w-full max-w-md mx-auto p-4 text-sm bg-white border-2 border-dashed rounded-lg">
@@ -189,7 +196,8 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
                 <tr>
                   <th className="text-left w-1/3">Chair</th>
                   <th className="text-center w-1/3">Time</th>
-                  <th className="text-right w-1/3">Total Hours</th>
+                  <th className="text-center w-1/3">Total Hours</th>
+                  <th className="text-right w-1/3">Amount</th>
                 </tr>
               </thead>
               <tbody>
@@ -210,7 +218,8 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
                         {formatTime(chair.start_time)} -{" "}
                         {formatTime(chair.end_time)}
                       </td>
-                      <td className="text-right">{chair.total_time}</td>
+                      <td className="text-center">{chair.total_time}</td>
+                      <td className="text-right">QAR {order.chair_amount? order.chair_amount: '0.00'}</td>
                     </tr>
                   );
                 })}

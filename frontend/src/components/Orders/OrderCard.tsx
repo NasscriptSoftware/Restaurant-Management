@@ -536,6 +536,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         chair_details: [...(order.chair_details || []), chairDetails],
       };
 
+
       // Update the order in the backend with chair details
       await api.patch(`/orders/${order.id}/`, {
         chair_amount: updatedOrder.chair_amount,
@@ -545,8 +546,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
       console.log("totAmount", updatedOrder.total_amount);
 
       setOrder(updatedOrder);
-      setIsChairModalOpen(false);
       onStatusUpdated();
+      setIsChairModalOpen(false);
       console.log("Chair and order updated successfully");
     } catch (error) {
       console.error("Failed to update chair and order:", error);
@@ -577,7 +578,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
               className="text-gray-700 hover:text-red-500 focus:outline-none"
               title="Add Options"
             >
-              <Coffee size={30}  className="animate-pulse text-red-500"/>
+              <Coffee size={30} className="animate-pulse text-red-500" />
             </button>
           </div>
           {/* Print Icon for Kitchen Bill */}
@@ -747,13 +748,13 @@ const OrderCard: React.FC<OrderCardProps> = ({
                     </span>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${order?.delivery_order_status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : order?.delivery_order_status === "delivered"
-                            ? "bg-green-100 text-green-800"
-                            : order?.delivery_order_status === "accepted" ||
-                              order?.delivery_order_status === "in_progress"
-                              ? "bg-indigo-100 text-indigo-800"
-                              : "bg-red-100 text-red-800"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : order?.delivery_order_status === "delivered"
+                          ? "bg-green-100 text-green-800"
+                          : order?.delivery_order_status === "accepted" ||
+                            order?.delivery_order_status === "in_progress"
+                            ? "bg-indigo-100 text-indigo-800"
+                            : "bg-red-100 text-red-800"
                         }`}
                     >
                       {order?.delivery_order_status
@@ -885,11 +886,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
               </span>
               <span className="text-xl font-bold text-green-600">
                 QAR{" "}
-                {(
-                  (order.order_type === "dining" && order.chair_amount
-                    ? parseFloat(order.chair_amount)
-                    : 0) + parseFloat(order.total_amount.toString())
-                ).toFixed(2)}
+                {parseFloat(order.total_amount.toString()).toFixed(2)}
               </span>
             </div>
           </div>
@@ -1227,8 +1224,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
                                       >
                                         <Check
                                           className={`mr-2 h-4 w-4 ${selectedDriver?.id === driver.id
-                                              ? "opacity-100"
-                                              : "opacity-0"
+                                            ? "opacity-100"
+                                            : "opacity-0"
                                             }`}
                                         />
                                         {driver.username}

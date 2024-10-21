@@ -243,6 +243,9 @@ class OrderSerializer(serializers.ModelSerializer):
         # Add delivery charge to total amount if it's not the default value
         if instance.delivery_charge != 0:
             total_amount += instance.delivery_charge
+        
+        if instance.chair_amount != 0:
+            total_amount += instance.chair_amount
 
         # Update the total amount
         instance.total_amount = total_amount
