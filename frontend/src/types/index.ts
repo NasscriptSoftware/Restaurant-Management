@@ -10,8 +10,8 @@ export interface Dish {
   description: string;
   price: string;
   image: string;
-  category: number;
-  sizes: Size[];
+  category: number | Category;
+  sizes?: Size[];
 }
 
 export interface OrderItem {
@@ -58,6 +58,12 @@ export interface Order {
   foc_product_details: FOCProduct[];
   chair_amount?: string;
   chair_details?: ChairDetail[];
+  kitchen_note?: string;
+  dish_sizes?: {
+    id: number;
+    size: string;
+    price: number;
+  }[];
 }
 
 export interface Bill {

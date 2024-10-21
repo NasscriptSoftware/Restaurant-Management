@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "react-query";
-import { Check, ChevronsUpDown, CircleCheck, Search,Cog } from "lucide-react";
+import { Check, ChevronsUpDown, CircleCheck, Search, Cog } from "lucide-react";
 import { motion } from "framer-motion";
 import Layout from "../components/Layout/Layout";
 import DishList from "../components/Dishes/DishList";
@@ -83,6 +83,13 @@ const DishesPage: React.FC = () => {
     fetchOnlineOrders
   );
 
+  const [isServicesView, setIsServicesView] = useState(false);
+
+  // Move this definition up, before it's used
+  const servicesCategory = categories?.find(
+    (category) => category.name.toLowerCase() === "service"
+  );
+
   const [isOrderVisible, setIsOrderVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [orderType, setOrderType] = useState<OrderType>("dining");
@@ -109,7 +116,7 @@ const DishesPage: React.FC = () => {
 
   const [showImage, setShowImage] = useState(() => {
     // Retrieve the value from localStorage on initial render
-    const savedShowImage = localStorage.getItem('showImage');
+    const savedShowImage = localStorage.getItem("showImage");
     return savedShowImage !== null ? JSON.parse(savedShowImage) : true;
   });
 
@@ -151,7 +158,7 @@ const DishesPage: React.FC = () => {
 
   useEffect(() => {
     // Save showImage to localStorage whenever it changes
-    localStorage.setItem('showImage', JSON.stringify(showImage));
+    localStorage.setItem("showImage", JSON.stringify(showImage));
   }, [showImage]);
 
   const handleAddDish = (dish: Dish & { selectedSize?: Size }) => {
@@ -212,11 +219,11 @@ const DishesPage: React.FC = () => {
           let sizeId = null;
 
           // Check if the item has a selectedSize property
-          if (item.selectedSize && typeof item.selectedSize.id === 'number') {
+          if (item.selectedSize && typeof item.selectedSize.id === "number") {
             sizeId = item.selectedSize.id;
             // If the item.id is a string, it might be the composite id
-            if (typeof item.id === 'string') {
-              const parts = item.id.split('-');
+            if (typeof item.id === "string") {
+              const parts = item.id.split("-");
               if (parts.length === 2) {
                 dishId = parseInt(parts[0], 10);
                 // We already have sizeId from selectedSize, so we don't need to parse it again
@@ -227,7 +234,10 @@ const DishesPage: React.FC = () => {
             }
           } else {
             // If there's no selectedSize, treat the id as is
-            dishId = typeof item.id === 'string' ? parseInt(item.id, 10) || item.id : item.id;
+            dishId =
+              typeof item.id === "string"
+                ? parseInt(item.id, 10) || item.id
+                : item.id;
           }
 
           return {
@@ -256,7 +266,6 @@ const DishesPage: React.FC = () => {
           orderType === "delivery" && selectedDriver ? selectedDriver.id : null,
         kitchen_note: kitchenNote,
       };
-            
 
       // Add online_order only if orderType is "onlinedelivery"
       if (orderType === "onlinedelivery" && onlineDeliveryData) {
@@ -298,6 +307,13 @@ const DishesPage: React.FC = () => {
   const handleCategoryClick = (categoryId: number | null) => {
     setSelectedCategory(categoryId);
     setSearchQuery("");
+    setIsServicesView(false);
+  };
+
+  const handleServicesClick = () => {
+    setIsServicesView(true);
+    setSelectedCategory(servicesCategory?.id || null);
+    setSearchQuery("");
   };
 
   const filteredDishes = data.filter((dish: Dish) => {
@@ -309,10 +325,20 @@ const DishesPage: React.FC = () => {
     const searchMatch = dish.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    return categoryMatch && searchMatch;
+    const serviceMatch = isServicesView
+      ? dish.category === servicesCategory?.id
+      : dish.category !== servicesCategory?.id;
+    return categoryMatch && searchMatch && serviceMatch;
   });
 
-  const servicesCategory = categories?.find(category => category.name.toLowerCase() === 'service');
+  // Helper function to filter out service dishes
+  const filterOutServiceDishes = (dishes: Dish[]) => {
+    return dishes.filter((dish) =>
+      typeof dish.category === "number"
+        ? dish.category !== servicesCategory?.id
+        : dish.category.id !== servicesCategory?.id
+    );
+  };
 
   if (isLoading)
     return (
@@ -358,12 +384,12 @@ const DishesPage: React.FC = () => {
               {/* ... */}
               {servicesCategory && (
                 <Button
-                  onClick={() => handleCategoryClick(servicesCategory.id)}
-                  variant={selectedCategory === servicesCategory.id ? "default" : "outline"}
+                  onClick={handleServicesClick}
+                  variant={isServicesView ? "default" : "outline"}
                   className={`w-full sm:w-auto mt-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-                    selectedCategory === servicesCategory.id
-                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:border-purple-500 hover:text-purple-500'
+                    isServicesView
+                      ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg"
+                      : "bg-white text-gray-700 border border-gray-300 hover:border-purple-500 hover:text-purple-500"
                   }`}
                 >
                   <div className="flex items-center justify-center">
@@ -377,23 +403,39 @@ const DishesPage: React.FC = () => {
           <div className="flex flex-wrap gap-2 mb-8">
             <Button
               onClick={() => handleCategoryClick(null)}
-              variant={selectedCategory === null ? "default" : "outline"}
+              variant={
+                selectedCategory === null && !isServicesView
+                  ? "default"
+                  : "outline"
+              }
             >
               All items
             </Button>
-            {categories?.filter(category => category.name.toLowerCase() !== 'services').map((category) => (
-              <Button
-                key={category.id}
-                onClick={() => handleCategoryClick(category.id)}
-                variant={
-                  selectedCategory === category.id ? "default" : "outline"
-                }
-              >
-                {category.name}
-              </Button>
-            ))}
+            {categories
+              ?.filter((category) => category.name.toLowerCase() !== "service")
+              .map((category) => (
+                <Button
+                  key={category.id}
+                  onClick={() => handleCategoryClick(category.id)}
+                  variant={
+                    selectedCategory === category.id && !isServicesView
+                      ? "default"
+                      : "outline"
+                  }
+                >
+                  {category.name}
+                </Button>
+              ))}
           </div>
-          <DishList dishes={filteredDishes} onAddDish={handleAddDish} showImage={showImage} />
+          <DishList
+            dishes={
+              isServicesView
+                ? filteredDishes
+                : filterOutServiceDishes(filteredDishes)
+            }
+            onAddDish={handleAddDish}
+            showImage={showImage}
+          />
           {orderItems.length > 0 &&
             !isMemoModalOpen &&
             !isKitchenNoteModalOpen && (
@@ -503,9 +545,14 @@ const DishesPage: React.FC = () => {
 
               {orderType === "onlinedelivery" && (
                 <div className="mt-4">
-                  <Label className="text-sm font-medium mb-2 block">Select Online Order Platform</Label>
+                  <Label className="text-sm font-medium mb-2 block">
+                    Select Online Order Platform
+                  </Label>
                   <Command className="rounded-lg border shadow-sm">
-                    <CommandInput placeholder="Search platforms..." className="h-9" />
+                    <CommandInput
+                      placeholder="Search platforms..."
+                      className="h-9"
+                    />
                     <CommandList>
                       <CommandEmpty>No platforms found.</CommandEmpty>
                       <CommandGroup>
