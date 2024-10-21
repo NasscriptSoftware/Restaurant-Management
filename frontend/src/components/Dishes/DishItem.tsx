@@ -1,4 +1,3 @@
-
 import React from "react";
 import { DishItemProps } from "../../types/index";
 import { Plus, ChefHat } from "lucide-react";
@@ -21,7 +20,9 @@ const DishItem: React.FC<DishItemWithToggleProps> = ({
   return (
     <div
       className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col h-full"
-      onClick={() => onAddDish(dish)}
+      onClick={() =>
+        dish.sizes && dish.sizes.length > 0 ? null : onAddDish(dish)
+      }
     >
       {showImage && (
         <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
@@ -30,7 +31,10 @@ const DishItem: React.FC<DishItemWithToggleProps> = ({
             alt={dish.name}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
-          <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div
+            className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+           
+          >
             <ChefHat size={48} className="text-white" />
           </div>
         </div>
@@ -50,6 +54,10 @@ const DishItem: React.FC<DishItemWithToggleProps> = ({
               <div
                 key={size.size}
                 className="flex items-center justify-between bg-gray-100 rounded-full px-3 py-1.5 sm:px-4 sm:py-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddDish({ ...dish, sizes: [size], price: size.price });
+                }}  
               >
                 <span className="text-xs sm:text-[0.725rem] font-bold text-gray-700">
                   {size.size}

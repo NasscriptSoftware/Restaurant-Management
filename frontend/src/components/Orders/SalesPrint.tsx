@@ -1,6 +1,7 @@
 import React from "react";
 import { Order, Dish } from "../../types/index";
 import { QRCodeSVG } from "qrcode.react";
+import { fetchDishSizes } from "../../services/api";
 
 interface SalesPrintProps {
   order: Order;
@@ -38,8 +39,32 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
     ? order.items.reduce((total, item) => total + item.quantity, 0)
     : 0;
 
+  const [dishSizes, setDishSizes] = React.useState<{
+    [key: number]: { size: string; price: string };
+  }>({});
+
+  React.useEffect(() => {
+    const fetchSizes = async () => {
+      const sizePromises = order.items.map(async (item) => {
+        if (item.dish_size) {
+          const sizeData = await fetchDishSizes(item.dish_size);
+          return { [item.dish_size]: sizeData };
+        }
+        return null;
+      });
+
+      const sizes = await Promise.all(sizePromises);
+      const sizeObject = Object.assign({}, ...sizes.filter(Boolean));
+      setDishSizes(sizeObject);
+    };
+
+    fetchSizes();
+  }, [order.items]);
+
   return (
-    <div className="print-container w-64 p-4 text-sm bg-white border-2 border-dashed rounded-lg mx-auto">
+    // <div className="print-container w-76 p-4 text-sm bg-white border-2 border-dashed rounded-lg mx-auto">
+    <div className="print-container w-full max-w-md mx-auto p-4 mt-5 text-sm bg-white border-2 border-dashed rounded-lg">
+
       {/* Display the logo and company info at the top */}
       <div className="flex flex-col items-center mb-4">
         {logoInfo?.logoUrl && (
@@ -70,7 +95,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
         Time: {formatTime(order.created_at)}
       </div>
       <div className="print-items">
-        <table className="w-full">
+        <table className="w-full ">
           <thead>
             <tr>
               <th className="text-left">Item</th>
@@ -82,16 +107,27 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
             {Array.isArray(order.items) && order.items.length > 0 ? (
               order.items.map((item, index) => {
                 const dish = dishes.find((dish) => dish.id === item.dish);
+                const sizeInfo = item.dish_size
+                  ? dishSizes[item.dish_size]
+                  : null;
                 return (
                   <tr key={index} className="print-item">
                     <td className="print-item-name">
                       {dish ? dish.name : "Unknown Dish"}
+                      {sizeInfo && (
+                        <span className="text-xs"> ({sizeInfo.size})</span>
+                      )}
                     </td>
                     <td className="print-item-quantity text-center">
                       x{item.quantity}
                     </td>
                     <td className="print-item-price text-right">
-                      QAR {dish ? dish.price * item.quantity : 0}
+                      QAR{" "}
+                      {sizeInfo
+                        ? parseFloat(sizeInfo.price) * item.quantity
+                        : dish
+                        ? dish.price * item.quantity
+                        : 0}
                     </td>
                   </tr>
                 );
@@ -106,7 +142,46 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
           </tbody>
         </table>
       </div>
+     
+        <div className="mt-4">
+          <div className="flex items-center justify-center mb-2">
+            <hr className="flex-grow border-gray-300" />
+            <span className="mx-4 text-red-500 font-semibold text-xs"> {/* Reduced font size */}
+              Chair Details
+            </span>
+            <hr className="flex-grow border-gray-300" />
+          </div>
+          <table className="w-full text-xs"> {/* Added text-xs class for smaller text */}
+            <thead>
+              <tr>
+                <th className="text-left w-1/3">Chair</th> {/* Added width class */}
+                <th className="text-center w-1/3">Time</th> {/* Changed to text-center and added width */}
+                <th className="text-right w-1/3">Total Hours</th> {/* Added width class */}
+              </tr>
+            </thead>
+            <tbody>
+            {order.chair_details?.map((chair,index) => {
+                const formatTime = (dateTimeString: string) => {
+                  const date = new Date(dateTimeString);
+                  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+                };
+                
+                return (
+                  <tr key={index}>
+                    <td className="text-left">{chair.chair_name}</td>
+                    <td className="text-center text-xs"> {/* Changed to text-center */}
+                      {formatTime(chair.start_time)} - {formatTime(chair.end_time)}
+                    </td>
+                    <td className="text-right">{chair.total_time}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
+        
+  
       <div className="print-summary mt-4">
         <div className="flex justify-between">
           <span>Total Quantity:</span>
@@ -118,11 +193,6 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
         </div>
       </div>
 
-      {/* Add QR code */}
-      <div className="mt-4 flex justify-center">
-        <QRCodeSVG value={`Order ID: ${order.id}`} size={64} />
-      </div>
-      <p className="text-center text-xs mt-1">Scan for Order ID</p>
       {order.foc_product_details.length > 0 && (
         <div className="mt-4">
           <div className="flex items-center justify-center mb-2">
@@ -149,6 +219,15 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
             </tbody>
           </table>
         </div>
+      )}
+      {/* Add QR code */}
+      {order.order_type === "delivery" && (
+        <>
+          <div className="mt-4 flex justify-center">
+            <QRCodeSVG value={`Order ID: ${order.id}`} size={64} />
+          </div>
+          <p className="text-center text-xs mt-1">Scan for Order ID</p>
+        </>
       )}
     </div>
   );

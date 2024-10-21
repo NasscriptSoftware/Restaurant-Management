@@ -126,6 +126,42 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
             </table>
           </div>
         )}
+         <div className="mt-4">
+          <div className="flex items-center justify-center mb-2">
+            <hr className="flex-grow border-gray-300" />
+            <span className="mx-4 text-red-500 font-semibold text-xs"> {/* Reduced font size */}
+              Chair Details
+            </span>
+            <hr className="flex-grow border-gray-300" />
+          </div>
+          <table className="w-full text-xs"> {/* Added text-xs class for smaller text */}
+            <thead>
+              <tr>
+                <th className="text-left w-1/3">Chair</th> {/* Added width class */}
+                <th className="text-center w-1/3">Time</th> {/* Changed to text-center and added width */}
+                <th className="text-right w-1/3">Total Hours</th> {/* Added width class */}
+              </tr>
+            </thead>
+            <tbody>
+            {order.chair_details?.map((chair,index) => {
+                const formatTime = (dateTimeString: string) => {
+                  const date = new Date(dateTimeString);
+                  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+                };
+                
+                return (
+                  <tr key={index}>
+                    <td className="text-left">{chair.chair_name}</td>
+                    <td className="text-center text-xs"> {/* Changed to text-center */}
+                      {formatTime(chair.start_time)} - {formatTime(chair.end_time)}
+                    </td>
+                    <td className="text-right">{chair.total_time}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
         {renderedNewlyAddedItems.length > 0 && (
           <div className="mt-4">
