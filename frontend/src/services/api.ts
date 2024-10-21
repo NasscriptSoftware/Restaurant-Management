@@ -251,6 +251,11 @@ export const deleteDeliveryOrder = (orderId: number) => {
   return api.delete(`/delivery-orders/${orderId}/`);
 };
 
+  // Driver Individual Report
+  export const individualDriverReport = () => {
+    return api.get(`/delivery-orders/driver-orders-report/`); // query parms from_date= & to_date=
+  };
+
 // Fetch Credit Users
 export const fetchCreditUsers = async () => {
   const response = await api.get<PaginatedResponse<CreditUser>>(`/credit-users/`);

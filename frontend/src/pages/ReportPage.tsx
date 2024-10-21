@@ -1,20 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Layout from "../components/Layout/Layout";
 import PaginationControls from "../components/Layout/PaginationControls";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { RotateCcw, Eye, Pencil, User, Users } from "lucide-react";
+import { RotateCcw, Eye, Pencil, Truck} from "lucide-react";
 import SalesPrint from "@/components/SalesReport/SalesPrint";
 import { api } from "@/services/api";
 import TransactionsModal from "@/components/Mess/TransactionsModal";
 import SalesHistoryModal from "@/components/SalesReport/SalesHistoryModal";
 import SalesEditModal from "@/components/SalesReport/SalesEditModal";
 import MessEditModal from "@/components/SalesReport/MessEditModal";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DriverDetailsModal from "@/components/SalesReport/DriverDetailsModal";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableFooter,
+} from "@/components/ui/table";
 
 interface SalesReport {
   id: number;
@@ -134,8 +143,14 @@ interface StaffUser {
   role: string;
 }
 
+interface Driver {
+  id: number;
+  username: string;
+  role: string;
+}
+
 const ReportPage: React.FC = () => {
-  const [reportType, setReportType] = useState<"sales" | "mess" | "product" | "onlineDelivery" | "staff">("sales");
+  const [reportType, setReportType] = useState<"sales" | "mess" | "product" | "onlineDelivery" | "staff" | "driver">("sales");
   const [reports, setReports] = useState<SalesReport[]>([]);
   const [messReports, setMessReports] = useState<MessReport[]>([]);
   const [productReports, setProductReports] = useState<ProductReport[]>([]);
@@ -159,17 +174,21 @@ const ReportPage: React.FC = () => {
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
   const [staffReports, setStaffReports] = useState<StaffReport[]>([]);
-  const [currentStaffPage, setCurrentStaffPage] = useState<number>(1); // Add state for staff pagination
-  const staffItemsPerPage = 10; // Define items per page for staff reports
+  const [currentStaffPage, setCurrentStaffPage] = useState<number>(1);
+  const staffItemsPerPage = 10;
 
   const itemsPerPage = 10;
+
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [driverReports, setDriverReports] = useState<DriverReport[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
 
   useEffect(() => {
     fetchDataWithFilter({});
   }, [reportType, fromDate, toDate, showCancelledOrders]);
 
   useEffect(() => {
-    if (reportType === "staff") {
+    if (reportType === "staff" || reportType === "driver") {
       fetchStaffUsers();
     }
   }, [reportType]);
@@ -177,6 +196,8 @@ const ReportPage: React.FC = () => {
   useEffect(() => {
     console.log("Staff reports updated:", staffReports);
   }, [staffReports]);
+
+
 
   const fetchDataWithFilter = async (filter: Record<string, string>) => {
     try {
@@ -261,6 +282,7 @@ const ReportPage: React.FC = () => {
       const allUsers = response.data.results;
       setAdminUsers(allUsers.filter((user: StaffUser) => user.role === "admin"));
       setStaffUsers(allUsers.filter((user: StaffUser) => user.role === "staff"));
+      setDrivers(allUsers.filter((user: Driver) => user.role === "driver"));
     } catch (error) {
       console.error("Error fetching staff users:", error);
     }
@@ -274,11 +296,9 @@ const ReportPage: React.FC = () => {
       const response = await api.get<StaffReportResponse>(url);
       console.log("Staff report response:", response.data);
       
-      // Directly set the state with the received data
       setStaffReports(response.data);
       console.log("Staff reports set:", response.data);
       
-      // If there's still pagination metadata, set it here
       if ('count' in response.data && 'next' in response.data && 'previous' in response.data) {
         setStaffReportMeta({
           count: response.data.count,
@@ -415,35 +435,32 @@ const ReportPage: React.FC = () => {
     handleModalClose();
   };
 
-  const handleSalesMobileClick = async (report: SalesReport) => {
-    await fetchOrderHistory(report.customer_phone_number);
-    setCurrentMember(report);
-    setIsSalesHistoryModalOpen(true);
+  const handleEdit = (item: any) => {
+    setSelectedItem(item);
+    if (reportType === "sales") {
+      setIsSalesEditModalOpen(true);
+    } else if (reportType === "mess") {
+      setIsMessEditModalOpen(true);
+    }
   };
 
-  const handleMobileClick = async (report: MessReport) => {
-    await fetchTransactions(report.id);
-    setCurrentMember(report);
-    setIsTransactionsModalOpen(true);
-  };
-
-  const handleSalesEditClick = (report: SalesReport) => {
-    setCurrentReport(report);
-    setIsSalesEditModalOpen(true);
-  };
-
-  const handleMessEditClick = (report: MessReport) => {
-    setCurrentReport(report);
-    setIsMessEditModalOpen(true);
+  const handleViewHistory = (item: any) => {
+    setSelectedItem(item);
+    if (reportType === "sales") {
+      fetchOrderHistory(item.customer_phone_number);
+      setIsSalesHistoryModalOpen(true);
+    } else if (reportType === "mess") {
+      fetchTransactions(item.id);
+      setIsTransactionsModalOpen(true);
+    }
   };
 
   const handleModalClose = () => {
-    setIsTransactionsModalOpen(false);
-    setIsSalesHistoryModalOpen(false);
     setIsSalesEditModalOpen(false);
     setIsMessEditModalOpen(false);
-    setCurrentReport(null);
-    setCurrentMember(null);
+    setIsSalesHistoryModalOpen(false);
+    setIsTransactionsModalOpen(false);
+    setSelectedItem(null);
   };
 
   const handleReset = () => {
@@ -467,8 +484,8 @@ const ReportPage: React.FC = () => {
   const paginatedMessReports = messReports.slice(startIndex, startIndex + itemsPerPage);
   const paginatedProductReports = productReports.slice(startIndex, startIndex + itemsPerPage);
   const paginatedOnlineDeliveryReports = onlineDeliveryReports.slice(startIndex, startIndex + itemsPerPage);
-  const staffStartIndex = (currentStaffPage - 1) * staffItemsPerPage; // Calculate start index for staff reports
-  const paginatedStaffReports = staffReports.slice(staffStartIndex, staffStartIndex + staffItemsPerPage); // Paginate staff reports
+  const staffStartIndex = (currentStaffPage - 1) * staffItemsPerPage;
+  const paginatedStaffReports = staffReports.slice(staffStartIndex, staffStartIndex + staffItemsPerPage);
 
   const totalAmount =
     reportType === "sales"
@@ -505,18 +522,246 @@ const ReportPage: React.FC = () => {
     .filter((report) => report.payment_method === "credit")
     .reduce((acc, report) => acc + parseFloat(report.total_amount.toString() || "0"), 0);
 
+
+  const fetchDriverReport = async (driverId: string | null) => {
+    try {
+      const baseUrl = `${import.meta.env.VITE_APP_API_URL}/orders/driver-report/`;
+      let url = new URL(baseUrl);
+
+      if (driverId) {
+        url.searchParams.append('delivery_driver_id', driverId);
+      }
+
+      // Add date range parameters if they exist
+      if (fromDate) {
+        url.searchParams.append('from_date', fromDate.toISOString().split('T')[0]);
+      }
+      if (toDate) {
+        url.searchParams.append('to_date', toDate.toISOString().split('T')[0]);
+      }
+
+      console.log("Fetching driver report with URL:", url.toString()); // Add this log
+
+      const response = await api.get<DriverReport[]>(url.toString());
+      console.log("Driver report response:", response.data); // Add this log
+      setDriverReports(response.data);
+    } catch (error) {
+      console.error("Error fetching driver report:", error);
+    }
+  };
+
+  const handleDriverButtonClick = (driverId: string | null) => {
+    setSelectedDriverId(driverId);
+    fetchDriverReport(driverId);
+  };
+
+  interface ReportTableProps {
+    data: any[];
+    reportType: 'sales' | 'mess' | 'product' | 'onlineDelivery' | 'staff' | 'driver';
+    onEdit?: (item: any) => void;
+    onViewHistory?: (item: any) => void;
+  }
+
+  const ReportTable: React.FC<ReportTableProps> = ({ data, reportType, onEdit, onViewHistory }) => {
+    const columns = useMemo(() => {
+      switch (reportType) {
+        case 'sales':
+          return [
+            { key: 'invoice_number', header: 'Invoice' },
+            { key: 'customer_phone_number', header: 'Mobile' },
+            { key: 'created_at', header: 'Date', format: (value: string) => formatDate(value) },
+            { key: 'order_type', header: 'Order Type' },
+            { key: 'payment_method', header: 'Payment Method' },
+            { key: 'status', header: 'Order Status' },
+            { key: 'total_amount', header: 'Total Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'cash_amount', header: 'Cash Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'bank_amount', header: 'Bank Amount', align: 'right', format: (value: any) => formatNumber(value) },
+          ];
+        case 'mess':
+          return [
+            { key: 'customer_name', header: 'Name' },
+            { key: 'mobile_number', header: 'Mobile' },
+            { key: 'mess_type', header: 'Mess Type', format: (value: any) => value.name },
+            { key: 'start_date', header: 'Start Date', format: (value: string) => formatDate(value) },
+            { key: 'end_date', header: 'End Date', format: (value: string) => formatDate(value) },
+            { key: 'total_amount', header: 'Total', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'paid_amount', header: 'Paid', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'pending_amount', header: 'Pending', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'payment_method', header: 'Payment Method' },
+          ];
+        case 'product':
+          return [
+            { key: 'product_name', header: 'Product Name' },
+            { key: 'total_quantity', header: 'Total Quantity', align: 'right' },
+            { key: 'invoice_number', header: 'Invoice Number' },
+            { key: 'order_created_at', header: 'Order Created At', format: (value: string) => formatDate(value) },
+            { key: 'order_type', header: 'Order Type' },
+            { key: 'cash_amount', header: 'Cash Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'bank_amount', header: 'Bank Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'total_amount', header: 'Total Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'payment_method', header: 'Payment Method' },
+          ];
+        case 'onlineDelivery':
+          return [
+            { key: 'onlineordername', header: 'Online Order Name' },
+            { key: 'invoice', header: 'Invoice' },
+            { key: 'date', header: 'Date', format: (value: string) => formatDate(value) },
+            { key: 'order_type', header: 'Order Type' },
+            { key: 'payment_method', header: 'Payment Method' },
+            { key: 'order_status', header: 'Order Status' },
+            { key: 'percentage', header: 'Percentage', format: (value: number) => `${value}%` },
+            { key: 'total_amount', header: 'Total Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'percentage_amount', header: 'Percentage Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'balance_amount', header: 'Balance Amount', align: 'right', format: (value: any) => formatNumber(value) },
+          ];
+        case 'staff':
+          return [
+            { key: 'invoice_number', header: 'Invoice' },
+            { key: 'created_at', header: 'Date', format: (value: string) => formatDate(value) },
+            { key: 'order_type', header: 'Order Type' },
+            { key: 'payment_method', header: 'Payment Method' },
+            { key: 'status', header: 'Order Status' },
+            { key: 'total_amount', header: 'Total Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'cash_amount', header: 'Cash Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'bank_amount', header: 'Bank Amount', align: 'right', format: (value: any) => formatNumber(value) },
+          ];
+        case 'driver':
+          return [
+            { key: 'order_id', header: 'Order ID' },
+            { key: 'invoice_number', header: 'Invoice Number' },
+            { key: 'customer_name', header: 'Customer Name' },
+            { key: 'address', header: 'Address' },
+            { key: 'payment_method', header: 'Payment Method' },
+            { key: 'total_amount', header: 'Total Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'bank_amount', header: 'Bank Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'cash_amount', header: 'Cash Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'delivery_charge', header: 'Delivery Charge', align: 'right', format: (value: any) => formatNumber(value) },
+          ];
+        default:
+          return [];
+      }
+    }, [reportType]);
+
+    const totals = useMemo(() => {
+      return data.reduce((acc, item) => {
+        columns.forEach(column => {
+          if (column.align === 'right' && typeof item[column.key] === 'number') {
+            acc[column.key] = (acc[column.key] || 0) + item[column.key];
+          }
+        });
+        return acc;
+      }, {});
+    }, [data, columns]);
+
+    const grandTotals = useMemo(() => {
+      if (reportType === 'sales') {
+        return {
+          total_amount: data.reduce((acc, item) => acc + parseFloat(item.total_amount.toString()), 0),
+          cash_amount: data.reduce((acc, item) => acc + parseFloat(item.cash_amount.toString()), 0),
+          bank_amount: data.reduce((acc, item) => acc + parseFloat(item.bank_amount.toString()), 0),
+        };
+      } else if (reportType === 'mess') {
+        return {
+          total_amount: data.reduce((acc, item) => acc + parseFloat(item.total_amount.toString()), 0),
+          paid_amount: data.reduce((acc, item) => acc + parseFloat(item.paid_amount.toString()), 0),
+          pending_amount: data.reduce((acc, item) => acc + parseFloat(item.pending_amount.toString()), 0),
+        };
+      } else if (reportType === 'staff') {
+        return {
+          total_amount: data.reduce((acc, item) => acc + parseFloat(item.total_amount.toString()), 0),
+          cash_amount: data.reduce((acc, item) => acc + parseFloat(item.cash_amount.toString()), 0),
+          bank_amount: data.reduce((acc, item) => acc + parseFloat(item.bank_amount.toString()), 0),
+        };
+      }
+      return {};
+    }, [data, reportType]);
+
+    const formatDate = (dateString: string) => {
+      const date = new Date(dateString);
+      return format(date, "dd-MM-yyyy");
+    };
+
+    const formatNumber = (value: number | string) => {
+      if (typeof value === 'number') {
+        return value.toFixed(2);
+      }
+      if (typeof value === 'string' && !isNaN(parseFloat(value))) {
+        return parseFloat(value).toFixed(2);
+      }
+      return 'N/A';
+    };
+
+    const showActions = reportType === 'sales' || reportType === 'mess';
+
+    return (
+      <div className="rounded-md border shadow-sm overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columns.map((column) => (
+                <TableHead key={column.key} className={column.align === 'right' ? 'text-right' : ''}>
+                  {column.header}
+                </TableHead>
+              ))}
+              {showActions && <TableHead>Actions</TableHead>}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((item, index) => (
+              <TableRow key={index}>
+                {columns.map((column) => (
+                  <TableCell key={column.key} className={column.align === 'right' ? 'text-right' : ''}>
+                    {column.format ? column.format(item[column.key]) : item[column.key]}
+                  </TableCell>
+                ))}
+                {showActions && (
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button variant="ghost" size="sm" onClick={() => onViewHistory?.(item)}>
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => onEdit?.(item)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              {columns.map((column) => (
+                <TableCell key={column.key} className={column.align === 'right' ? 'text-right font-bold' : ''}>
+                  {column.key in totals ? (column.format ? column.format(totals[column.key]) : totals[column.key]) : 
+                   column.key === columns[0].key ? 'Grand Total' : 
+                   column.key in grandTotals ? (column.format ? column.format(grandTotals[column.key]) : grandTotals[column.key]) : ''}
+                </TableCell>
+              ))}
+              {showActions && <TableCell />}
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </div>
+    );
+  };
+
   return (
     <Layout>
       <div className="container mx-auto p-4 space-y-6">
         <Card>
           <CardContent className="p-6">
             <Tabs defaultValue="sales" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-5 lg:w-auto">
+              <TabsList className="grid w-full grid-cols-6 lg:w-auto">
                 <TabsTrigger value="sales" onClick={() => setReportType("sales")} className="data-[state=active]:bg-purple-600 bg-white rounded-l-lg data-[state=active]:text-white border border-purple-600">Sales Report</TabsTrigger>
                 <TabsTrigger value="mess" onClick={() => setReportType("mess")} className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600">Mess Report</TabsTrigger>
                 <TabsTrigger value="product" onClick={() => setReportType("product")} className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600">Product Report</TabsTrigger>
                 <TabsTrigger value="onlineDelivery" onClick={() => setReportType("onlineDelivery")} className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600">Online Delivery Report</TabsTrigger>
-                <TabsTrigger value="staff" onClick={() => setReportType("staff")} className="data-[state=active]:bg-purple-600 bg-white rounded-r-lg data-[state=active]:text-white border border-purple-600">Staff Report</TabsTrigger>
+                <TabsTrigger value="staff" onClick={() => setReportType("staff")} className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600">Staff Report</TabsTrigger>
+                <TabsTrigger value="driver" onClick={() => setReportType("driver")} className="data-[state=active]:bg-purple-600 bg-white rounded-r-lg data-[state=active]:text-white border border-purple-600">
+                  <Truck className="w-4 h-4 mr-2" />
+                  Driver Report
+                </TabsTrigger>
               </TabsList>
 
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
@@ -528,14 +773,13 @@ const ReportPage: React.FC = () => {
                 </Button>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
-                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                    <DatePicker
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0">
+                  <DatePicker
                       selected={fromDate}
                       onChange={(date) => setFromDate(date)}
                       dateFormat="yyyy-MM-dd"
                       placeholderText="From Date"
-                      className="w-full sm:w-auto p-2 border rounded"
-                    />
+                      className                    />
                     <DatePicker
                       selected={toDate}
                       onChange={(date) => setToDate(date)}
@@ -551,12 +795,13 @@ const ReportPage: React.FC = () => {
                 </div>
 
                 <SalesPrint
-                  reportType={reportType as "sales" | "mess" | "product" | "onlineDelivery" | "staff"}
+                  reportType={reportType as "sales" | "mess" | "product" | "onlineDelivery" | "staff" | "driver"}
                   reports={reports}
                   messReports={messReports}
                   productReports={productReports}
                   onlineDeliveryReports={onlineDeliveryReports}
                   staffReports={staffReports}
+                  driverReports={driverReports}
                   totalAmount={totalAmount}
                   totalCashAmount={totalCashAmount}
                   totalCardAmount={totalCardAmount}
@@ -607,259 +852,92 @@ const ReportPage: React.FC = () => {
                 )}
               </div>
 
-              <TabsContent value="sales" className="space-y-4">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-muted">
-                        <th className="p-2 text-left">Invoice</th>
-                        <th className="p-2 text-left">Mobile</th>
-                        <th className="p-2 text-left">Date</th>
-                        <th className="p-2 text-left">Order Type</th>
-                        <th className="p-2 text-left">Payment Method</th>
-                        <th className="p-2 text-left">Order Status</th>
-                        <th className="p-2 text-left">Total Amount</th>
-                        <th className="p-2 text-left">Cash Amount</th>
-                        <th className="p-2 text-left">Bank Amount</th>
-                        <th className="p-2 text-left">History</th>
-                        <th className="p-2 text-left">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedReports.map((report) => (
-                        <tr key={report.id} className="border-b">
-                          <td className="p-2">{report.invoice_number}</td>
-                          <td className="p-2">{report.customer_phone_number || "N/A"}</td>
-                          <td className="p-2">{format(new Date(report.created_at), "dd-MM-yyyy")}</td>
-                          <td className="p-2 capitalize" onClick={() => openModal(report.delivery_driver_id)}>{report.order_type}</td>
-                          <td className="p-2 capitalize">{report.payment_method}</td>
-                          <td className="p-2 capitalize">{report.status}</td>
-                          <td className="p-2">{report.total_amount}</td>
-                          <td className="p-2">
-                            {parseFloat(report.cash_amount) > 0 ? report.cash_amount : "N/A"}
-                          </td>
-                          <td className="p-2">
-                            {parseFloat(report.bank_amount) > 0 ? report.bank_amount : "N/A"}
-                          </td>
-                          <td className="p-2">
-                            <Button variant="ghost" size="sm" onClick={() => handleSalesMobileClick(report)}>
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </td>
-                          <td className="p-2">
-                            <Button variant="ghost" size="sm" onClick={() => handleSalesEditClick(report)}>
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {reportType === "staff" && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={selectedStaffId === null ? "default" : "outline"}
+                    onClick={() => handleStaffButtonClick(null)}
+                  >
+                    All Staff
+                  </Button>
+                  {staffUsers.map((staff) => (
+                    <Button
+                      key={staff.id}
+                      variant={selectedStaffId === staff.id ? "default" : "outline"}
+                      onClick={() => handleStaffButtonClick(staff.id)}
+                    >
+                      {staff.username}
+                    </Button>
+                  ))}
                 </div>
+              )}
+
+              {reportType === "driver" && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={selectedDriverId === null ? "default" : "outline"}
+                    onClick={() => handleDriverButtonClick(null)}
+                  >
+                    All Drivers
+                  </Button>
+                  {drivers.map((driver) => (
+                    <Button
+                      key={driver.id}
+                      variant={selectedDriverId === driver.id.toString() ? "default" : "outline"}
+                      onClick={() => handleDriverButtonClick(driver.id.toString())}
+                    >
+                      {driver.username}
+                    </Button>
+                  ))}
+                </div>
+              )}
+
+              <TabsContent value="sales" className="space-y-4">
+                <ReportTable 
+                  data={paginatedReports} 
+                  reportType="sales" 
+                  onEdit={handleEdit}
+                  onViewHistory={handleViewHistory}
+                />
               </TabsContent>
 
               <TabsContent value="mess" className="space-y-4">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-muted">
-                        <th className="p-2 text-left">Name</th>
-                        <th className="p-2 text-left">Mobile</th>
-                        <th className="p-2 text-left">Mess Type</th>
-                        <th className="p-2 text-left">Total</th>
-                        <th className="p-2 text-left">Paid</th>
-                        <th className="p-2 text-left">Pending</th>
-                        <th className="p-2 text-left">Start Date</th>
-                        <th className="p-2 text-left">End Date</th>
-                        <th className="p-2 text-left">Payment Method</th>
-                        <th className="p-2 text-left">Transactions</th>
-                        <th className="p-2 text-left">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedMessReports.map((report) => (
-                        <tr key={report.id} className="border-b">
-                          <td className="p-2">{report.customer_name}</td>
-                          <td className="p-2">{report.mobile_number}</td>
-                          <td className="p-2">{report.mess_type.name}</td>
-                          <td className="p-2">{report.grand_total}</td>
-                          <td className="p-2">{report.paid_amount}</td>
-                          <td className="p-2">{report.pending_amount}</td>
-                          <td className="p-2">{format(new Date(report.start_date), "dd-MM-yyyy")}</td>
-                          <td className="p-2">{format(new Date(report.end_date), "dd-MM-yyyy")}</td>
-                          <td className="p-2">{report.payment_method}</td>
-                          <td className="p-2">
-                            <Button variant="ghost" size="sm" onClick={() => handleMobileClick(report)}>
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </td>
-                          <td className="p-2">
-                            <Button variant="ghost" size="sm" onClick={() => handleMessEditClick(report)}>
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <ReportTable 
+                  data={paginatedMessReports} 
+                  reportType="mess" 
+                  onEdit={handleEdit}
+                  onViewHistory={handleViewHistory}
+                />
               </TabsContent>
 
               <TabsContent value="product" className="space-y-4">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-muted">
-                        <th className="p-2 text-left">Product Name</th>
-                        <th className="p-2 text-left">Total Quantity</th>
-                        <th className="p-2 text-left">Total Amount</th>
-                        <th className="p-2 text-left">Invoice Number</th>
-                        <th className="p-2 text-left">Order Created At</th>
-                        <th className="p-2 text-left">Order Type</th>
-                        <th className="p-2 text-left">Cash Amount</th>
-                        <th className="p-2 text-left">Bank Amount</th>
-                        <th className="p-2 text-left">Payment Method</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedProductReports.map((report, index) => (
-                        <tr key={index} className="border-b">
-                          <td className="p-2">{report.product_name}</td>
-                          <td className="p-2">{report.total_quantity}</td>
-                          <td className="p-2">{report.total_amount}</td>
-                          <td className="p-2">{report.invoice_number}</td>
-                          <td className="p-2">{format(new Date(report.order_created_at), "dd-MM-yyyy")}</td>
-                          <td className="p-2 capitalize">{report.order_type}</td>
-                          <td className="p-2">{report.cash_amount}</td>
-                          <td className="p-2">{report.bank_amount}</td>
-                          <td className="p-2 capitalize">{report.payment_method}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <ReportTable 
+                  data={paginatedProductReports} 
+                  reportType="product"
+                />
               </TabsContent>
 
               <TabsContent value="onlineDelivery" className="space-y-4">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-muted">
-                        <th className="p-2 text-left">Online Order Name</th>
-                        <th className="p-2 text-left">Percentage</th>
-                        <th className="p-2 text-left">Invoice</th>
-                        <th className="p-2 text-left">Date</th>
-                        <th className="p-2 text-left">Order Type</th>
-                        <th className="p-2 text-left">Payment Method</th>
-                        <th className="p-2 text-left">Order Status</th>
-                        <th className="p-2 text-left">Total Amount</th>
-                        <th className="p-2 text-left">Percentage Amount</th>
-                        <th className="p-2 text-left">Balance Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedOnlineDeliveryReports.map((report, index) => (
-                        <tr key={index} className="border-b">
-                          <td className="p-2">{report.onlineordername}</td>
-                          <td className="p-2">{report.percentage}%</td>
-                          <td className="p-2">{report.invoice}</td>
-                          <td className="p-2">{format(new Date(report.date), "dd-MM-yyyy")}</td>
-                          <td className="p-2 capitalize">{report.order_type}</td>
-                          <td className="p-2 capitalize">{report.payment_method}</td>
-                          <td className="p-2 capitalize">{report.order_status}</td>
-                          <td className="p-2">{report.total_amount}</td>
-                          <td className="p-2">{report.percentage_amount}</td>
-                          <td className="p-2">{report.balance_amount}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <ReportTable 
+                  data={paginatedOnlineDeliveryReports} 
+                  reportType="onlineDelivery"
+                />
               </TabsContent>
 
               <TabsContent value="staff" className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant={selectedStaffId === null ? "default" : "outline"}
-                      onClick={() => handleStaffButtonClick(null)}
-                    >
-                      <Users className="w-4 h-4 mr-2" />
-                      All Staff
-                    </Button>
-                    {[...adminUsers, ...staffUsers].map((user) => (
-                      <Button
-                        key={user.id}
-                        variant={selectedStaffId === user.id ? "default" : "outline"}
-                        onClick={() => handleStaffButtonClick(user.id)}
-                      >
-                        <User className="w-4 h-4 mr-2" />
-                        {user.username}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-muted">
-                        <th className="p-2 text-left">Invoice</th>
-                        <th className="p-2 text-left">Date</th>
-                        <th className="p-2 text-left">Order Type</th>
-                        <th className="p-2 text-left">Payment Method</th>
-                        <th className="p-2 text-left">Order Status</th>
-                        <th className="p-2 text-left">Total Amount</th>
-                        <th className="p-2 text-left">Cash Amount</th>
-                        <th className="p-2 text-left">Bank Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Array.isArray(paginatedStaffReports) && paginatedStaffReports.length > 0 ? (
-                        paginatedStaffReports.map((report, index) => (
-                          <tr key={index} className="border-b">
-                            <td className="p-2">{report.invoice_number}</td>
-                            <td className="p-2">{report.created_at ? format(new Date(report.created_at), "dd-MM-yyyy") : "N/A"}</td>
-                            <td className="p-2 capitalize">{report.order_type}</td>
-                            <td className="p-2 capitalize">{report.payment_method}</td>
-                            <td className="p-2 capitalize">{report.status}</td>
-                            <td className="p-2">{report.total_amount}</td>
-                            <td className="p-2">
-                              {report.cash_amount != null ? report.cash_amount : "N/A"}
-                            </td>
-                            <td className="p-2">
-                              {report.bank_amount != null ? report.bank_amount : "N/A"}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={10} className="p-2 text-center">No staff reports available</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                <ReportTable 
+                  data={paginatedStaffReports} 
+                  reportType="staff"
+                />
+              </TabsContent>
+
+              <TabsContent value="driver" className="space-y-4">
+                <ReportTable 
+                  data={driverReports} 
+                  reportType="driver"
+                />
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
-
-        <Card className="w-full">
-          <CardContent className="p-6">
-            <div className="flex flex-col items-end space-y-2">
-              <p className="font-semibold text-right">
-                Cash Amount: <span className="font-normal">{totalCashAmount.toFixed(2)}</span>
-              </p>
-              <p className="font-semibold text-right">
-                Bank Amount: <span className="font-normal">{totalBankAmount.toFixed(2)}</span>
-              </p>
-              <p className="font-semibold text-right">
-                Credit Amount: <span className="font-normal">{totalCreditAmount.toFixed(2)}</span>
-              </p>
-              <p className="font-semibold text-right">
-                Total Amount: <span className="font-normal">{totalAmount.toFixed(2)}</span>
-              </p>
-            </div>
           </CardContent>
         </Card>
 
@@ -874,6 +952,8 @@ const ReportPage: React.FC = () => {
               ? messReports.length
               : reportType === "product"
               ? productReports.length
+              : reportType === "driver"
+              ? driverReports.length
               : onlineDeliveryReports.length) / itemsPerPage
           )}
           onPageChange={(page) => {
@@ -885,15 +965,24 @@ const ReportPage: React.FC = () => {
           }}
         />
 
-        {isTransactionsModalOpen && currentMember && (
-          <TransactionsModal
-            transactions={transactions}
-            isOpen={isTransactionsModalOpen}
+        {isSalesEditModalOpen && selectedItem && (
+          <SalesEditModal
+            isOpen={isSalesEditModalOpen}
             onClose={handleModalClose}
+            report={selectedItem as SalesReport}
+            onUpdate={handleReportUpdate}
           />
         )}
 
-        {isSalesHistoryModalOpen && currentMember && (
+        {isMessEditModalOpen && selectedItem && (
+          <MessEditModal
+            isOpen={isMessEditModalOpen}
+            onClose={handleModalClose}
+            report={selectedItem as MessReport}
+          />
+        )}
+
+        {isSalesHistoryModalOpen && selectedItem && (
           <SalesHistoryModal
             orderhistory={orderHistory}
             isOpen={isSalesHistoryModalOpen}
@@ -901,23 +990,13 @@ const ReportPage: React.FC = () => {
           />
         )}
 
-        {isSalesEditModalOpen && (
-          <SalesEditModal
-            isOpen={isSalesEditModalOpen}
+        {isTransactionsModalOpen && selectedItem && (
+          <TransactionsModal
+            transactions={transactions}
+            isOpen={isTransactionsModalOpen}
             onClose={handleModalClose}
-            report={currentReport as SalesReport}
-            onUpdate={handleReportUpdate}
           />
         )}
-
-        {isMessEditModalOpen && (
-          <MessEditModal
-            isOpen={isMessEditModalOpen}
-            onClose={handleModalClose}
-            report={currentReport as MessReport}
-          />
-        )}
-        
 
         {isModalOpen && (
           <DriverDetailsModal driverId={selectedDriverId!} closeModal={closeModal} />

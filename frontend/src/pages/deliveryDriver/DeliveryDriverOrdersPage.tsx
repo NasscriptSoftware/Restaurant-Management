@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { DeliveryOrder, PaginatedResponse } from "@/types";
+import React, { useState, useEffect, useMemo } from "react";
+import { DeliveryOrder, PaginatedResponse, ReportData } from "@/types";
 import {
   fetchDriverOrders,
   updateDeliveryOrderStatus,
   deleteDeliveryOrder,
+  individualDriverReport,
 } from "@/services/api";
 import { DeliveryDriverHeader } from "@/components/Layout/DeliveryDriverHeader";
 import { UserRoundPenIcon } from "lucide-react";
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { format } from "date-fns";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 
 export const STATUS_CHOICES: [string, string][] = [
   ["pending", "Pending"],
@@ -36,11 +38,17 @@ export const STATUS_CHOICES: [string, string][] = [
 
 export const DeliveryDriverOrdersPage: React.FC = () => {
   const [orders, setOrders] = useState<DeliveryOrder[]>([]);
+  const [reportData, setReportData] = useState<ReportData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState<'orders' | 'reports'>('orders');
 
   useEffect(() => {
-    getOrders();
-  }, []);
+    if (activeSection === 'orders') {
+      getOrders();
+    } else {
+      getReportData();
+    }
+  }, [activeSection]);
 
   const getOrders = async () => {
     try {
@@ -49,6 +57,18 @@ export const DeliveryDriverOrdersPage: React.FC = () => {
       setOrders(data.results);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getReportData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await individualDriverReport();
+      setReportData(response.data);
+    } catch (error) {
+      console.error("Failed to fetch report data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -137,12 +157,87 @@ export const DeliveryDriverOrdersPage: React.FC = () => {
     </Card>
   );
 
+  const ReportsTable: React.FC<{ reportData: ReportData[] }> = ({ reportData }) => {
+    const totals = useMemo(() => {
+      return reportData.reduce((acc, item) => {
+        acc.totalAmount += parseFloat(item.order.total_amount);
+        acc.cashAmount += parseFloat(item.order.cash_amount);
+        acc.bankAmount += parseFloat(item.order.bank_amount);
+        acc.deliveryCharge += parseFloat(item.order.delivery_charge);
+        return acc;
+      }, {
+        totalAmount: 0,
+        cashAmount: 0,
+        bankAmount: 0,
+        deliveryCharge: 0
+      });
+    }, [reportData]);
+
+    return (
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[100px]">Order ID</TableHead>
+              <TableHead>Invoice Number</TableHead>
+              <TableHead>Customer Name</TableHead>
+              <TableHead>Address</TableHead>
+              <TableHead>Payment Method</TableHead>
+              <TableHead>Total Amount</TableHead>
+              <TableHead>Bank Amount</TableHead>
+              <TableHead>Cash Amount</TableHead>
+              <TableHead>Delivery Charge</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {reportData.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-medium">{item.order.id}</TableCell>
+                <TableCell>{item.order.invoice_number}</TableCell>
+                <TableCell>{item.order.customer_name}</TableCell>
+                <TableCell className="max-w-[200px] truncate">{item.order.address}</TableCell>
+                <TableCell>{item.order.payment_method}</TableCell>
+                <TableCell>{item.order.total_amount}</TableCell>
+                <TableCell>{item.order.bank_amount}</TableCell>
+                <TableCell>{item.order.cash_amount}</TableCell>
+                <TableCell>{item.order.delivery_charge}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={5} className="font-bold">Grand Total</TableCell>
+              <TableCell className="font-bold">{totals.totalAmount.toFixed(2)}</TableCell>
+              <TableCell className="font-bold">{totals.bankAmount.toFixed(2)}</TableCell>
+              <TableCell className="font-bold">{totals.cashAmount.toFixed(2)}</TableCell>
+              <TableCell className="font-bold">{totals.deliveryCharge.toFixed(2)}</TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </div>
+    );
+  };
+
   return (
     <div className="container mt-10 px-4">
       <DeliveryDriverHeader />
 
       <div className="flex justify-between items-center mt-6 mb-2">
-        <h1 className="text-2xl font-bold">My Orders</h1>
+        <div>
+          <Button
+            onClick={() => setActiveSection('orders')}
+            variant={activeSection === 'orders' ? "default" : "outline"}
+            className="mr-2"
+          >
+            My Orders
+          </Button>
+          <Button
+            onClick={() => setActiveSection('reports')}
+            variant={activeSection === 'reports' ? "default" : "outline"}
+          >
+            My Reports
+          </Button>
+        </div>
         <DrawerDialogDemo>
           <Avatar className="cursor-pointer flex items-center justify-center">
             <UserRoundPenIcon size={28} className="flex items-center" />
@@ -154,11 +249,15 @@ export const DeliveryDriverOrdersPage: React.FC = () => {
         <Loader />
       ) : (
         <div>
-          {orders.length > 0 ? (
-            orders.map((order) => <OrderCard key={order.id} order={order} />)
+          {activeSection === 'orders' ? (
+            orders.length > 0 ? (
+              orders.map((order) => <OrderCard key={order.id} order={order} />)
+            ) : (
+              <p className="text-center py-4">No orders available.</p>
+            )
           ) : (
-            <p className="text-center py-4">No orders available.</p>
-          )}
+            <ReportsTable reportData={reportData} />
+            )}
         </div>
       )}
     </div>

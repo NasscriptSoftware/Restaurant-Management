@@ -1,5 +1,6 @@
 import React from "react";
 import { Order, Dish } from "../../types";
+import { QRCodeSVG } from "qrcode.react";
 
 interface SalesPrintProps {
   order: Order;
@@ -115,6 +116,12 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
           <span className="font-bold">QAR {order.total_amount}</span>
         </div>
       </div>
+
+      {/* Add QR code */}
+      <div className="mt-4 flex justify-center">
+        <QRCodeSVG value={`Order ID: ${order.id}`} size={64} />
+      </div>
+      <p className="text-center text-xs mt-1">Scan for Order ID</p>
     </div>
   );
 };

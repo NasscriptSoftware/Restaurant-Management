@@ -17,7 +17,7 @@ class User(AbstractUser):
     ROLES = (
         ("admin", "Admin"),
         ("staff", "Staff"),
-        ("driver", "Driver"),
+        ("  ", "Driver"),
     )
     GENDERS = (
         ("male", "Male"),

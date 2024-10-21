@@ -5,6 +5,7 @@ from .models import DeliveryDriver, DeliveryOrder
 from .serializers import DeliveryDriverSerializer, DeliveryOrderSerializer, DeliveryOrderUpdateSerializer
 from restaurant_app.models import Order
 from restaurant_app.serializers import OrderTypeChangeSerializer
+from django.utils.dateparse import parse_date
 
 
 class DeliveryDriverViewSet(viewsets.ModelViewSet):
@@ -122,3 +123,27 @@ class DeliveryOrderViewSet(viewsets.ModelViewSet):
             if not active_orders.exists():
                 driver.is_available = True
                 driver.save()
+    
+    @action(detail=False, methods=['get'], url_path='driver-orders-report')
+    def driver_orders_report(self, request):
+        """
+        Returns the list of orders for the current driver filtered by optional from_date and to_date.
+        """
+        delivery_driver = DeliveryDriver.objects.get(user=request.user)
+        delivery_orders = DeliveryOrder.objects.filter(driver=delivery_driver)
+        
+        # Extract query parameters
+        from_date = request.query_params.get('from_date')
+        to_date = request.query_params.get('to_date')
+        
+        # Filter by from_date and to_date if provided
+        if from_date:
+            from_date_parsed = parse_date(from_date)
+            delivery_orders = delivery_orders.filter(created_at__gte=from_date_parsed)
+        if to_date:
+            to_date_parsed = parse_date(to_date)
+            delivery_orders = delivery_orders.filter(created_at__lte=to_date_parsed)
+        
+        # Serialize and return the filtered data
+        serializer = self.get_serializer(delivery_orders, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

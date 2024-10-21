@@ -559,6 +559,64 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['GET'], url_path='driver-report')
+    def driver_report_list(self, request):
+        """
+        Retrieve a report of orders for all drivers or filtered by date range.
+        """
+        return self._generate_driver_report(request)
+
+    @action(detail=True, methods=['GET'], url_path='driver-report')
+    def driver_report_detail(self, request, pk=None):
+        """
+        Retrieve a report of orders for a specific driver.
+        """
+        return self._generate_driver_report(request, driver_id=pk)
+
+    def _generate_driver_report(self, request, driver_id=None):
+        """
+        Helper method to generate driver report for both list and detail views.
+        """
+        from_date = request.query_params.get('from_date')
+        to_date = request.query_params.get('to_date')
+        delivery_driver_id = request.query_params.get('delivery_driver_id') or driver_id
+
+        # Start with all delivery orders
+        orders = self.queryset.filter(order_type='delivery')
+
+        # Apply driver filter if provided
+        if delivery_driver_id:
+            orders = orders.filter(delivery_driver_id=delivery_driver_id)
+            print(f"Filtering for driver ID: {delivery_driver_id}")  # Add this log
+        else:
+            print("No driver ID provided, returning all delivery orders")  # Add this log
+
+        # Apply date range filter if provided
+        if from_date:
+            from_date = parse_date(from_date)
+            orders = orders.filter(created_at__date__gte=from_date)
+        if to_date:
+            to_date = parse_date(to_date)
+            orders = orders.filter(created_at__date__lte=to_date)
+
+        # Select the fields we need
+        report_data = orders.values(
+            'id',
+            'invoice_number',
+            'customer_name',
+            'address',
+            'payment_method',
+            'total_amount',
+            'bank_amount',
+            'cash_amount',
+            'delivery_charge',
+            'delivery_driver_id'  # Include this to verify the driver ID
+        )
+
+        print(f"Number of orders in report: {len(report_data)}")  # Add this log
+
+        return Response(list(report_data))
+
 
 class OrderStatusUpdateViewSet(viewsets.GenericViewSet):
     queryset = Order.objects.all()
