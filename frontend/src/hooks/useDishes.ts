@@ -1,14 +1,18 @@
-import { useState } from 'react';
-import { useQuery } from 'react-query';
-import { getDishes } from '../services/api';
-import { UseDishesReturn } from '../types';
+import { useState } from "react";
+import { useQuery } from "react-query";
+import { getDishes } from "../services/api";
+import { UseDishesReturn } from "../types/index";
 
 export const useDishes = (): UseDishesReturn => {
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError, refetch } = useQuery(['dishes'], () => getDishes(), {
-    keepPreviousData: true,
-  });
+  const { data, isLoading, isError, refetch } = useQuery(
+    ["dishes"],
+    () => getDishes(),
+    {
+      keepPreviousData: true,
+    }
+  );
 
   const addDishToOrder = () => null;
 

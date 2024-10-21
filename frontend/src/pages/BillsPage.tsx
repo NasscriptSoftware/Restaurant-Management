@@ -5,7 +5,7 @@ import PaginationControls from "../components/Layout/PaginationControls";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { RotateCcw } from "lucide-react";
-import { Bill } from "../types";
+import { Bill } from "../types/index";
 import Loader from "../components/Layout/Loader";
 import { api } from "@/services/api";
 
@@ -85,7 +85,7 @@ const BillsPage: React.FC = () => {
 
   return (
     <Layout>
-      <h1 className="text-3xl font-bold mb-6">Generated Bills</h1>
+      <h1 className="text-3xl font-bold mb-6 ml-10 mt-2">Generated Bills</h1>
       <div className="flex flex-col md:flex-row justify-between items-center mb-4 space-y-4 md:space-y-0">
         <div className="flex flex-col md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4 w-full md:w-auto">
           <div className="w-full md:w-auto">

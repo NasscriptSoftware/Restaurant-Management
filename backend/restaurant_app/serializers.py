@@ -104,7 +104,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class DishSizeSerializer(serializers.ModelSerializer):
     class Meta:
         model = DishSize
-        fields = ['size', 'price']
+        fields = ['id','size', 'price']
 
 
 class DishSerializer(serializers.ModelSerializer):
@@ -135,10 +135,11 @@ class OnlineOrderSerializer(serializers.ModelSerializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     dish = serializers.PrimaryKeyRelatedField(queryset=Dish.objects.all())
-
+    dish_size = serializers.PrimaryKeyRelatedField(queryset=DishSize.objects.all(), required=False)
+    
     class Meta:
         model = OrderItem
-        fields = ["id","dish", "quantity","is_newly_added","variants"]
+        fields = ["id","dish", "quantity","is_newly_added","variants","dish_size",]
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -177,7 +178,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "chair_amount",
             "chair_details",
             "foc_products",
-            "foc_product_details"
+            "foc_product_details",
         ]
 
     def get_foc_product_details(self, obj):
@@ -199,7 +200,10 @@ class OrderSerializer(serializers.ModelSerializer):
 
         for item_data in items_data:
             order_item = OrderItem.objects.create(order=order, **item_data)
-            total_amount += order_item.quantity * order_item.dish.price
+            if order_item.dish_size:
+                total_amount += order_item.quantity * order_item.dish_size.price
+            else:
+                total_amount += order_item.quantity * order_item.dish.price
         
         # Add delivery charge to total amount if it's not the default value
         if order.delivery_charge != 0:
@@ -215,19 +219,26 @@ class OrderSerializer(serializers.ModelSerializer):
         foc_products_data = validated_data.pop("foc_products", None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+        
         # Start by resetting the total amount to 0
         total_amount = 0
 
         # Sum existing items' total amount
         for existing_item in instance.items.all():
-            total_amount += existing_item.quantity * existing_item.dish.price
+            if existing_item.dish_size:
+                total_amount += existing_item.quantity * existing_item.dish_size.price
+            else:
+                total_amount += existing_item.quantity * existing_item.dish.price
 
         # Add new items' total amount
         if items_data:
             for item_data in items_data:
                 item_data['is_newly_added'] = True  # Marking as newly added
                 order_item = OrderItem.objects.create(order=instance, **item_data)
-                total_amount += order_item.quantity * order_item.dish.price
+                if order_item.dish_size:
+                    total_amount += order_item.quantity * order_item.dish_size.price
+                else:
+                    total_amount += order_item.quantity * order_item.dish.price
         
         # Add delivery charge to total amount if it's not the default value
         if instance.delivery_charge != 0:
@@ -610,3 +621,4 @@ class FOCProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = FOCProduct
         fields = ['id', 'name', 'quantity']
+

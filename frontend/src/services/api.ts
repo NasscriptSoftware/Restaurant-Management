@@ -271,8 +271,16 @@ export const fetchOnlineOrders = async () => {
   const response = await api.get(`/online-orders/`);
   return response.data;
 };
+export const fetchOnlineOrderData = async (id:number) => {
+  const response = await api.get(`/online-orders/${id}/`);
+  return response.data;
+};
 export const fetchFocProducts  = async () => {
   const response = await api.get(`/focproducts/`);
+  return response.data;
+};
+export const fetchDishSizes  = async (id:number) => {
+  const response = await api.get(`/dish-sizes/${id}/`);
   return response.data;
 };
 

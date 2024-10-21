@@ -1,12 +1,10 @@
-
-
 import React from "react";
 import DishItem from "./DishItem";
-import { DishListProps } from "../../types/index";
+import { DishListProps, Dish } from "../../types/index";
 import { motion } from 'framer-motion';
 
 const DishList: React.FC<DishListProps> = ({ dishes, onAddDish, showImage }) => {
-  const handleAddDish = (dish: any) => {
+  const handleAddDish = (dish: Dish) => {
     onAddDish(dish);
   };
 
@@ -38,5 +36,3 @@ const DishList: React.FC<DishListProps> = ({ dishes, onAddDish, showImage }) => 
 };
 
 export default DishList;
-
-

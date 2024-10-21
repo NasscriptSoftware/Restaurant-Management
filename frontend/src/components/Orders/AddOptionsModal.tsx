@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchFocProducts, api } from "@/services/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Plus, Minus } from "lucide-react";
+import { Search, X, Plus, Minus, ShoppingCart } from "lucide-react";
 import { Option, Order } from "@/types/index";
+import { Badge } from "@/components/ui/badge";
 
 interface AddOptionsModalProps {
   onClose: () => void;
@@ -83,22 +84,23 @@ const AddOptionsModal: React.FC<AddOptionsModalProps> = ({
       const updatedOrder = response.data;
       console.log('Updated order:', updatedOrder);
 
-      onSubmit(updatedOrder); // Call onSubmit with the updated order
+      onSubmit(updatedOrder);
       onClose();
     } catch (error) {
       console.error('Error updating order with FOC products:', error);
-      // Add user-facing error handling here, e.g., show an error message
     }
   };
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Add FOC to Order</DialogTitle>
-          <p>{orderId}</p>
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="border-b pb-4">
+          <div className="flex justify-between items-center">
+            <DialogTitle className="text-2xl font-bold">Add FOC to Order</DialogTitle>
+            <Badge variant="secondary" className="text-lg mt-2">Order ID: #{orderId}</Badge>
+          </div>
         </DialogHeader>
-        <div className="flex-grow overflow-hidden flex flex-col">
+        <div className="flex-grow overflow-hidden flex flex-col py-4">
           <div className="mb-4 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <Input
@@ -118,61 +120,71 @@ const AddOptionsModal: React.FC<AddOptionsModalProps> = ({
               </Button>
             )}
           </div>
-          <div className="flex-grow overflow-hidden flex gap-4">
-            <div className="flex-1 overflow-y-auto pr-2">
-              <h4 className="text-lg font-semibold mb-2">Available FOC Products</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex-grow overflow-hidden flex gap-6">
+            <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+              <h4 className="text-lg font-semibold mb-3">Available FOC Products</h4>
+              <div className="grid grid-cols-1 gap-3">
                 <AnimatePresence>
                   {filteredFocProducts.map((item) => (
                     <motion.div
                       key={item.id}
                       layout
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.2 }}
-                      className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                      className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 group"
+                      onClick={() => handleAddOption(item)}
                     >
-                      <h3 className="font-semibold text-lg mb-2">{item.name}</h3>
-                      <p className="text-sm text-gray-600 mb-4">Quantity: {item.quantity}</p>
-                      <Button
-                        onClick={() => handleAddOption(item)}
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                      >
-                        <Plus className="mr-2 h-4 w-4" /> Add to Order
-                      </Button>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="font-semibold text-lg group-hover:text-blue-600 transition-colors">{item.name}</h3>
+                          <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                        </div>
+                        <Button
+                          onClick={() => handleAddOption(item)}
+                          variant="outline"
+                          size="sm"
+                          className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Plus className="h-4 w-4 mr-1" /> Add
+                        </Button>
+                      </div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
               </div>
             </div>
             <div className="w-px bg-gray-200" />
-            <div className="flex-1 overflow-y-auto pl-2">
-              <h4 className="text-lg font-semibold mb-2">Added Options</h4>
+            <div className="flex-1 overflow-y-auto pl-4 custom-scrollbar">
+              <h4 className="text-lg font-semibold mb-3 flex items-center">
+                <ShoppingCart className="mr-2 h-5 w-5" />
+                Added Options
+                <Badge variant="secondary" className="ml-2">{addedOptions.length}</Badge>
+              </h4>
               <AnimatePresence>
                 {addedOptions.map((item) => (
                   <motion.div
                     key={item.id}
                     layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.2 }}
-                    className="bg-gray-50 p-4 rounded-lg shadow-sm mb-4"
+                    className="bg-white p-4 rounded-lg shadow-sm mb-3 border border-gray-200 group hover:bg-gray-50 transition-all z-10 hover:z-20 hover:shadow-md"
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <h3 className="font-semibold">{item.name}</h3>
+                        <h3 className="font-semibold text-gray-900">{item.name}</h3>
                         <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
                       </div>
                       <Button
                         onClick={() => handleRemoveOption(item.id)}
-                        variant="destructive"
+                        variant="ghost"
                         size="sm"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
                       >
-                        <Minus className="h-4 w-4" />
+                        <Minus className="h-4 w-4 mr-1" /> Remove
                       </Button>
                     </div>
                   </motion.div>
@@ -181,12 +193,16 @@ const AddOptionsModal: React.FC<AddOptionsModalProps> = ({
             </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="border-t pt-4">
           <Button onClick={onClose} variant="outline">
             Cancel
           </Button>
-          <Button onClick={handleFinalSubmit} variant="default">
-            Add to Order
+          <Button 
+            onClick={handleFinalSubmit} 
+            variant="default"
+            disabled={addedOptions.length === 0}
+          >
+            Add {addedOptions.length} {addedOptions.length === 1 ? 'FOC PRODUCT' : 'FOC PRODUCTS'} TO ORDER
           </Button>
         </DialogFooter>
       </DialogContent>

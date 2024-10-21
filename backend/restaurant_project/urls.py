@@ -7,6 +7,7 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from restaurant_app.views import (
     ChairsViewSet,
+    DishSizeViewSet,
     FOCProductViewSet,
     OnlineOrderViewSet,
     UserViewSet,
@@ -58,6 +59,7 @@ router.register(r'users', UserViewSet)
 
 router.register(r"login", LoginViewSet, basename="login")
 router.register(r"dishes", DishViewSet, basename="dishes")
+router.register(r'dish-sizes', DishSizeViewSet, basename="dish-sizes")
 router.register(r'variants', DishVariantViewSet, basename="variants")
 router.register(r"categories", CategoryViewSet, basename="categories")
 

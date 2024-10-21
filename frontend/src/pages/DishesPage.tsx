@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "react-query";
-import { Check, ChevronsUpDown, CircleCheck, Search, Image, ImageOff } from "lucide-react";
+import { Check, ChevronsUpDown, CircleCheck, Search,Cog } from "lucide-react";
 import { motion } from "framer-motion";
 import Layout from "../components/Layout/Layout";
 import DishList from "../components/Dishes/DishList";
@@ -59,6 +59,10 @@ type OnlineOrder = {
 
   // Add other relevant fields
 };
+interface Size {
+  size: string;
+  price: string;
+}
 
 const DishesPage: React.FC = () => {
   const dispatch = useDispatch();
@@ -150,8 +154,31 @@ const DishesPage: React.FC = () => {
     localStorage.setItem('showImage', JSON.stringify(showImage));
   }, [showImage]);
 
-  const handleAddDish = (dish: Dish) => {
-    dispatch(addItem({ ...dish, quantity: 1, variants: [] }));
+  const handleAddDish = (dish: Dish & { selectedSize?: Size }) => {
+    if (dish.sizes && dish.sizes.length > 0) {
+      // If the dish has sizes, add each size as a separate item
+      dish.sizes.forEach((size) => {
+        const newDish = {
+          ...dish,
+          id: `${dish.id}-${size.id}`, // Create a unique ID for each size
+          price: parseFloat(size.price),
+          quantity: 1,
+          variants: [],
+          selectedSize: size,
+        };
+        dispatch(addItem(newDish));
+      });
+    } else {
+      // If the dish doesn't have sizes, add it as before
+      const price = dish.price ? parseFloat(dish.price) : 0;
+      const newDish = {
+        ...dish,
+        price,
+        quantity: 1,
+        variants: [],
+      };
+      dispatch(addItem(newDish));
+    }
     setIsOrderVisible(true);
   };
 
@@ -180,17 +207,42 @@ const DishesPage: React.FC = () => {
         }
       }
       const orderData: OrderFormData = {
-        items: orderItems.map((item) => ({
-          id: item.id,
-          dish: item.id,
-          quantity: item.quantity || 0,
-          variants: item.variants.map((variant) => ({
-            variantId: variant.variantId,
-            name: variant.name,
-            quantity: variant.quantity,
-          })),
-          is_newly_added: false,
-        })),
+        items: orderItems.map((item) => {
+          let dishId = item.id;
+          let sizeId = null;
+
+          // Check if the item has a selectedSize property
+          if (item.selectedSize && typeof item.selectedSize.id === 'number') {
+            sizeId = item.selectedSize.id;
+            // If the item.id is a string, it might be the composite id
+            if (typeof item.id === 'string') {
+              const parts = item.id.split('-');
+              if (parts.length === 2) {
+                dishId = parseInt(parts[0], 10);
+                // We already have sizeId from selectedSize, so we don't need to parse it again
+              } else {
+                // If it's not in the expected format, use the whole string as dishId
+                dishId = parseInt(item.id, 10) || item.id;
+              }
+            }
+          } else {
+            // If there's no selectedSize, treat the id as is
+            dishId = typeof item.id === 'string' ? parseInt(item.id, 10) || item.id : item.id;
+          }
+
+          return {
+            id: dishId,
+            dish: dishId,
+            quantity: item.quantity || 0,
+            variants: item.variants.map((variant) => ({
+              variantId: variant.variantId,
+              name: variant.name,
+              quantity: variant.quantity,
+            })),
+            is_newly_added: false,
+            ...(sizeId !== null ? { dish_size: sizeId } : {}),
+          };
+        }),
         total_amount: parseFloat(total.toFixed(2)),
         status: "pending",
         order_type: orderType,
@@ -204,6 +256,7 @@ const DishesPage: React.FC = () => {
           orderType === "delivery" && selectedDriver ? selectedDriver.id : null,
         kitchen_note: kitchenNote,
       };
+            
 
       // Add online_order only if orderType is "onlinedelivery"
       if (orderType === "onlinedelivery" && onlineDeliveryData) {
@@ -259,6 +312,8 @@ const DishesPage: React.FC = () => {
     return categoryMatch && searchMatch;
   });
 
+  const servicesCategory = categories?.find(category => category.name.toLowerCase() === 'service');
+
   if (isLoading)
     return (
       <Layout>
@@ -273,7 +328,7 @@ const DishesPage: React.FC = () => {
     );
 
   const subtotal = orderItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + parseFloat(item.price) * item.quantity,
     0
   );
   const total = subtotal;
@@ -282,43 +337,41 @@ const DishesPage: React.FC = () => {
     <Layout>
       <div className="flex flex-col lg:flex-row">
         <div className="w-full pr-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold mb-4 sm:mb-0">
+          <div className="flex flex-col sm:flex-row justify-between items-start mb-8">
+            <h2 className="text-3xl font-bold mb-4 sm:mb-0 ml-10 mt-2">
               Choose Categories
             </h2>
-            <div className="flex items-center w-full sm:w-auto">
-              <Input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products..."
-                className="w-full sm:w-64 mr-2"
-              />
-              <Button variant="outline" size="icon" className="mr-2">
-                <Search className="h-4 w-4" />
-              </Button>
-              <motion.div 
-                className="relative w-28 h-8 bg-[#6f42c1] rounded-full p-1 cursor-pointer"
-                onClick={() => setShowImage(!showImage)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <motion.div 
-                  className="absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] bg-white rounded-full shadow-lg flex items-center justify-center"
-                  animate={{ left: showImage ? '2px' : 'calc(50% + 0px)' }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            <div className="flex flex-col items-end w-full sm:w-auto">
+              <div className="flex items-center w-full sm:w-auto mb-2">
+                <Input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products..."
+                  className="w-full sm:w-64 mr-2"
+                />
+                <Button variant="outline" size="icon">
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
+              {/* Image toggle button */}
+              {/* ... */}
+              {servicesCategory && (
+                <Button
+                  onClick={() => handleCategoryClick(servicesCategory.id)}
+                  variant={selectedCategory === servicesCategory.id ? "default" : "outline"}
+                  className={`w-full sm:w-auto mt-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                    selectedCategory === servicesCategory.id
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:border-purple-500 hover:text-purple-500'
+                  }`}
                 >
-                  {showImage ? (
-                    <Image size={12} className="text-[#6f42c1]" />
-                  ) : (
-                    <ImageOff size={12} className="text-[#6f42c1]" />
-                  )}
-                </motion.div>
-                <div className="h-full flex items-center justify-around text-white text-[10px] font-bold">
-                  <span className={showImage ? 'invisible' : ''}></span>
-                  <span className={!showImage ? 'invisible' : ''}></span>
-                </div>
-              </motion.div>
+                  <div className="flex items-center justify-center">
+                    <Cog className="mr-2 h-5 w-5" />
+                    <span>Services</span>
+                  </div>
+                </Button>
+              )}
             </div>
           </div>
           <div className="flex flex-wrap gap-2 mb-8">
@@ -328,7 +381,7 @@ const DishesPage: React.FC = () => {
             >
               All items
             </Button>
-            {categories?.map((category) => (
+            {categories?.filter(category => category.name.toLowerCase() !== 'services').map((category) => (
               <Button
                 key={category.id}
                 onClick={() => handleCategoryClick(category.id)}
@@ -364,7 +417,7 @@ const DishesPage: React.FC = () => {
         </div>
         {orderItems.length > 0 && (
           <div
-            className={`w-full lg:w-[550px] bg-white p-8 mt-2 ${
+            className={`w-full flex  md:justify-center items-center md:items-start flex-col md:flex-row lg:w-[550px] bg-white p-8 mt-2 ${
               isOrderVisible ? "block" : "hidden lg:block"
             }`}
           >
@@ -380,7 +433,7 @@ const DishesPage: React.FC = () => {
                         typeof item.category === "number"
                           ? item.category
                           : item.category.id,
-                      price: item.price.toString(),
+                      price: item.price,
                     }}
                     incrementQuantity={() => updateQuantityFn(item.id, 1)}
                     decrementQuantity={() => updateQuantityFn(item.id, -1)}

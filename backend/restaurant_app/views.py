@@ -144,6 +144,11 @@ class DishViewSet(viewsets.ModelViewSet):
     ordering_fields = ["name", "price"]
 
 
+class DishSizeViewSet(viewsets.ModelViewSet):
+    queryset = DishSize.objects.all()
+    serializer_class = DishSizeSerializer
+
+
 class DishVariantViewSet(viewsets.ModelViewSet):
     queryset = DishVariant.objects.all()
     serializer_class = DishVariantSerializer
