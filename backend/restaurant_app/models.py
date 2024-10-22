@@ -275,6 +275,19 @@ class Order(models.Model):
         self.save(update_fields=["total_amount"])
 
 
+@receiver(post_save, sender=Order)
+def create_customer_details(sender, instance, **kwargs):
+    # Check if the order type is "delivery"
+    if instance.order_type == "delivery":
+        # Check if the phone number exists in the CustomerDetails table
+        if not CustomerDetails.objects.filter(phone_number=instance.customer_phone_number).exists():
+            # Create a new CustomerDetails entry
+            CustomerDetails.objects.create(
+                customer_name=instance.customer_name,
+                phone_number=instance.customer_phone_number,
+                address=instance.address
+            )
+
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
