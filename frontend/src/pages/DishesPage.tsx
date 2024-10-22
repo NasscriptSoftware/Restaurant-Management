@@ -155,7 +155,7 @@ const DishesPage: React.FC = () => {
     }
   }, [dispatch]);
 
-  useEffect(() => {
+  useEffect(() => { 
     // Save order items to localStorage whenever they change
     localStorage.setItem("orderItems", JSON.stringify(orderItems));
   }, [orderItems]);
@@ -168,9 +168,15 @@ const DishesPage: React.FC = () => {
   useEffect(() => {
     if (customerSearchQuery.length >= 3) {
       fetchCustomerDetails().then((data) => {
-        const filteredCustomers = data.filter((customer: any) =>
-          customer.customer_name.toLowerCase().includes(customerSearchQuery.toLowerCase())
-        );
+        console.log("API response:", data);
+        const lowercaseQuery = customerSearchQuery.toLowerCase();
+        const filteredCustomers = data.filter((customer: any) => {
+          const nameMatch = customer.customer_name.toLowerCase().includes(lowercaseQuery);
+          const phoneMatch = customer.phone_number.includes(customerSearchQuery);
+          console.log(`Customer: ${customer.customer_name}, Name match: ${nameMatch}, Phone match: ${phoneMatch}`);
+          return nameMatch || phoneMatch;
+        });
+        console.log("Filtered customers:", filteredCustomers);
         setCustomers(filteredCustomers);
       });
     } else {
@@ -621,31 +627,30 @@ const DishesPage: React.FC = () => {
                     <Label className="text-sm font-medium mb-2 block">
                       Select Customer
                     </Label>
-                    <Command className="rounded-lg border shadow-sm">
-                      <CommandInput
-                        placeholder="Search Customer..."
-                        value={customerSearchQuery}
-                        onValueChange={setCustomerSearchQuery}
-                        className="h-9"
-                      />
-                      <CommandList>
-                        <CommandEmpty>
-                          {customerSearchQuery && customers.length === 0
-                            ? "No Customer found."
-                            : "Type to search for a customer"}
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {customers.map((customer) => (
-                            <CommandItem
-                              key={customer.id}
-                              onSelect={() => handleSelectCustomer(customer)}
-                            >
-                              {customer.customer_name}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
+                    <Input
+                      type="text"
+                      placeholder="Search Customer..."
+                      value={customerSearchQuery}
+                      onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                      className="h-9"
+                    />
+                    {customers.length > 0 ? (
+                      <ul className="mt-2 border rounded-md shadow-sm">
+                        {customers.map((customer) => (
+                          <li
+                            key={customer.id}
+                            onClick={() => handleSelectCustomer(customer)}
+                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                          >
+                            {customer.customer_name} - {customer.phone_number}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      customerSearchQuery.length >= 3 && (
+                        <p className="mt-2 text-sm text-gray-500">No customers found</p>
+                      )
+                    )}
                     <Label htmlFor="customerName">Customer Name</Label>
                     <Input
                       id="customerName"
