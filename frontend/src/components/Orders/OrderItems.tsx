@@ -82,7 +82,7 @@ const OrderItems: React.FC<OrderItemsProps> = ({
           <h4
             className={`font-semibold ${isNewlyAdded ? "text-green-600" : ""}`}
           >
-            {dish.name}
+            {dish.name} / {dish.arabic_name}
           </h4>
           {dishSize && (
             <p>

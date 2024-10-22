@@ -37,6 +37,10 @@ const OrdersPage: React.FC = () => {
     companyName: string;
     phoneNumber: string;
     location: string;
+    companyNameArabic: string;
+    printLogo: string;
+    locationArabic: string; 
+      
   } | null>(null);
   const [chairs, setChairs] = useState<Chair[]>([]);
 
@@ -68,6 +72,9 @@ const OrdersPage: React.FC = () => {
             companyName: results[0].company_name,
             phoneNumber: results[0].phone_number,
             location: results[0].location,
+            companyNameArabic: results[0].company_name_arabic,
+            printLogo: results[0].print_logo,
+            locationArabic: results[0].location_arabic,
           };
           setLogoInfo(logoData);
         } else {

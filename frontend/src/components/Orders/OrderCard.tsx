@@ -72,6 +72,9 @@ interface OrderCardProps {
     companyName: string;
     phoneNumber: string;
     location: string;
+    companyNameArabic: string;
+    printLogo: string;  
+    locationArabic: string;
   } | null;
   chairs: Chair[];
 }

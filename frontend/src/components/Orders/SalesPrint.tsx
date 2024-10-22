@@ -11,6 +11,9 @@ interface SalesPrintProps {
     companyName: string;
     phoneNumber: string;
     location: string;
+    companyNameArabic: string;
+    printLogo: string;
+    locationArabic: string;
   } | null;
 }
 
@@ -61,243 +64,157 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
     fetchSizes();
   }, [order.items]);
 
-  const calculateGrandTotal = () => {
-    let total = parseFloat(order.total_amount);
-    if (order.chair_amount) {
-      total += parseFloat(order.chair_amount);
-    }
-    return total.toFixed(2);
-  };
-
   return (
-    // <div className="print-container w-76 p-4 text-sm bg-white border-2 border-dashed rounded-lg mx-auto">
-    <div className="print-container w-full max-w-md mx-auto p-4 mt-5 text-sm bg-white border-2 border-dashed rounded-lg">
-
-      {/* Display the logo and company info at the top */}
-      <div className="flex flex-col items-center mb-4">
-        {logoInfo?.logoUrl && (
-          <img
-            src={logoInfo.logoUrl}
-            alt="Logo"
-            className="h-8 w-auto mb-2" // Smaller logo size
-          />
-        )}
-        <div className="text-center">
-          <p className="font-bold">{logoInfo?.companyName}</p>
-          <p>{logoInfo?.phoneNumber}</p>
-          <p>{logoInfo?.location}</p>
-        </div>
-      </div>
-
-      <h1 className="text-center text-lg font-bold mb-2">Sales Receipt</h1>
-      <div className="flex justify-between mb-2">
-        <div className="print-order-id">Order_id #{order.id}</div>
-        {order.payment_method === "credit" && (
-          <div className="text-right font-bold text-red-500 ml-4">Credit</div>
-        )}
-      </div>
-      <div className="print-date mb-2">
-        Date: {formatDate(order.created_at)}
-      </div>
-      <div className="print-time mb-2">
-        Time: {formatTime(order.created_at)}
-      </div>
-      <div className="print-items">
-        <table className="w-full ">
-          <thead>
-            <tr>
-              <th className="text-left">Item</th>
-              <th className="text-center">Qty</th>
-              <th className="text-right">Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.isArray(order.items) && order.items.length > 0 ? (
-              order.items.map((item, index) => {
-                const dish = dishes.find((dish) => dish.id === item.dish);
-                const sizeInfo = item.dish_size
-                  ? dishSizes[item.dish_size]
-                  : null;
-                return (
-                  <tr key={index} className="print-item">
-                    <td className="print-item-name">
-                      {dish ? dish.name : "Unknown Dish"}
-                      {sizeInfo && (
-                        <span className="text-xs"> ({sizeInfo.size})</span>
-                      )}
-                    </td>
-                    <td className="print-item-quantity text-center">
-                      x{item.quantity}
-                    </td>
-                    <td className="print-item-price text-right">
-                      QAR{" "}
-                      {sizeInfo
-                        ? parseFloat(sizeInfo.price) * item.quantity
-                        : dish
-                        ? dish.price * item.quantity
-                        : 0}
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan={3} className="text-center">
-                  No items found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-      {/* {order.chair_details && order.chair_details.length > 0 && (
-        <div className="mt-4">
-          <div className="flex items-center justify-center mb-2">
-            <hr className="flex-grow border-gray-300" />
-            <span className="mx-4 text-red-500 font-semibold text-xs">
-              Chair Details
-            </span>
-            <hr className="flex-grow border-gray-300" />
+    <div className="print-container w-full max-w-sm mx-auto p-4 text-xs font-sans text-black border border-dotted border-black">
+      {/* Header Section */}
+      <div className="mb-4 pb-3 border-b-2 border-black">
+        <div className="flex flex-col items-center">
+          {logoInfo?.printLogo && (
+            <img
+              src={logoInfo.printLogo}
+              alt="Logo"
+              className="h-20 w-auto mb-3"
+            />
+          )}
+          <div className="text-center">
+            <h1 className="text-3xl font-bold uppercase mb-2">
+              {logoInfo?.companyName} / {logoInfo?.companyNameArabic}
+            </h1>
+            <p className="text-sm mb-1">
+              <span className="font-semibold">Tel:</span>{" "}
+              {logoInfo?.phoneNumber}
+            </p>
+            <div className="text-sm italic flex justify-between">
+              <span className="text-right">
+                {logoInfo?.location?.split(",").map((part, index) => (
+                  <React.Fragment key={index}>
+                    {part.trim()}
+                    <br />
+                  </React.Fragment>
+                ))}
+              </span>
+              <span className="text-left">
+                {logoInfo?.locationArabic?.split(",").map((part, index) => (
+                  <React.Fragment key={index}>
+                    {part.trim()}
+                    <br />
+                  </React.Fragment>
+                ))}
+              </span>
+            </div>
           </div>
-          <table className="w-full text-xs">
-            <thead>
-              <tr>
-                <th className="text-left w-1/4">Chair</th>
-                <th className="text-center w-1/4">Time</th>
-                <th className="text-right w-1/4">Total Hours</th>
-                <th className="text-right w-1/4">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-            {order.chair_details?.map((chair, index) => {
-                const formatTime = (dateTimeString: string) => {
-                  const date = new Date(dateTimeString);
-                  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
-                };
-                
-                return (
-                  <tr key={index}>
-                    <td className="text-left">{chair.chair_name}</td>
-                    <td className="text-center">
-                      {formatTime(chair.start_time)} - {formatTime(chair.end_time)}
-                    </td>
-                    <td className="text-right">{chair.total_time}</td>
-                    <td className="text-right">
-                      {index === 0 && order.chair_amount ? `QAR ${order.chair_amount}` : '-'}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
         </div>
-      )} */}
-        
-        {order.chair_details && order.chair_details.length > 0 && (
-  <div className="mt-4">
-    <div className="flex items-center justify-center mb-2">
-      <hr className="flex-grow border-gray-300" />
-      <span className="mx-4 text-red-500 font-semibold text-xs">
-        Chair Details
-      </span>
-      <hr className="flex-grow border-gray-300" />
-    </div>
-    <table className="w-full text-xs">
-      <thead>
-        <tr>
-          <th className="text-left">Chair</th>
-         
-          <th className="text-center">Time</th>
-          <th className="text-right">Total Hours</th>
-          <th className="text-right">Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-      {order.chair_details.map((chair, index) => {
-        const formatTime = (dateTimeString: string) => {
-          const date = new Date(dateTimeString);
-          return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
-        };
-        
-        return (
-          <tr key={index}>
-            <td className="text-left">{chair.chair_name}</td>
-    
-            <td className="text-center">
-              {formatTime(chair.start_time)} - {formatTime(chair.end_time)}
-            </td>
-            <td className="text-right ">{chair.total_time} hrs</td>
-            <td className="text-right">QAR {chair.amount}</td>
-          </tr>
-        );
-      })}
-      </tbody>
-    </table>
-  </div>
-)}
+      </div>
 
-
-<div className="mt-4">
-    <div className="flex items-center justify-center mb-2">
-      <hr className="flex-grow border-gray-300" />
-      <span className="mx-4 text-red-500 font-semibold text-xs">
-       Totals
-      </span>
-      <hr className="flex-grow border-gray-300" />
-    </div>
-      <div className="print-summary mt-4">
+      {/* Order Info Section */}
+      <div className="mb-4 pb-2 border-b border-black">
+        <p className="text-center font-bold text-lg">ORDER #{order.id}</p>
         <div className="flex justify-between">
-          <span>Total Quantity:</span>
-          <span className="font-semibold">{totalQuantity}</span>
+          <span>Date: {formatDate(order.created_at)}</span>
+          <span>Time: {formatTime(order.created_at)}</span>
         </div>
-      
-        {order.chair_details && order.chair_details.length > 0 && (
-          <div className="flex justify-between mt-2">
-            <span>Chair Amount:</span>
-            <span className="font-semibold">QAR {order.chair_amount}</span>
-          </div>
+        {order.payment_method === "credit" && (
+          <p className="text-center font-bold mt-2 underline">*** CREDIT ***</p>
         )}
-
-          <div className="flex justify-between mt-2">
-          <span>Total Amount:</span>
-          <span className="font-bold">QAR {order.total_amount}</span>
-        </div>
-        {/* <div className="flex justify-between mt-2 text-lg font-bold">
-          <span>Grand Total:</span>
-          <span>QAR {calculateGrandTotal()}</span>
-        </div> */}
-      </div>
       </div>
 
-
-      {order.foc_product_details.length > 0 && (
-        <div className="mt-4">
-          <div className="flex items-center justify-center mb-2">
-            <hr className="flex-grow border-gray-300" />
-            <span className="mx-4 text-red-500 font-semibold">
-              Foc Products
-            </span>
-            <hr className="flex-grow border-gray-300" />
+      {/* Items Section */}
+      <div className="mb-4">
+        <div className="font-bold border-y border-black py-1">
+          <div className="flex justify-between">
+            <span className="w-1/2">Item</span>
+            <span className="w-1/4 text-center">Qty</span>
+            <span className="w-1/4 text-right">Price</span>
           </div>
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="text-left">Item</th>
-                <th className="text-right">Qty</th>
-              </tr>
-            </thead>
-            <tbody>
-              {order.foc_product_details.map((item: any, index: number) => (
-                <tr key={index}>
-                  <td className="text-left">{item.name}</td>
-                  <td className="text-right">{item.quantity}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        </div>
+        <div>
+          {Array.isArray(order.items) && order.items.length > 0 ? (
+            order.items.map((item, index) => {
+              const dish = dishes.find((dish) => dish.id === item.dish);
+              const sizeInfo = item.dish_size
+                ? dishSizes[item.dish_size]
+                : null;
+              return (
+                <div
+                  key={index}
+                  className="flex justify-between py-1 border-b border-dotted border-black"
+                >
+                  <span className="w-1/2">
+                    {dish ? dish.name : "Unknown Dish"} / {dish ? dish.arabic_name : "Unknown Dish"}
+                  </span>
+                  <span className="w-1/4 text-center">{item.quantity}</span>
+                  <span className="w-1/4 text-right">
+                  QAR {sizeInfo
+                      ? parseFloat(sizeInfo.price) * item.quantity
+                      : dish
+                      ? dish.price * item.quantity
+                      : 0}
+                  </span>
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-center py-2">No items found</p>
+          )}
+        </div>
+      </div>
+
+      {/* Chair Details Section */}
+      {order.chair_details && order.chair_details.length > 0 && (
+        <div className="mb-4">
+          <p className="font-bold border-y border-black py-1">CHAIR DETAILS</p>
+          <div>
+            {order.chair_details.map((chair, index) => (
+              <div
+                key={index}
+                className="flex justify-between py-1 border-b border-dotted border-black"
+              >
+                <span>{chair.chair_name}</span>
+                <span>{chair.total_time} hrs</span>
+                <span>{chair.amount}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
-      {/* Add QR code */}
+
+      {/* Totals Section */}
+      <div className="mb-4 pb-2 border-b border-black">
+        <div className="flex justify-between py-1">
+          <span>Total Quantity:</span>
+          <span>{totalQuantity}</span>
+        </div>
+        {order.chair_details && order.chair_details.length > 0 && (
+          <div className="flex justify-between py-1">
+            <span>Chair Amount:</span>
+            <span>{order.chair_amount}</span>
+          </div>
+        )}
+        <div className="flex justify-between py-1 font-bold border-t border-black">
+          <span>TOTAL AMOUNT:</span>
+          <span>{order.total_amount}</span>
+        </div>
+      </div>
+
+      {/* FOC Products Section */}
+      {order.foc_product_details.length > 0 && (
+        <div className="mb-4">
+          <p className="font-bold border-y border-black py-1">FOC PRODUCTS</p>
+          <div>
+            {order.foc_product_details.map((item: any, index: number) => (
+              <div
+                key={index}
+                className="flex justify-between py-1 border-b border-dotted border-black"
+              >
+                <span>{item.name}</span>
+                <span>x{item.quantity}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Section */}
       {order.order_type === "delivery" && (
         <>
           <div className="mt-4 flex justify-center">
@@ -306,6 +223,10 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
           <p className="text-center text-xs mt-1">Scan for Order ID</p>
         </>
       )}
+
+      <div className="text-center mt-4">
+        <p className="font-bold">Thank you for your purchase!</p>
+      </div>
     </div>
   );
 };

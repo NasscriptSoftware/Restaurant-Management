@@ -12,6 +12,7 @@ export interface Dish {
   image: string;
   category: number | Category;
   sizes?: Size[];
+  arabic_name: string;
 }
 
 export interface OrderItem {

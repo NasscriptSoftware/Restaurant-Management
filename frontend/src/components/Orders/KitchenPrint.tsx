@@ -82,7 +82,7 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
           return (
             <tr key={index} className="print-item">
               <td className="print-item-name">
-                {dish ? dish.name : "Unknown Dish"}
+                {dish ? dish.name : "Unknown Dish"} / {dish ? dish.arabic_name : "Unknown Dish"}
                 {sizeDetails && (
                   <span className="text-xs ml-1">({sizeDetails.size})</span>
                 )}

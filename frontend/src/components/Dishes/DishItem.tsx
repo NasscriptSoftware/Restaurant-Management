@@ -41,8 +41,8 @@ const DishItem: React.FC<DishItemWithToggleProps> = ({
       )}
       <div className="p-4 sm:p-5 flex-grow flex flex-col justify-between">
         <div>
-          <h3 className="text-xl sm:text-2xl font-bold mb-2 text-gray-800">
-            {dish.name}
+          <h3 className="text-md sm:text-1xl font-bold mb-2 text-gray-800">
+            {dish.name} / {dish.arabic_name}
           </h3>
           <p className="text-gray-600 text-sm mb-4 line-clamp-2">
             {dish.description}
