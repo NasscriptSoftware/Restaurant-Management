@@ -28,7 +28,7 @@ const NotificationBadge: React.FC<NotificationBadgeProps> = ({ className = "" })
   if (unreadCount === 0 || location.pathname === '/notifications') return null;
 
   return (
-    <span className={`bg-red-500 text-white text-xs font-bold rounded-full px-1 ${className}`}>
+    <span className={`w-fit bg-red-500 text-white text-xs font-bold rounded-full p-1 ${className}`}>
       {unreadCount}
     </span>
   );

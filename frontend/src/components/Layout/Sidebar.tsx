@@ -73,12 +73,14 @@ const Sidebar: React.FC = () => {
     const fetchMenuItems = async () => {
       try {
         const response = await api.get("/sidebar-items/"); // Ensure this returns all items
-        console.log('Menu items response:', response.data);
+        console.log("Menu items response:", response.data);
 
         // Check if we have results and set menu items
         if (Array.isArray(response.data.results)) {
           // Filter out inactive menu items
-          const activeMenuItems = response.data.results.filter((item: MenuItem) => item.active);
+          const activeMenuItems = response.data.results.filter(
+            (item: MenuItem) => item.active
+          );
           setMenuItems(activeMenuItems);
         } else {
           console.error("Menu items response is not an array");
@@ -124,7 +126,9 @@ const Sidebar: React.FC = () => {
           <TooltipTrigger asChild>
             <Link
               to={item.path}
-              className={`flex items-center justify-between space-x-2 p-2 rounded ${isActive(item.path)}`}
+              className={`flex items-center justify-between space-x-2 p-2 rounded ${isActive(
+                item.path
+              )}`}
             >
               <div className="flex gap-2 items-center">
                 {IconComponent ? (
@@ -135,7 +139,9 @@ const Sidebar: React.FC = () => {
                 <span className="font-bold">{item.label}</span>
               </div>
               <span className="flex text-end">
-                {location.pathname === item.path && <ArrowRight className="w-5 h-5" />}
+                {location.pathname === item.path && (
+                  <ArrowRight className="w-5 h-5" />
+                )}
               </span>
             </Link>
           </TooltipTrigger>
@@ -167,7 +173,11 @@ const Sidebar: React.FC = () => {
             className="fixed top-0 left-0 w-64 bg-white p-4 h-screen border-r border-gray-300 flex flex-col z-40 overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-8">
-              <Link to="/" className="flex justify-center md:justify-start" onClick={() => setIsOpen(false)}>
+              <Link
+                to="/"
+                className="flex justify-center md:justify-start"
+                onClick={() => setIsOpen(false)}
+              >
                 <img src={mainLogoUrl} alt="Logo" className="h-8 w-auto" />
               </Link>
 
@@ -207,25 +217,16 @@ const Sidebar: React.FC = () => {
               <h3 className="text-md text-black-500 mb-2 font-bold">Other</h3>
               <ul>
                 <li onClick={() => setIsOpen(false)}>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link
-                          to="/notifications"
-                          className={`relative flex items-center space-x-2 p-2 mr-2 rounded ${isActive(
-                            "/notifications"
-                          )}`}
-                        >
-                          <Bell className="w-6 h-6" />
-                          <NotificationBadge className="absolute -top-1 -right-1" />
-                          <span className="font-bold">Notifications</span>
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">
-                        <p>Notifications</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Link
+                    to="/notifications"
+                    className={`relative flex items-center space-x-2 p-2 mr-2 rounded ${isActive(
+                      "/notifications"
+                    )}`}
+                  >
+                    <Bell className="w-6 h-6" />
+                    <span className="font-bold">Notifications</span>
+                    <NotificationBadge className="absolute top-2 right-3" />
+                  </Link>
                 </li>
                 <li onClick={() => setIsOpen(false)}>
                   <LogoutBtn />
@@ -239,7 +240,11 @@ const Sidebar: React.FC = () => {
               className="mt-4 flex justify-center items-center flex-col"
             >
               <p className="text-black-600 text-md font-bold">Powered by</p>
-              <img src="/images/nasscript_full_banner_logo.png" alt="Logo" className="h-5 w-auto" />
+              <img
+                src="/images/nasscript_full_banner_logo.png"
+                alt="Logo"
+                className="h-5 w-auto"
+              />
             </a>
           </motion.div>
         )}
