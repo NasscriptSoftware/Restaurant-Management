@@ -163,14 +163,11 @@ const ReportPage: React.FC = () => {
   const [isSalesHistoryModalOpen, setIsSalesHistoryModalOpen] = useState(false);
   const [isSalesEditModalOpen, setIsSalesEditModalOpen] = useState(false);
   const [isMessEditModalOpen, setIsMessEditModalOpen] = useState(false);
-  const [currentReport, setCurrentReport] = useState<SalesReport | MessReport | null>(null);
   const [showCancelledOrders, setShowCancelledOrders] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [orderHistory, setOrderHistory] = useState<Sales[]>([]);
-  const [currentMember, setCurrentMember] = useState<SalesReport | MessReport | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
-  const [adminUsers, setAdminUsers] = useState<StaffUser[]>([]);
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
   const [staffReports, setStaffReports] = useState<StaffReport[]>([]);
@@ -280,7 +277,6 @@ const ReportPage: React.FC = () => {
     try {
       const response = await api.get("/users/");
       const allUsers = response.data.results;
-      setAdminUsers(allUsers.filter((user: StaffUser) => user.role === "admin"));
       setStaffUsers(allUsers.filter((user: StaffUser) => user.role === "staff"));
       setDrivers(allUsers.filter((user: Driver) => user.role === "driver"));
     } catch (error) {
@@ -779,7 +775,8 @@ const ReportPage: React.FC = () => {
                       onChange={(date) => setFromDate(date)}
                       dateFormat="yyyy-MM-dd"
                       placeholderText="From Date"
-                      className                    />
+                      className="w-full sm:w-auto p-2 border rounded"
+                      />
                     <DatePicker
                       selected={toDate}
                       onChange={(date) => setToDate(date)}
