@@ -176,6 +176,12 @@ class OnlineOrderViewSet(viewsets.ModelViewSet):
     serializer_class = OnlineOrderSerializer
 
 
+class CustomerDetailsViewSet(viewsets.ModelViewSet):
+    queryset = CustomerDetails.objects.all()
+    serializer_class = CustomerDetailsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer

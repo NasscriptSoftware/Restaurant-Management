@@ -15,6 +15,7 @@ import {
   fetchDeliveryDrivers,
   getCategories,
   fetchOnlineOrders,
+  fetchCustomerDetails,
 } from "../services/api";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -120,6 +121,9 @@ const DishesPage: React.FC = () => {
     return savedShowImage !== null ? JSON.parse(savedShowImage) : true;
   });
 
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+
   const handleValueChange = (value: OrderType) => {
     setOrderType(value);
     if (value === "onlinedelivery") {
@@ -160,6 +164,27 @@ const DishesPage: React.FC = () => {
     // Save showImage to localStorage whenever it changes
     localStorage.setItem("showImage", JSON.stringify(showImage));
   }, [showImage]);
+
+  useEffect(() => {
+    if (customerSearchQuery.length >= 3) {
+      fetchCustomerDetails().then((data) => {
+        const filteredCustomers = data.filter((customer: any) =>
+          customer.customer_name.toLowerCase().includes(customerSearchQuery.toLowerCase())
+        );
+        setCustomers(filteredCustomers);
+      });
+    } else {
+      setCustomers([]);
+    }
+  }, [customerSearchQuery]);
+
+  const handleSelectCustomer = (customer: any) => {
+    setCustomerName(customer.customer_name);
+    setDeliveryAddress(customer.address);
+    setCustomerMobileNumber(customer.phone_number);
+    setCustomers([]);
+    setCustomerSearchQuery("");
+  };
 
   const handleAddDish = (dish: Dish & { selectedSize?: Size }) => {
     if (dish.sizes && dish.sizes.length > 0) {
@@ -593,6 +618,34 @@ const DishesPage: React.FC = () => {
               {orderType === "delivery" && (
                 <>
                   <div className="mt-4 flex flex-col gap-2">
+                    <Label className="text-sm font-medium mb-2 block">
+                      Select Customer
+                    </Label>
+                    <Command className="rounded-lg border shadow-sm">
+                      <CommandInput
+                        placeholder="Search Customer..."
+                        value={customerSearchQuery}
+                        onValueChange={setCustomerSearchQuery}
+                        className="h-9"
+                      />
+                      <CommandList>
+                        <CommandEmpty>
+                          {customerSearchQuery && customers.length === 0
+                            ? "No Customer found."
+                            : "Type to search for a customer"}
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {customers.map((customer) => (
+                            <CommandItem
+                              key={customer.id}
+                              onSelect={() => handleSelectCustomer(customer)}
+                            >
+                              {customer.customer_name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
                     <Label htmlFor="customerName">Customer Name</Label>
                     <Input
                       id="customerName"

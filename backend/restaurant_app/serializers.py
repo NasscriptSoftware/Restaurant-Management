@@ -142,6 +142,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
         fields = ["id","dish", "quantity","is_newly_added","variants","dish_size",]
 
 
+class CustomerDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerDetails
+        fields = ['id', 'customer_name', 'address', 'phone_number']
+
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
     user = UserSerializer(read_only=True)

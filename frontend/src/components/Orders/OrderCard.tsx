@@ -81,7 +81,7 @@ interface OnlineOrderData {
   order_type: string;
   // Add other fields as needed
 }
-type OrderType = "dining" | "takeaway" | "delivery" | string;
+type OrderType = "dining" | "takeaway" | "delivery" | "onlinedelivery" | string;
 
 type PaymentType = "cash" | "bank" | "cash-bank" | "credit" | string;
 
@@ -466,7 +466,14 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const handleChairInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    setChairData({ ...chairData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setChairData({ ...chairData, [name]: value });
+
+    // Automatically close the modal for start_time and end_time inputs
+    if (name === 'start_time' || name === 'end_time') {
+      const inputElement = e.target as HTMLInputElement;
+      inputElement.blur(); // Remove focus from the input to close the modal
+    }
   };
 
   const handleChairSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -572,15 +579,24 @@ const OrderCard: React.FC<OrderCardProps> = ({
         </div>
 
         <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3 mt-4 sm:mt-0">
+          
           <div>
-            <button
-              onClick={() => setShowAddOptionsModal(true)}
-              className="text-gray-700 hover:text-red-500 focus:outline-none"
-              title="Add Options"
-            >
-              <Coffee size={30} className="animate-pulse text-red-500" />
-            </button>
-          </div>
+              <button
+                onClick={() => setShowAddOptionsModal(true)}
+                disabled={status === "delivered"}
+                className={`text-gray-700 focus:outline-none ${
+                  status === "delivered"
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:text-red-500"
+                }`}
+                title="Add Options"
+              >
+                <Coffee size={30} className={`${
+                  status !== "delivered" ? "animate-pulse" : ""
+                } text-red-500`} />
+              </button>
+            </div>
+        
           {/* Print Icon for Kitchen Bill */}
           {status === "approved" && (
             <button
@@ -800,10 +816,16 @@ const OrderCard: React.FC<OrderCardProps> = ({
           {order?.order_type === "dining" && (
             <Button
               variant="outline"
-              className="font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105"
+              className={`font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105 ${order.status === "delivered" 
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+                }`}
               onClick={() => setShowOrderTypeModal(true)}
             >
-              <HandPlatter size={18} className="animate-bounce" />
+              <HandPlatter size={18} className={`${order.status === "delivered" 
+                  ? "opacity-50 cursor-not-allowed"
+                  : "animate-bounce"
+                }`} />
               {order?.order_type?.charAt(0).toUpperCase() +
                 order?.order_type?.slice(1)}
             </Button>
@@ -848,18 +870,20 @@ const OrderCard: React.FC<OrderCardProps> = ({
               className={`
                 font-semibold text-sm px-5 py-2.5 rounded-full
                 bg-gradient-to-r from-purple-200 to-purple-300 text-purple-800
-                hover:from-purple-300 hover:to-purple-400
-                transition-all duration-300 shadow-md hover:shadow-lg
+                hover:from-                transition-all duration-300 shadow-md hover:shadow-lg
                 flex items-center gap-3 transform hover:scale-105
-                ${order.status === "delivered"
+                ${order.chair_details && order.chair_details.length > 0  || order.status === "delivered"
                   ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer"
                 }
               `}
               onClick={() => setIsChairModalOpen(true)}
-              disabled={order.status === "delivered"}
+              disabled={order.chair_details && order.chair_details.length > 0 || order.status === "delivered"}
             >
-              <Armchair size={18} className="animate-bounce" />
+            <Armchair size={18} className={`${order.chair_details && order.chair_details.length > 0  || order.status === "delivered"
+                  ? "opacity-50 cursor-not-allowed"
+                  : "animate-bounce"
+                }`} />
               <span className="tracking-wide">Select Chair</span>
             </Button>
           )}

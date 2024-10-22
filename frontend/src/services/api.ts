@@ -267,8 +267,15 @@ export const fetchActiveCreditUsers = async () => {
   const response = await api.get(`/credit-users/get_active_users/`);
   return response.data.data;
 };
+
 export const fetchOnlineOrders = async () => {
   const response = await api.get(`/online-orders/`);
+  return response.data;
+};
+
+// Fetch CustomerDetails
+export const fetchCustomerDetails = async () => {
+  const response = await api.get(`/customer-details/`);
   return response.data;
 };
 export const fetchOnlineOrderData = async (id:number) => {

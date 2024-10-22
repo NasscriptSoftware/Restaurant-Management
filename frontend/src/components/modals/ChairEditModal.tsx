@@ -53,17 +53,39 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const submissionData = {
-        ...formData,
-        start_time: formData.start_time || null,
-        end_time: formData.end_time || null,
-        amount: formData.amount
-      };
-      await api.put(`/chairs/${chair.id}/`, submissionData);
+      // First, update the chair
+      const chairResponse = await api.put(`/chairs/${chair.id}/`, formData);
+      
+      // Then, update the order with the new chair details
+      if (chairResponse.data.order) {
+        const orderResponse = await api.get(`/orders/${chairResponse.data.order}/`);
+        const orderData = orderResponse.data;
+        
+        // Calculate the new chair_amount
+        const newChairAmount = orderData.chair_details.reduce((total: number, chair: any) => {
+          return total + (parseFloat(chair.amount) || 0);
+        }, 0);
+
+        // Calculate the new total_amount
+        const newTotalAmount = (parseFloat(orderData.total_amount) - parseFloat(orderData.chair_amount)) + newChairAmount;
+
+        // Update the order with new chair_amount, total_amount, and chair_details
+        await api.patch(`/orders/${chairResponse.data.order}/`, {
+          chair_amount: newChairAmount.toFixed(2),
+          total_amount: newTotalAmount.toFixed(2),
+          chair_details: orderData.chair_details.map((chair: any) => ({
+            ...chair,
+            amount: parseFloat(chair.amount).toFixed(2)
+          }))
+        });
+      }
+
       onUpdate();
       onClose();
     } catch (error) {
-      console.error('Error updating chair:', error);
+      console.error('Error updating chair and order:', error);
+      // Add user feedback for error
+      alert('An error occurred while updating the chair and order. Please try again.');
     }
   };
 
@@ -209,4 +231,3 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
     </Transition>
   );
 }
-

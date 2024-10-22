@@ -181,6 +181,27 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
             </tbody>
           </table>
         </div>  */}
+        {renderedNewlyAddedItems.length > 0 && (
+          <div className="mt-4">
+            <div className="flex items-center justify-center mb-2">
+              <hr className="flex-grow border-gray-300" />
+              <span className="mx-4 text-red-500 font-semibold">
+                Newly Added
+              </span>
+              <hr className="flex-grow border-gray-300" />
+            </div>
+            <table className="w-full">
+              <thead>
+                <tr>
+                  <th className="text-left">Item</th>
+                  <th className="text-right">Qty</th>
+                  <th className="text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>{renderedNewlyAddedItems}</tbody>
+            </table>
+          </div>
+        )}
 
         {order.chair_details && order.chair_details.length > 0 && (
           <div className="mt-4">
@@ -219,7 +240,7 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
                         {formatTime(chair.end_time)}
                       </td>
                       <td className="text-center">{chair.total_time}</td>
-                      <td className="text-right">QAR {order.chair_amount? order.chair_amount: '0.00'}</td>
+                      <td className="text-right">QAR {order.chair_amount ? order.chair_amount : '0.00'}</td>
                     </tr>
                   );
                 })}
@@ -227,27 +248,7 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
             </table>
           </div>
         )}
-        {renderedNewlyAddedItems.length > 0 && (
-          <div className="mt-4">
-            <div className="flex items-center justify-center mb-2">
-              <hr className="flex-grow border-gray-300" />
-              <span className="mx-4 text-red-500 font-semibold">
-                Newly Added
-              </span>
-              <hr className="flex-grow border-gray-300" />
-            </div>
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="text-left">Item</th>
-                  <th className="text-right">Qty</th>
-                  <th className="text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>{renderedNewlyAddedItems}</tbody>
-            </table>
-          </div>
-        )}
+
 
         {order.foc_product_details.length > 0 && (
           <div className="mt-4">

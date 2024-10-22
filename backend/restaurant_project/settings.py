@@ -248,6 +248,11 @@ UNFOLD = {
                         "link": reverse_lazy("admin:restaurant_app_user_changelist"),
                     },
                     {
+                        "title": _("Customer Details"),
+                        "icon": "people",
+                        "link": reverse_lazy("admin:restaurant_app_customerdetails_changelist"),
+                    },
+                    {
                         "title": _("Credit Users"),
                         "icon": "credit_card",
                         "link": reverse_lazy(

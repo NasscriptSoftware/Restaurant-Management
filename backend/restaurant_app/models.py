@@ -168,6 +168,19 @@ class FOCProduct(models.Model):
         return f"{self.name} - {self.quantity}"
 
 
+class CustomerDetails(models.Model):
+    customer_name = models.CharField(max_length=255)
+    address = models.TextField()
+    phone_number = models.CharField(max_length=15, unique=True)
+
+    class Meta:
+        verbose_name = "Customer Detail"
+        verbose_name_plural = "Customer Details"
+
+    def __str__(self):
+        return f"{self.customer_name} - {self.phone_number}"
+
+
 class Order(models.Model):
     STATUS_CHOICES = [
         ("pending", "Pending"),

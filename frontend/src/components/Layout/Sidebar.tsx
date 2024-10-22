@@ -24,11 +24,14 @@ import {
   CalendarRange,
   Armchair,
   Menu,
+  UserRoundCheck,
 } from "lucide-react"; // Import the icons you'll use
 import { motion, AnimatePresence } from "framer-motion";
 import LogoutBtn from "./LogoutBtn";
 import NotificationBadge from "./NotificationBadge";
 import { api } from "@/services/api";
+import { useSelector } from "react-redux";
+import { RootState } from "@/features/store";
 
 const iconMap = {
   bell: Bell,
@@ -46,7 +49,7 @@ const iconMap = {
   arrowrightleft: ArrowRightLeft,
   chartcolumn: ChartColumn,
   calendarrange: CalendarRange,
-  armchair : Armchair,
+  armchair: Armchair,
 };
 
 interface MenuItem {
@@ -58,6 +61,7 @@ interface MenuItem {
 }
 
 const Sidebar: React.FC = () => {
+  const username = useSelector((state: RootState) => state.auth.user?.username);
   const location = useLocation();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [mainLogoUrl, setMainLogoUrl] = useState<string>(
@@ -70,7 +74,7 @@ const Sidebar: React.FC = () => {
       try {
         const response = await api.get("/sidebar-items/"); // Ensure this returns all items
         console.log('Menu items response:', response.data);
-        
+
         // Check if we have results and set menu items
         if (Array.isArray(response.data.results)) {
           // Filter out inactive menu items
@@ -126,7 +130,7 @@ const Sidebar: React.FC = () => {
                 {IconComponent ? (
                   <IconComponent className="w-5 h-5" />
                 ) : (
-                  <div className="w-5 h-5 text-gray-400">❓</div> 
+                  <div className="w-5 h-5 text-gray-400">❓</div>
                 )}
                 <span className="font-bold">{item.label}</span>
               </div>
@@ -166,6 +170,7 @@ const Sidebar: React.FC = () => {
               <Link to="/" className="flex justify-center md:justify-start" onClick={() => setIsOpen(false)}>
                 <img src={mainLogoUrl} alt="Logo" className="h-8 w-auto" />
               </Link>
+
               <button
                 onClick={toggleSidebar}
                 className="lg:hidden bg-[#6f42c1] text-white p-2 rounded-md shadow-md hover:bg-[#5a32a3] transition-colors duration-200"
@@ -173,6 +178,16 @@ const Sidebar: React.FC = () => {
                 <Menu className="w-6 h-6" />
               </button>
             </div>
+            <div className="flex items-center space-x-3 mb-6 p-3 bg-gray-100 rounded-lg">
+              <div className="bg-[#6f42c1] rounded-full p-2">
+                <UserRoundCheck size={24} className="text-white" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-gray-700">Logged in as</span>
+                <span className="text-base font-bold text-[#6f42c1]"> {username || 'Guest'}</span>
+              </div>
+            </div>
+
             <div className="flex-grow mr-2">
               <nav>
                 <ul className="space-y-2">

@@ -150,7 +150,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
           </tbody>
         </table>
       </div>
-      {order.chair_details && order.chair_details.length > 0 && (
+      {/* {order.chair_details && order.chair_details.length > 0 && (
         <div className="mt-4">
           <div className="flex items-center justify-center mb-2">
             <hr className="flex-grow border-gray-300" />
@@ -191,29 +191,84 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
             </tbody>
           </table>
         </div>
-      )}
+      )} */}
         
-  
+        {order.chair_details && order.chair_details.length > 0 && (
+  <div className="mt-4">
+    <div className="flex items-center justify-center mb-2">
+      <hr className="flex-grow border-gray-300" />
+      <span className="mx-4 text-red-500 font-semibold text-xs">
+        Chair Details
+      </span>
+      <hr className="flex-grow border-gray-300" />
+    </div>
+    <table className="w-full text-xs">
+      <thead>
+        <tr>
+          <th className="text-left">Chair</th>
+         
+          <th className="text-center">Time</th>
+          <th className="text-right">Total Hours</th>
+          <th className="text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+      {order.chair_details.map((chair, index) => {
+        const formatTime = (dateTimeString: string) => {
+          const date = new Date(dateTimeString);
+          return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+        };
+        
+        return (
+          <tr key={index}>
+            <td className="text-left">{chair.chair_name}</td>
+    
+            <td className="text-center">
+              {formatTime(chair.start_time)} - {formatTime(chair.end_time)}
+            </td>
+            <td className="text-right ">{chair.total_time} hrs</td>
+            <td className="text-right">QAR {chair.amount}</td>
+          </tr>
+        );
+      })}
+      </tbody>
+    </table>
+  </div>
+)}
+
+
+<div className="mt-4">
+    <div className="flex items-center justify-center mb-2">
+      <hr className="flex-grow border-gray-300" />
+      <span className="mx-4 text-red-500 font-semibold text-xs">
+       Totals
+      </span>
+      <hr className="flex-grow border-gray-300" />
+    </div>
       <div className="print-summary mt-4">
         <div className="flex justify-between">
           <span>Total Quantity:</span>
-          <span className="font-bold">{totalQuantity}</span>
+          <span className="font-semibold">{totalQuantity}</span>
         </div>
-        <div className="flex justify-between mt-2">
-          <span>Total Amount:</span>
-          <span className="font-bold">QAR {order.total_amount}</span>
-        </div>
+      
         {order.chair_details && order.chair_details.length > 0 && (
           <div className="flex justify-between mt-2">
             <span>Chair Amount:</span>
-            <span className="font-bold">QAR {order.chair_amount}</span>
+            <span className="font-semibold">QAR {order.chair_amount}</span>
           </div>
         )}
-        <div className="flex justify-between mt-2 text-lg font-bold">
+
+          <div className="flex justify-between mt-2">
+          <span>Total Amount:</span>
+          <span className="font-bold">QAR {order.total_amount}</span>
+        </div>
+        {/* <div className="flex justify-between mt-2 text-lg font-bold">
           <span>Grand Total:</span>
           <span>QAR {calculateGrandTotal()}</span>
-        </div>
+        </div> */}
       </div>
+      </div>
+
 
       {order.foc_product_details.length > 0 && (
         <div className="mt-4">

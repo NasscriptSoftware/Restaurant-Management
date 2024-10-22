@@ -7,6 +7,7 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from restaurant_app.views import (
     ChairsViewSet,
+    CustomerDetailsViewSet,
     DishSizeViewSet,
     FOCProductViewSet,
     OnlineOrderViewSet,
@@ -64,6 +65,7 @@ router.register(r'variants', DishVariantViewSet, basename="variants")
 router.register(r"categories", CategoryViewSet, basename="categories")
 
 #Order Mangement
+router.register(r'customer-details', CustomerDetailsViewSet, basename='customer-details')
 router.register(r'online-orders', OnlineOrderViewSet)
 router.register(r"orders", OrderViewSet, basename="orders")  # Primary Orders ViewSet
 router.register(r"order-type", OrderTypeChangeViewSet, basename="order_type")  # Separate route for changing order types

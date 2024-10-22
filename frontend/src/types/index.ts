@@ -46,7 +46,9 @@ export interface Order {
     username: string;
     mobile_number: number;
     email: string;
+
   };
+  
   payment_method: "cash" | "bank" | "cash-bank" | "credit" | string;
   cash_amount: number;
   bank_amount: number;
@@ -422,6 +424,9 @@ export interface ChairDetail {
   end_time: string;
   amount: string;
   total_time: string;
+  id: number;
+  order: number;
+    
 }
 
 export interface Size {
