@@ -66,7 +66,7 @@ export const logout = async () => {
 export const getCategories = () =>
   api
     .get<ApiResponse<Category>>("/categories/")
-    .then((response) => response.data.results);
+    .then((response) => response.data);
 
 export const getDishes = () =>
   api

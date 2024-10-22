@@ -470,7 +470,7 @@ const DishesPage: React.FC = () => {
           {orderItems.length > 0 &&
             !isMemoModalOpen &&
             !isKitchenNoteModalOpen && (
-              <div className="flex justify-center mt-4 space-x-4 sticky bottom-0 bg-white p-4 z-10">
+              <div className=" flex justify-center mt-4 space-x-4 sticky bottom-0 bg-white p-4 z-10">
                 <Button
                   variant="outline"
                   className="w-full h-14 border hover:border-purple-600 bg-purple-600 hover:bg-purple-500 hover:text-white text-white"

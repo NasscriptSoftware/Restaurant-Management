@@ -229,6 +229,11 @@ UNFOLD = {
                         "icon": "room_service",
                         "link": reverse_lazy("admin:restaurant_app_sidebaritem_changelist"),
                     },
+                    {
+                        "title": _("Company Details"),
+                        "icon": "room_service",
+                        "link": reverse_lazy("admin:restaurant_app_logoinfo_changelist"),
+                    },
                 ],
             },
             {

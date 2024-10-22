@@ -128,6 +128,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ["name"]
+    pagination_class=None
 
 
 class DishViewSet(viewsets.ModelViewSet):

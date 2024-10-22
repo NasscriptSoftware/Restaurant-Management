@@ -50,8 +50,10 @@ class User(AbstractUser):
 
 class LogoInfo(models.Model):
     company_name = models.CharField(max_length=255)
+    company_name_arabic = models.CharField(max_length=255, blank=True, null=True)
     phone_number = models.CharField(max_length=20)
     location = models.CharField(max_length=255)
+    location_arabic = models.CharField(max_length=255, blank=True, null=True)
     office_number = models.CharField(max_length=20)
     main_logo = models.ImageField(upload_to='company_logos/')
     print_logo = models.ImageField(upload_to='company_logos/')
@@ -85,6 +87,7 @@ class Category(models.Model):
 
 class Dish(models.Model):
     name = models.CharField(max_length=200)
+    arabic_name = models.CharField(max_length=200, blank=True, null=True)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to="images/", default="default_dish_image.jpg")
     price = models.DecimalField(

@@ -118,7 +118,8 @@ class DishSerializer(serializers.ModelSerializer):
             "price",
             "image",
             "category",
-            "sizes"
+            "sizes",
+            "arabic_name"
         ]
 
 
