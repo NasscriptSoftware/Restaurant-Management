@@ -321,7 +321,7 @@ class Notification(models.Model):
 def create_notification_for_orders(sender, instance, created, **kwargs):
     if created:
         Notification.objects.create(
-            message=f"New order created: Order #{instance.id} with a total amount of ${instance.total_amount}"
+            message=f"New order created: Order #{instance.id} with a total amount of QAR {instance.total_amount}"
         )
 
 
