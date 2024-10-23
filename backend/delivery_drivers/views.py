@@ -128,8 +128,16 @@ class DeliveryOrderViewSet(viewsets.ModelViewSet):
     def driver_orders_report(self, request):
         """
         Returns the list of orders for the current driver filtered by optional from_date and to_date.
+        If no user is authenticated, returns an empty list.
         """
-        delivery_driver = DeliveryDriver.objects.get(user=request.user)
+        if not request.user.is_authenticated:
+            return Response([], status=status.HTTP_200_OK)
+
+        try:
+            delivery_driver = DeliveryDriver.objects.get(user=request.user)
+        except DeliveryDriver.DoesNotExist:
+            return Response([], status=status.HTTP_200_OK)
+
         delivery_orders = DeliveryOrder.objects.filter(driver=delivery_driver)
         
         # Extract query parameters
@@ -143,7 +151,7 @@ class DeliveryOrderViewSet(viewsets.ModelViewSet):
         if to_date:
             to_date_parsed = parse_date(to_date)
             delivery_orders = delivery_orders.filter(created_at__lte=to_date_parsed)
-        
+            
         # Serialize and return the filtered data
         serializer = self.get_serializer(delivery_orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

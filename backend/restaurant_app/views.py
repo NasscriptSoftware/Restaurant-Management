@@ -529,32 +529,38 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         return Response(report_data)
     
+    @action(detail=False, methods=['GET'], url_path='staff-user-order-report')
+    def staff_user_order_report(self, request):
+        """
+        Retrieve all orders placed by staff users, optionally filtered by date range.
+        """
+        return self._get_staff_orders(request)
+
     @action(detail=True, methods=['GET'], url_path='staff-user-order-report')
-    def staf_user_order_report(self, request, pk=None):
+    def staff_user_order_report_detail(self, request, pk=None):
         """
-        Retrieve all orders placed by a specific user, filtered by an optional date range.
-
-        Query Parameters:
-        -----------------
-        - from_date (optional): Start date for filtering the orders (YYYY-MM-DD).
-        - to_date (optional): End date for filtering the orders (YYYY-MM-DD).
-
-        Response Fields:
-        ----------------
-        - List of orders, including details like invoice number, created date, status, total amount, 
-          order type, payment method, and items.
+        Retrieve orders for a specific staff user, optionally filtered by date range.
         """
-        try:
-            user = User.objects.get(pk=pk)
-        except User.DoesNotExist:
-            return Response({'error': 'User not found.'}, status=404)
-        
+        return self._get_staff_orders(request, pk)
+
+    def _get_staff_orders(self, request, pk=None):
+        """
+        Helper method to get staff orders, either for all staff or a specific staff member.
+        """
         from_date = request.query_params.get('from_date')
         to_date = request.query_params.get('to_date')
         
-        orders = Order.objects.filter(user=user)
+        if pk:
+            try:
+                user = User.objects.get(pk=pk, role='staff')
+                orders = Order.objects.filter(user=user)
+            except User.DoesNotExist:
+                return Response({'error': 'Staff user not found.'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            # Filter orders by all staff users
+            orders = Order.objects.filter(user__role='staff')
 
-        # Apply date filtering if both `from_date` and `to_date` are provided
+        # Apply date filtering if provided
         if from_date:
             from_date_parsed = parse_date(from_date)
             if from_date_parsed:
