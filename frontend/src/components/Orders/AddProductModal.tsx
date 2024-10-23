@@ -82,7 +82,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
 
   const calculateTotal = () => {
     const totalValue = addedProducts.reduce(
-      (sum, product) => sum + product.quantity * product.dish.price,
+      (sum, product) => sum + product.quantity * Number(product.dish.price),
       0
     );
     setTotalAmount(totalValue);
@@ -166,7 +166,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       QAR {product.dish.price}
                     </td>
                     <td className="border p-2">
-                      QAR {(product.quantity * product.dish.price).toFixed(2)}
+                      QAR {product.quantity * Number(product.dish.price)}
                     </td>
                     <td className="border p-2">
                       <button

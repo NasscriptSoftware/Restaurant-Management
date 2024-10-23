@@ -25,7 +25,7 @@ export const orderSlice = createSlice({
     },
     updateQuantity: (
       state,
-      action: PayloadAction<{ id: number; change: number }>
+      action: PayloadAction<{ id: number | string; change: number }>
     ) => {
       const item = state.items.find((item) => item.id === action.payload.id);
       if (item) {

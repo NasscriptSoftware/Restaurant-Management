@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { DeliveryOrder, PaginatedResponse, ReportData } from "@/types";
+import {  Order, PaginatedResponse } from "@/types/index";
 import {
   fetchDriverOrders,
   updateDeliveryOrderStatus,
@@ -36,6 +36,39 @@ export const STATUS_CHOICES: [string, string][] = [
   ["cancelled", "Cancelled"],
 ];
 
+type DeliveryOrder = {
+  id: number;
+  driver: number;
+  driver_name: string;
+  status: string;
+  order: Order;
+  created_at: Date;
+  updated_at: Date;
+  invoice_number: string;
+  customer_name: string;
+  address: string;
+  payment_method: string;
+  total_amount: string;
+  cash_amount: string;
+  bank_amount: string;
+  delivery_charge: string;
+};
+
+type ReportData = {
+  id: number;
+  order: {
+    id: number;
+    invoice_number: string;
+    customer_name: string;
+    address: string;
+    payment_method: string;
+    total_amount: string;
+    cash_amount: string;
+    bank_amount: string;
+    delivery_charge: string;
+  };
+};
+
 export const DeliveryDriverOrdersPage: React.FC = () => {
   const [orders, setOrders] = useState<DeliveryOrder[]>([]);
   const [reportData, setReportData] = useState<ReportData[]>([]);
@@ -53,7 +86,7 @@ export const DeliveryDriverOrdersPage: React.FC = () => {
   const getOrders = async () => {
     try {
       const response = await fetchDriverOrders();
-      const data: PaginatedResponse<DeliveryOrder> = response.data;
+      const data = response.data as PaginatedResponse<DeliveryOrder>;
       setOrders(data.results);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
@@ -99,7 +132,7 @@ export const DeliveryDriverOrdersPage: React.FC = () => {
       <CardHeader>
         <div className="flex justify-between">
           <div>
-            <h3 className="text-lg font-semibold">Order #{order.id}</h3>
+            <h3 className="text-lg font-semibold">Delivery OrderId #{order.id}</h3>
             <p className="text-sm text-gray-500">
               {format(new Date(order.created_at), "PPpp")}
             </p>

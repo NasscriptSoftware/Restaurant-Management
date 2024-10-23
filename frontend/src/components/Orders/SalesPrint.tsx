@@ -39,7 +39,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
   };
 
   const totalQuantity = Array.isArray(order.items)
-    ? order.items.reduce((total, item) => total + item.quantity, 0)
+    ? order.items.reduce((total, item) => total + (typeof item.quantity === 'number' ? item.quantity : parseFloat(item.quantity)), 0)
     : 0;
 
   const [dishSizes, setDishSizes] = React.useState<{
@@ -50,12 +50,12 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
     const fetchSizes = async () => {
       const sizePromises = order.items.map(async (item) => {
         if (item.dish_size) {
-          const sizeData = await fetchDishSizes(item.dish_size);
+          const sizeData = await fetchDishSizes(Number(item.dish_size));
           return { [item.dish_size]: sizeData };
         }
         return null;
       });
-
+     
       const sizes = await Promise.all(sizePromises);
       const sizeObject = Object.assign({}, ...sizes.filter(Boolean));
       setDishSizes(sizeObject);
@@ -73,11 +73,11 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
             <img
               src={logoInfo.printLogo}
               alt="Logo"
-              className="h-20 w-auto mb-3"
+              className="h-10 w-auto mb-3 object-contain"
             />
           )}
           <div className="text-center">
-            <h1 className="text-3xl font-bold uppercase mb-2">
+            <h1 className="text-xl font-bold uppercase mb-2">
               {logoInfo?.companyName} / {logoInfo?.companyNameArabic}
             </h1>
             <p className="text-sm mb-1">
@@ -86,10 +86,9 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
             </p>
             <div className="text-sm italic flex justify-between">
               <span className="text-right">
-                {logoInfo?.location?.split(",").map((part, index) => (
+                {logoInfo?.location?.split(" ").map((part, index) => (
                   <React.Fragment key={index}>
                     {part.trim()}
-                    <br />
                   </React.Fragment>
                 ))}
               </span>
@@ -132,7 +131,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
             order.items.map((item, index) => {
               const dish = dishes.find((dish) => dish.id === item.dish);
               const sizeInfo = item.dish_size
-                ? dishSizes[item.dish_size]
+                ? dishSizes[Number(item.dish_size)]
                 : null;
               return (
                 <div
@@ -141,14 +140,17 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
                 >
                   <span className="w-1/2">
                     {dish ? dish.name : "Unknown Dish"} / {dish ? dish.arabic_name : "Unknown Dish"}
+                    {sizeInfo && (
+                      <span className="text-xs ml-1">({sizeInfo.size})</span>
+                    )}
                   </span>
                   <span className="w-1/4 text-center">{item.quantity}</span>
                   <span className="w-1/4 text-right">
-                  QAR {sizeInfo
-                      ? parseFloat(sizeInfo.price) * item.quantity
-                      : dish
-                      ? dish.price * item.quantity
-                      : 0}
+                    QAR {sizeInfo
+                        ? parseFloat(sizeInfo.price) * Number(item.quantity)
+                        : dish
+                        ? parseFloat(String(dish.price)) * Number(item.quantity)
+                        : 0}
                   </span>
                 </div>
               );

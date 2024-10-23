@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fetchDriverProfile, updateDriverStatus } from "@/services/api";
-import { DeliveryDriver } from "@/types";
+import { DeliveryDriver } from "@/types/index";
 import { useSelector } from "react-redux";
 import Loader from "@/components/Layout/Loader";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";

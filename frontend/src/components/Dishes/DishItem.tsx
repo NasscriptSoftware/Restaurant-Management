@@ -1,15 +1,23 @@
 import React from "react";
-import { DishItemProps } from "../../types/index";
 import { Plus, ChefHat } from "lucide-react";
 import { Button } from "../ui/button";
+import { Dish } from "@/types/index";
 
 interface DishItemWithToggleProps extends DishItemProps {
+
   showImage: boolean;
 }
 
 interface Size {
   size: string;
   price: string;
+  id: number;
+}
+
+export interface DishItemProps {
+  dish: Dish;
+  onAddDish: (dish: Dish) => void;
+  showImage: boolean;
 }
 
 const DishItem: React.FC<DishItemWithToggleProps> = ({

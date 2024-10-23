@@ -1,7 +1,7 @@
 import React from "react";
 
 type ProductReport = {
-  product_name:string;
+  product_name: string;
   invoice_number: string;
   created_at: string;
   order_type: string;
@@ -68,17 +68,29 @@ interface StaffReport {
   bank_amount: number;
   staff_name: string;
 }
+interface DriverReport {
+  order_id: string;
+  invoice_number: string;
+  customer_name: string;
+  address: string;
+  payment_method: string;
+  total_amount: number;
+  bank_amount: number;
+  cash_amount: number;
+  delivery_charge: number;
+}
 
 interface SalesPrintProps {
-  reportType: "sales" | "mess" | "product" | "onlineDelivery" | "staff";
+  reportType: "sales" | "mess" | "product" | "onlineDelivery" | "staff" | "driver";
   reports: SalesReport[];
   messReports: MessReport[];
   productReports?: ProductReport[];  // Add productReports as an optional prop
   totalAmount: number;
   totalCashAmount: number;
   totalCardAmount: number;
-  onlineDeliveryReports: OnlineDeliveryReport[];  
-  staffReports:StaffReport[];
+  onlineDeliveryReports: OnlineDeliveryReport[];
+  staffReports: StaffReport[];
+  driverReports: DriverReport[];
   // Other props...
 }
 
@@ -92,6 +104,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
   totalCardAmount,
   onlineDeliveryReports,
   staffReports, // Ensure staffReports is included in the props
+  driverReports,
 }) => {
   const printContent = () => {
     const printWindow = window.open("", "_blank");
@@ -123,10 +136,9 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
         </style>
       </head>
       <body>
-        <h1>${reportType === "sales" ? "Sales Report" : reportType === "mess" ? "Mess Report" : reportType === "product" ? "Product Report" : reportType === "staff" ? "Staff Report" : "No report"}</h1>
-        ${
-          reportType === "staff"
-            ? `
+        <h1>${reportType === "sales" ? "Sales Report" : reportType === "mess" ? "Mess Report" : reportType === "product" ? "Product Report" : reportType === "staff" ? "Staff Report" : reportType === "driver" ? "Driver Report" : "No report"}</h1>
+        ${reportType === "staff"
+        ? `
           <table>
             <thead>
               <tr>
@@ -143,8 +155,8 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
             </thead>
             <tbody>
               ${staffReports
-                .map(
-                  (report) => `
+          .map(
+            (report) => `
                 <tr>
                   <td>${report.id}</td>
                   <td>${report.invoice_number}</td>
@@ -157,33 +169,32 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
                   <td>${report.bank_amount}</td>
                 </tr>
               `
-                )
-                .join("")}
+          )
+          .join("")}
             </tbody>
             <tfoot>
               <tr>
                 <td colspan="8"></td>
                 <td>Total Cash:</td>
-                <td>₹${totalCashAmount.toFixed(2)}</td>
+                <td>Qar ${totalCashAmount.toFixed(2)}</td>
               </tr>
               <tr>
                 <td colspan="8"></td>
                 <td>Total Card:</td>
-                <td>₹${totalCardAmount.toFixed(2)}</td>
+                <td>Qar ${totalCardAmount.toFixed(2)}</td>
               </tr>
               <tr>
                 <td colspan="8"></td>
                 <td>Grand Total:</td>
-                <td>₹${totalAmount.toFixed(2)}</td>
+                <td>Qar ${totalAmount.toFixed(2)}</td>
               </tr>
             </tfoot>
           </table>
         `
-            : ""
-        }
-        ${
-          reportType === "sales"
-            ? ` 
+        : ""
+      }
+        ${reportType === "sales"
+        ? ` 
           <table>
             <thead>
               <tr>
@@ -199,8 +210,8 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
             </thead>
             <tbody>
               ${reports
-                .map(
-                  (report) => `
+          .map(
+            (report) => `
                 <tr>
                   <td>${report.id}</td>
                   <td>${report.invoice_number}</td>
@@ -212,30 +223,30 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
                   <td>${report.total_amount}</td>
                 </tr>
               `
-                )
-                .join("")}
+          )
+          .join("")}
             </tbody>
             <tfoot>
               <tr>
                 <td colspan="6"></td>
                 <td>Total Cash:</td>
-                <td>₹${totalCashAmount.toFixed(2)}</td>
+                <td>Qar ${totalCashAmount.toFixed(2)}</td>
               </tr>
               <tr>
                 <td colspan="6"></td>
                 <td>Total Card:</td>
-                <td>₹${totalCardAmount.toFixed(2)}</td>
+                <td>Qar ${totalCardAmount.toFixed(2)}</td>
               </tr>
               <tr>
                 <td colspan="6"></td>
                 <td>Grand Total:</td>
-                <td>₹${totalAmount.toFixed(2)}</td>
+                <td>Qar ${totalAmount.toFixed(2)}</td>
               </tr>
             </tfoot>
           </table>
         `
-            : reportType === "mess"
-            ? `
+        : reportType === "mess"
+          ? `
           <table>
             <thead>
               <tr>
@@ -255,8 +266,8 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
             </thead>
             <tbody>
               ${messReports
-                .map(
-                  (report) => `
+            .map(
+              (report) => `
                 <tr>
                   <td>${report.id}</td>
                   <td>${report.customer_name}</td>
@@ -272,29 +283,29 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
                   <td>${report.total_amount}</td>
                 </tr>
               `
-                )
-                .join("")}
+            )
+            .join("")}
             </tbody>
             <tfoot>
               <tr>
                 <td colspan="10"></td>
                 <td>Total Cash:</td>
-                <td>₹${totalCashAmount.toFixed(2)}</td>
+                <td>Qar ${totalCashAmount.toFixed(2)}</td>
               </tr>
               <tr>
                 <td colspan="10"></td>
                 <td>Total Card:</td>
-                <td>₹${totalCardAmount.toFixed(2)}</td>
+                <td>Qar ${totalCardAmount.toFixed(2)}</td>
               </tr>
               <tr>
                 <td colspan="10"></td>
                 <td>Grand Total:</td>
-                <td>₹${totalAmount.toFixed(2)}</td>
+                <td>Qar ${totalAmount.toFixed(2)}</td>
               </tr>
             </tfoot>
           </table>
         `
-            : reportType === "product"
+          : reportType === "product"
             ? `
           <table>
             <thead>
@@ -311,8 +322,8 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
             </thead>
             <tbody>
               ${productReports
-                .map(
-                  (report) => `
+              .map(
+                (report) => `
                 <tr>
                   <td>${report.product_name}</td>
                   <td>${report.invoice_number}</td>
@@ -324,30 +335,30 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
                   <td>${report.total_amount}</td>
                 </tr>
               `
-                )
-                .join("")}
+              )
+              .join("")}
             </tbody>
             <tfoot>
               <tr>
                 <td colspan="6"></td>
                 <td>Total Cash:</td>
-                <td>₹${totalCashAmount.toFixed(2)}</td>
+                <td>Qar ${totalCashAmount.toFixed(2)}</td>
               </tr>
               <tr>
                 <td colspan="6"></td>
                 <td>Total Card:</td>
-                <td>₹${totalCardAmount.toFixed(2)}</td>
+                <td>Qar ${totalCardAmount.toFixed(2)}</td>
               </tr>
               <tr>
                 <td colspan="6"></td>
                 <td>Grand Total:</td>
-                <td>₹${totalAmount.toFixed(2)}</td>
+                <td>Qar ${totalAmount.toFixed(2)}</td>
               </tr>
             </tfoot>
           </table>
         `
             : reportType === "onlineDelivery"
-            ? `
+              ? `
           <table>
             <thead>
               <tr>
@@ -380,9 +391,9 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
                   <td>${report.order_type}</td>
                   <td>${report.payment_method}</td>
                   <td>${report.order_status}</td>
-                  <td>₹${report.total_amount.toFixed(2)}</td>
-                  <td>₹${report.percentage_amount.toFixed(2)}</td>
-                  <td>₹${report.balance_amount.toFixed(2)}</td>
+                  <td>Qar ${report.total_amount.toFixed(2)}</td>
+                  <td>Qar ${report.percentage_amount.toFixed(2)}</td>
+                  <td>Qar ${report.balance_amount.toFixed(2)}</td>
                   <td>${new Date(report.created_at).toLocaleString()}</td>
                 </tr>
               `
@@ -393,13 +404,67 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
               <tr>
                 <td colspan="9"></td>
                 <td colspan="2">Grand Total:</td>
-                <td colspan="2">₹${totalAmount.toFixed(2)}</td>
+                <td colspan="2">Qar ${totalAmount.toFixed(2)}</td>
               </tr>
             </tfoot>
           </table>
         `
-            : ""
-        }
+              : reportType === "driver"
+                ? `
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Invoice Number</th>
+                      <th>Customer Name</th>
+                      <th>Address</th>
+                      <th>Payment Method</th>
+                      <th>Total Amount</th>
+                      <th>Bank Amount</th>
+                      <th>Cash Amount</th>
+                      <th>Delivery Charge</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${driverReports
+                  .map(
+                    (report) => `
+                      <tr>
+                        <td>${report.order_id}</td>
+                        <td>${report.invoice_number}</td>
+                        <td>${report.customer_name}</td>
+                        <td>${report.address}</td>
+                        <td>${report.payment_method}</td>
+                        <td>Qar ${report.total_amount.toFixed(2)}</td>
+                        <td>Qar ${report.bank_amount.toFixed(2)}</td>
+                        <td>Qar ${report.cash_amount.toFixed(2)}</td>
+                        <td>Qar ${report.delivery_charge.toFixed(2)}</td>
+                      </tr>
+                    `
+                  )
+                  .join("")}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="5"></td>
+                      <td>Total Cash:</td>
+                      <td>Qar ${totalCashAmount.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                      <td colspan="5"></td>
+                      <td>Total Card:</td>
+                      <td>Qar ${totalCardAmount.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                      <td colspan="5"></td>
+                      <td>Grand Total:</td>
+                      <td>Qar ${totalAmount.toFixed(2)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              `
+                : ""
+      }
       </body>
       </html>
     `);

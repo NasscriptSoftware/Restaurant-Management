@@ -4,8 +4,18 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dish } from "@/types";
-import OrderItems from "../Orders/OrderItems";
+
+import OrderListItems from "./OrderListItems";
+import { Category,Size } from "@/types/index";
+
+export interface OrderItem {
+  item_id: number;
+  id: number;
+  dish: number;
+  quantity: number;
+  is_newly_added: boolean;
+  total_amount: number;
+  dish_size: number; }
 
 export interface Order {
   id: number;
@@ -14,7 +24,7 @@ export interface Order {
   status: string;
   order_type: "dining" | "takeaway" | "delivery";
   billed_at: string;
-  items: { dish: number; quantity: number, is_newly_added: boolean }[];
+  items: OrderItem[];
 }
 
 interface OrdersListingProps {
@@ -26,6 +36,16 @@ interface OrdersListingProps {
   handlePreviousPage: () => void;
   handleNextPage: () => void;
   dishes: Dish[] | undefined;
+}
+interface Dish {
+  id: number | string;
+  name: string;
+  description: string;
+  price: string | number;
+  image: string;
+  category: number | Category;
+  sizes?: Size[];
+  arabic_name: string;
 }
 
 const OrdersListing: React.FC<OrdersListingProps> = ({
@@ -134,11 +154,14 @@ const OrdersListing: React.FC<OrdersListingProps> = ({
                     className="mt-4 space-y-2"
                   >
                     {order.items.map((item, index) => (
-                      <OrderItems
+                      <OrderListItems
                         key={index}
                         orderItem={item}
                         dishes={dishes}
-                        isNewlyAdded={false}
+                        orderId={order.id}
+                        onItemDeleted={() => {}} // Add a proper handler if needed
+                        order_status={order.status}
+                        isNewlyAdded={item.is_newly_added}
                       />
                     ))}
                   </motion.div>

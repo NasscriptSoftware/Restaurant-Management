@@ -13,7 +13,7 @@ interface Variant {
 }
 
 interface OrderItem {
-  id: number;
+  id: number | string;
   category: number;
   description: string;
   image: string;
@@ -55,8 +55,8 @@ export default function MemoModal({
       const fetchVariants = async () => {
         const fetchedVariants: Variant[] = [];
         for (const item of orderItems) {
-          if (variantsCache[item.id]) {
-            fetchedVariants.push(...variantsCache[item.id]);
+          if (variantsCache[(typeof item.id === 'number' ? item.id : parseFloat(item.id))]) {
+            fetchedVariants.push(...variantsCache[(typeof item.id === 'number' ? item.id : parseFloat(item.id))]);
           } else {
             try {
               const response = await api.get(`/variants/?dish_id=${item.id}`);
@@ -109,7 +109,7 @@ export default function MemoModal({
 
   const updateOrderItemsWithVariants = useCallback(() => {
     const updatedItems = orderItems.map((item) => {
-      const itemVariants = addedVariantsPerItem[item.id] || [];
+      const itemVariants = addedVariantsPerItem[(typeof item.id === 'number' ? item.id : parseFloat(item.id))] || [];
 
       const totalQuantityFromVariants = itemVariants.reduce(
         (total, variant) => total + variant.quantity,
@@ -217,7 +217,7 @@ export default function MemoModal({
                         variant="ghost"
                         size="icon"
                         className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors"
-                        onClick={() => handleRemoveItem(item.id)}
+                        onClick={() => handleRemoveItem(typeof item.id === 'number' ? item.id : parseFloat(item.id))}
                       >
                         <Trash2 className="h-5 w-5" />
                         <span className="sr-only">Remove item</span>
@@ -243,7 +243,7 @@ export default function MemoModal({
                                 variant="outline"
                                 size="icon"
                                 onClick={() =>
-                                  handleQuantityChange(item.id, -1)
+                                  handleQuantityChange(typeof item.id === 'number' ? item.id : parseFloat(item.id), -1)
                                 }
                                 className="bg-white"
                               >
@@ -253,12 +253,12 @@ export default function MemoModal({
                                 </span>
                               </Button>
                               <span className="text-lg font-semibold text-gray-700">
-                                {itemQuantities[item.id] || item.quantity}
+                                {itemQuantities[typeof item.id === 'number' ? item.id : parseFloat(item.id)] || item.quantity}
                               </span>
                               <Button
                                 variant="outline"
                                 size="icon"
-                                onClick={() => handleQuantityChange(item.id, 1)}
+                                onClick={() => handleQuantityChange(typeof item.id === 'number' ? item.id : parseFloat(item.id), 1)}
                                 className="bg-white"
                               >
                                 <Plus className="h-4 w-4" />
@@ -288,7 +288,7 @@ export default function MemoModal({
                               </select>
                               <Button
                                 variant="outline"
-                                onClick={() => handleAddVariant(item.id)}
+                                onClick={() => handleAddVariant(typeof item.id === 'number' ? item.id : parseFloat(item.id))}
                                 className="w-4/5 bg-white hover:bg-gray-100 transition-colors"
                               >
                                 Add Variant
@@ -300,7 +300,7 @@ export default function MemoModal({
                             </p>
                           )}
                           <AnimatePresence>
-                            {addedVariantsPerItem[item.id]?.length > 0 && (
+                            {addedVariantsPerItem[typeof item.id === 'number' ? item.id : parseFloat(item.id)]?.length > 0 && (
                               <motion.div
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: "auto" }}
@@ -312,7 +312,7 @@ export default function MemoModal({
                                   Added Variants:
                                 </h4>
                                 <ul className="space-y-2">
-                                  {addedVariantsPerItem[item.id]?.map(
+                                  {addedVariantsPerItem[typeof item.id === 'number' ? item.id : parseFloat(item.id)]?.map(
                                     (addedVariant) => (
                                       <motion.li
                                         key={addedVariant.variantId}
@@ -331,7 +331,7 @@ export default function MemoModal({
                                           size="icon"
                                           onClick={() =>
                                             handleRemoveVariant(
-                                              item.id,
+                                              typeof item.id === 'number' ? item.id : parseFloat(item.id),
                                               addedVariant.variantId
                                             )
                                           }

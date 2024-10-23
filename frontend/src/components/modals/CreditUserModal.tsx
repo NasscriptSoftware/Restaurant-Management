@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { api } from "@/services/api";
-import { CreditUser, CreditUserForm } from "@/types";
+import { CreditUser, CreditUserForm } from "@/types/index";
 
 interface CreditUserModalProps {
   isOpen: boolean;

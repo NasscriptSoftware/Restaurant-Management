@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "react-query";
-import { Check, ChevronsUpDown, CircleCheck, Search, Cog } from "lucide-react";
+import { useQuery, UseQueryResult } from "react-query";
+import { Check, ChevronsUpDown, CircleCheck, Search, Cog, Image, ImageOff } from "lucide-react";
 import { motion } from "framer-motion";
 import Layout from "../components/Layout/Layout";
 import DishList from "../components/Dishes/DishList";
@@ -10,7 +10,7 @@ import { useDishes } from "../hooks/useDishes";
 import { useOrders } from "../hooks/useOrders";
 import MemoModal from "@/components/modals/MemoModal";
 import KitchenNoteModal from "@/components/modals/KitchenNoteModal";
-import { Dish, Category, OrderFormData, DeliveryDriver } from "../types/index";
+import { Category, OrderFormData, DeliveryDriver, Dish } from "../types/index";
 import {
   fetchDeliveryDrivers,
   getCategories,
@@ -48,7 +48,7 @@ import {
 
 type OrderType = "dining" | "takeaway" | "delivery" | "onlinedelivery";
 
-export type OrderDish = Dish & { quantity: number; variants: any[] };
+export type OrderDish = Dish & { quantity: number; variants: any[]; selectedSize?: Size };
 
 // ... existing imports ...
 
@@ -61,6 +61,7 @@ type OnlineOrder = {
   // Add other relevant fields
 };
 interface Size {
+  id: number;
   size: string;
   price: string;
 }
@@ -71,7 +72,7 @@ const DishesPage: React.FC = () => {
   const { dishes, isLoading, isError } = useDishes();
 
   const { createOrder } = useOrders();
-  const { data: categories } = useQuery<Category[]>(
+  const { data: categories }: UseQueryResult<Category[], unknown> = useQuery(
     "categories",
     getCategories
   );
@@ -113,7 +114,7 @@ const DishesPage: React.FC = () => {
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
 
   const [showImage, setShowImage] = useState(() => {
     // Retrieve the value from localStorage on initial render
@@ -124,14 +125,7 @@ const DishesPage: React.FC = () => {
   const [customers, setCustomers] = useState<any[]>([]);
   const [customerSearchQuery, setCustomerSearchQuery] = useState("");
 
-  const handleValueChange = (value: OrderType) => {
-    setOrderType(value);
-    if (value === "onlinedelivery") {
-      setIsModalOpen(true);
-    } else {
-      setIsModalOpen(false);
-    }
-  };
+
   const navigate = useNavigate();
 
   const data = dishes || [];
@@ -155,7 +149,7 @@ const DishesPage: React.FC = () => {
     }
   }, [dispatch]);
 
-  useEffect(() => { 
+  useEffect(() => {
     // Save order items to localStorage whenever they change
     localStorage.setItem("orderItems", JSON.stringify(orderItems));
   }, [orderItems]);
@@ -203,12 +197,13 @@ const DishesPage: React.FC = () => {
           quantity: 1,
           variants: [],
           selectedSize: size,
+
         };
         dispatch(addItem(newDish));
       });
     } else {
       // If the dish doesn't have sizes, add it as before
-      const price = dish.price ? parseFloat(dish.price) : 0;
+      const price = dish.price ? dish.price : 0;
       const newDish = {
         ...dish,
         price,
@@ -220,7 +215,7 @@ const DishesPage: React.FC = () => {
     setIsOrderVisible(true);
   };
 
-  const updateQuantityFn = (id: number, change: number) => {
+  const updateQuantityFn = (id: number | string, change: number) => {
     dispatch(updateQuantity({ id, change }));
   };
 
@@ -385,7 +380,7 @@ const DishesPage: React.FC = () => {
     );
 
   const subtotal = orderItems.reduce(
-    (sum, item) => sum + parseFloat(item.price) * item.quantity,
+    (sum, item) => sum + (typeof item.price === 'number' ? item.price : parseFloat(item.price)) * item.quantity,
     0
   );
   const total = subtotal;
@@ -399,7 +394,9 @@ const DishesPage: React.FC = () => {
               Choose Categories
             </h2>
             <div className="flex flex-col items-end w-full sm:w-auto">
-              <div className="flex items-center w-full sm:w-auto mb-2">
+
+
+              <div className="flex items-center w-full sm:w-auto">
                 <Input
                   type="text"
                   value={searchQuery}
@@ -407,21 +404,40 @@ const DishesPage: React.FC = () => {
                   placeholder="Search products..."
                   className="w-full sm:w-64 mr-2"
                 />
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" className="mr-2">
                   <Search className="h-4 w-4" />
                 </Button>
+                <motion.div
+                  className="relative w-28 h-8 bg-[#6f42c1] rounded-full p-1 cursor-pointer"
+                  onClick={() => setShowImage(!showImage)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <motion.div
+                    className="absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] bg-white rounded-full shadow-lg flex items-center justify-center"
+                    animate={{ left: showImage ? '2px' : 'calc(50% + 0px)' }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  >
+                    {showImage ? (
+                      <Image size={12} className="text-[#6f42c1]" />
+                    ) : (
+                      <ImageOff size={12} className="text-[#6f42c1]" />
+                    )}
+                  </motion.div>
+                  <div className="h-full flex items-center justify-around text-white text-[10px] font-bold">
+                    <span className={showImage ? 'invisible' : ''}></span>
+                    <span className={!showImage ? 'invisible' : ''}></span>
+                  </div>
+                </motion.div>
               </div>
-              {/* Image toggle button */}
-              {/* ... */}
               {servicesCategory && (
                 <Button
                   onClick={handleServicesClick}
                   variant={isServicesView ? "default" : "outline"}
-                  className={`w-full sm:w-auto mt-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-                    isServicesView
-                      ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg"
-                      : "bg-white text-gray-700 border border-gray-300 hover:border-purple-500 hover:text-purple-500"
-                  }`}
+                  className={`w-full sm:w-auto mt-2 px-4 py-2 rounded-lg transition-all duration-300 ${isServicesView
+                    ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg"
+                    : "bg-white text-gray-700 border border-gray-300 hover:border-purple-500 hover:text-purple-500"
+                    }`}
                 >
                   <div className="flex items-center justify-center">
                     <Cog className="mr-2 h-5 w-5" />
@@ -461,8 +477,8 @@ const DishesPage: React.FC = () => {
           <DishList
             dishes={
               isServicesView
-                ? filteredDishes
-                : filterOutServiceDishes(filteredDishes)
+                ? filteredDishes as Dish[]
+                : filterOutServiceDishes(filteredDishes) as Dish[]
             }
             onAddDish={handleAddDish}
             showImage={showImage}
@@ -490,9 +506,8 @@ const DishesPage: React.FC = () => {
         </div>
         {orderItems.length > 0 && (
           <div
-            className={`w-full flex  md:justify-center items-center md:items-start flex-col md:flex-row lg:w-[550px] bg-white p-8 mt-2 ${
-              isOrderVisible ? "block" : "hidden lg:block"
-            }`}
+            className={`w-full flex  md:justify-center items-center md:items-start flex-col md:flex-row lg:w-[550px] bg-white p-8 mt-2 ${isOrderVisible ? "block" : "hidden lg:block"
+              }`}
           >
             <div className="sticky top-0">
               <h2 className="text-2xl font-bold mb-4">New Order</h2>
@@ -608,11 +623,10 @@ const DishesPage: React.FC = () => {
                               <p className="font-medium">{onlineOrder.name}</p>
                             </div>
                             <Check
-                              className={`flex-shrink-0 h-5 w-5 text-green-500 ${
-                                onlineDeliveryData?.id === onlineOrder.id
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                              }`}
+                              className={`flex-shrink-0 h-5 w-5 text-green-500 ${onlineDeliveryData?.id === onlineOrder.id
+                                ? "opacity-100"
+                                : "opacity-0"
+                                }`}
                             />
                           </CommandItem>
                         ))}
@@ -723,11 +737,10 @@ const DishesPage: React.FC = () => {
                                   }}
                                 >
                                   <Check
-                                    className={`mr-2 h-4 w-4 ${
-                                      selectedDriver?.id === driver.id
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    }`}
+                                    className={`mr-2 h-4 w-4 ${selectedDriver?.id === driver.id
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                      }`}
                                   />
                                   {driver.username}
                                 </CommandItem>
@@ -767,8 +780,8 @@ const DishesPage: React.FC = () => {
             handleUpdateOrderItems(
               updatedItems.map((item) => ({
                 ...item,
-                price: Number(item.price),
-              }))
+                price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+                })) as OrderDish[]
             );
           }}
         />
@@ -833,4 +846,5 @@ const DishesPage: React.FC = () => {
   );
 };
 
-export default DishesPage;
+export default DishesPage;     
+

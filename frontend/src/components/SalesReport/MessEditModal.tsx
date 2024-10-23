@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '@/services/api';
-import { MessType } from '@/types';
+import { MessType } from '@/types/index';
 
 interface MessReport {
     id: number;

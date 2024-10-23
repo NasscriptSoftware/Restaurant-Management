@@ -11,17 +11,28 @@ import {
 } from "@/services/api";
 import KitchenPrint from "../components/Orders/KitchenPrint";
 import SalesPrint from "../components/Orders/SalesPrint";
-import { Chair, CreditUser, Order } from "@/types/index";
+import {  Chair, CreditUser, Order } from "@/types/index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 
+//  interface Dish{
+//   id: number | string;
+//   name: string;
+//   description: string;
+//   price: string | number;
+//   image: string;
+//   category: number | Category;
+//   arabic_name: string;
+//  }
+
 const OrderCard = lazy(() => import("../components/Orders/OrderCard"));
 const PaginationControls = lazy(
   () => import("../components/Layout/PaginationControls")
 );
+
 
 const OrdersPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -59,7 +70,7 @@ const OrdersPage: React.FC = () => {
 
   useEffect(() => {
     loadCreditCardUsers();
-  }, []);
+  }, []);   
 
   useEffect(() => {
     const fetchLogoInfo = async () => {
@@ -195,7 +206,7 @@ console.log("orders", orders);
           // Update order status to delivered
           await updateOrderStatusNew(orderId, "delivered", {
             payment_method: "cash",
-            cash_amount: cashAmount, // Set cash_amount to the total amount
+            cash_amount: Number(cashAmount), // Convert cashAmount to a number
             bank_amount: 0, // Explicitly set bank_amount to 0
           });
 
@@ -447,7 +458,7 @@ console.log("orders", orders);
           .map((order: any) => (
             <div key={order.id} style={{ pageBreakAfter: "always" }}>
               {printType === "kitchen" ? (
-                <KitchenPrint order={order} dishes={dishes} />
+                <KitchenPrint order={order} dishes={dishes } />
               ) : (
                 <SalesPrint
                   order={order}

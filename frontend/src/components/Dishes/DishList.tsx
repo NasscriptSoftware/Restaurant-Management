@@ -1,7 +1,13 @@
 import React from "react";
 import DishItem from "./DishItem";
-import { DishListProps, Dish } from "../../types/index";
+import { Dish } from "../../types/index";
 import { motion } from 'framer-motion';
+
+export interface DishListProps {
+  dishes: Dish[];
+  onAddDish: (dish: Dish) => void;
+  showImage: boolean;
+}
 
 const DishList: React.FC<DishListProps> = ({ dishes, onAddDish, showImage }) => {
   const handleAddDish = (dish: Dish) => {

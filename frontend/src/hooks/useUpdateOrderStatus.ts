@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "react-query";
 import { updateOrderStatus as updateOrderStatusAPI } from "../services/api";
-import { Order } from "../types";
+import { Order } from "../types/index";
 
 export const useUpdateOrderStatus = () => {
   const queryClient = useQueryClient();

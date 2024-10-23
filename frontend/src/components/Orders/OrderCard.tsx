@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from "react";
 import Swal from "sweetalert2";
 import {
   Order,
-  Dish,
   CreditUser,
   DeliveryDriver,
   Chair,
   FOCProduct,
+  Category,
+  ChairDetail,
 } from "../../types/index";
 import OrderItems from "./OrderItems";
 import { useReactToPrint } from "react-to-print";
@@ -16,7 +17,6 @@ import AddProductModal from "./AddProductModal";
 import PrintConfirmationModal from "./PrintConfirmationModal";
 import {
   api,
-  fetchChairs,
   fetchOnlineOrderData,
   updateOrderStatusNew,
 } from "../../services/api";
@@ -78,11 +78,26 @@ interface OrderCardProps {
   } | null;
   chairs: Chair[];
 }
+ interface Dish{
+  id: number | string;
+  name: string;
+  description: string;
+  price: string | number;
+  image: string;
+  category: number | Category;  
+  arabic_name: string;
+}
+
+
 interface OnlineOrderData {
   id: number;
   order_id: number;
   order_type: string;
-  // Add other fields as needed
+  name: string;
+  address: string;
+  phone_number: number;
+  delivery_charge: number;
+  logo: string;
 }
 type OrderType = "dining" | "takeaway" | "delivery" | "onlinedelivery" | string;
 
@@ -152,7 +167,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
   useEffect(() => {
     if (order.order_type === "onlinedelivery" && order.online_order) {
-      fetchOnlineOrderData(order.online_order)
+      fetchOnlineOrderData(Number(order.online_order))
         .then((data) => setOnlineOrderData(data))
         .catch((error) =>
           console.error("Error fetching online order data:", error)
@@ -186,7 +201,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       console.log(newStatus);
 
       try {
-        await updateOrderStatusNew(order.id, "approved");
+        await updateOrderStatusNew(Number(order.id), "approved");
         onStatusUpdated();
       } catch (error) {
         console.error("Error updating status to approved:", error);
@@ -205,7 +220,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       }).then(async (result) => {
         if (result.isConfirmed) {
           try {
-            await updateOrderStatusNew(order.id, "cancelled");
+            await updateOrderStatusNew(Number(order.id), "cancelled");
             setStatus("cancelled");
             Swal.fire("Cancelled!", "The order has been cancelled.", "success");
             onStatusUpdated();
@@ -224,7 +239,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
     } else {
       try {
         await updateOrderStatusNew(
-          order.id,
+          Number(order.id),
           newStatus as "pending" | "approved" | "cancelled" | "delivered"
         );
         onStatusUpdated();
@@ -236,9 +251,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
   };
   const handleOrderSelection = () => {
     onOrderSelection(
-      selectedOrders.includes(order.id)
-        ? selectedOrders.filter((id) => id !== order.id)
-        : [...selectedOrders, order.id]
+      selectedOrders.includes(Number(order.id))
+        ? selectedOrders.filter((id) => id !== Number(order.id))
+        : [...selectedOrders, Number(order.id)]
     );
   };
 
@@ -263,7 +278,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   ) => {
     try {
       const newTotalAmount = products.reduce<number>(
-        (sum, product) => sum + product.quantity * product.dish.price,
+        (sum, product) => sum + product.quantity * (typeof  product.dish.price === 'number' ?  product.dish.price : parseFloat( product.dish.price)),
         Number(order.total_amount)
       );
 
@@ -271,7 +286,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         items: products.map((product) => ({
           dish: product.dish.id,
           quantity: product.quantity,
-          total_amount: product.quantity * product.dish.price,
+          total_amount: product.quantity * (typeof  product.dish.price === 'number' ?  product.dish.price : parseFloat( product.dish.price)),
           is_newly_added: true,
         })),
         total_amount: newTotalAmount.toFixed(2),
@@ -361,7 +376,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       }
 
       const response = await updateOrderStatusNew(
-        order.id,
+        Number(order.id),
         "delivered",
         additionalData
       );
@@ -372,7 +387,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         console.log("UpdatedOrder", UpdatedOrder);
 
         const billsResponse = await api.post("/bills/", {
-          order_id: order.id,
+          order_id: Number(order.id),
           total_amount: order.total_amount,
           paid: true,
         });
@@ -512,8 +527,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
       const chairAmount = totalHours * parseFloat(chairData.amount);
 
       // Create chair details object
-      const chairDetails = {
-        chair_id: chairId,
+      const chairDetails: ChairDetail = {
+        id: Date.now(), // Generate a temporary id
+        chair_id: chairId ,
         chair_name: chairData.chair_name,
         customer_name: chairData.customer_name,
         customer_mob: chairData.customer_mob,
@@ -521,6 +537,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         end_time: chairData.end_time,
         amount: chairAmount.toFixed(2),
         total_time: totalTime,
+        order: Number(order.id)
       };
 
       // Update chair data
@@ -572,7 +589,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         <div className="flex items-center">
           <input
             type="checkbox"
-            checked={selectedOrders.includes(order.id)}
+            checked={selectedOrders.includes(Number(order.id))}
             onChange={handleOrderSelection}
             className="mr-4 w-6 h-6 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
           />
@@ -702,7 +719,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
               orderItem={item}
               dishes={dishes}
               isNewlyAdded={item.is_newly_added}
-              orderId={order.id}
+              orderId={Number(order.id)}
               onItemDeleted={handleItemDeleted}
               order_status={order.status}
             />
@@ -875,7 +892,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 bg-gradient-to-r from-purple-200 to-purple-300 text-purple-800
                 hover:from-                transition-all duration-300 shadow-md hover:shadow-lg
                 flex items-center gap-3 transform hover:scale-105
-                ${order.chair_details && order.chair_details.length > 0  || order.status === "delivered"
+                ${order.chair_details && order.chair_details.length > 0 || order.status === "delivered"
                   ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer"
                 }
@@ -966,7 +983,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       )}
       {showAddOptionsModal && (
         <AddOptionsModal
-          orderId={order.id}
+          orderId={Number(order.id)}
           onClose={() => setShowAddOptionsModal(false)}
           onSubmit={handleAddOptionsSubmit}
         />

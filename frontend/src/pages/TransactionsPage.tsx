@@ -37,7 +37,7 @@ const TransactionsPage: React.FC = () => {
     <Layout>
       <div className="p-4 bg-gray-100 min-h-screen">
         <header className="bg-white p-4 shadow-md rounded-md mb-4">
-          <div className="w-full flex justify-between gap-1">
+          <div className="flex flex-wrap sm:flex-nowrap w-full justify-between gap-2">
             <button
               className={`py-2 px-4 rounded w-full ${
                 activeButton === "PayIn" ? "bg-[#6f42c1] text-white transition-all" : "text-purple-500 border border-purple-500 hover:bg-purple-500 hover:text-white"

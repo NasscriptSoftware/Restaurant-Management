@@ -2,19 +2,23 @@ import React, { useState, useEffect } from "react";
 import Layout from "../components/Layout/Layout";
 import BillCard from "../components/Bills/BillCard";
 import PaginationControls from "../components/Layout/PaginationControls";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { RotateCcw } from "lucide-react";
+import { CalendarIcon, RotateCcw } from "lucide-react";
 import { Bill } from "../types/index";
 import Loader from "../components/Layout/Loader";
 import { api } from "@/services/api";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
 
 const BillsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [allBills, setAllBills] = useState<Bill[]>([]);
   const [filteredBills, setFilteredBills] = useState<Bill[]>([]);
-  const [fromDate, setFromDate] = useState<Date | null>(new Date()); // Default to today
-  const [toDate, setToDate] = useState<Date | null>(new Date()); // Default to today
+  const [fromDate, setFromDate] = useState<Date | undefined>(new Date()); // Default to today
+  const [toDate, setToDate] = useState<Date | undefined>(new Date()); // Default to today
   const [searchTerm, setSearchTerm] = useState<string>(""); // Search term for bill number
   const [showCancelled, setShowCancelled] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -71,8 +75,8 @@ const BillsPage: React.FC = () => {
 
   // Reset filters
   const handleReset = () => {
-    setFromDate(new Date()); // Reset to today
-    setToDate(new Date()); // Reset to today
+    setFromDate(undefined); // Reset to today
+    setToDate(undefined); // Reset to today
     setSearchTerm(""); // Clear search term
     setShowCancelled(false); // Show all bills
   };
@@ -92,26 +96,56 @@ const BillsPage: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700">
               From Date
             </label>
-            <DatePicker
-              selected={fromDate}
-              onChange={(date) => setFromDate(date)}
-              dateFormat="yyyy-MM-dd"
-              className="mt-1 p-2 border rounded w-full"
-              placeholderText="Select from date"
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-[240px] justify-start text-left font-normal",
+                    !fromDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {fromDate ? format(fromDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={fromDate}
+                  onSelect={setFromDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="w-full md:w-auto">
             <label className="block text-sm font-medium text-gray-700">
               To Date
             </label>
-            <DatePicker
-              selected={toDate}
-              onChange={(date) => setToDate(date)}
-              dateFormat="yyyy-MM-dd"
-              className="mt-1 p-2 border rounded w-full"
-              placeholderText="Select to date"
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-[240px] justify-start text-left font-normal",
+                    !toDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {toDate ? format(toDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={toDate}
+                  onSelect={setToDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="w-full md:w-auto">

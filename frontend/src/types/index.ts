@@ -5,10 +5,10 @@ export interface Category {
 }
 
 export interface Dish {
-  id: number;
+  id: number | string;
   name: string;
   description: string;
-  price: string;
+  price: string | number;
   image: string;
   category: number | Category;
   sizes?: Size[];
@@ -16,27 +16,25 @@ export interface Dish {
 }
 
 export interface OrderItem {
+  item_id: number | string;
   is_newly_added: boolean | undefined;
-  dish: number;
-  quantity: number;
+  dish: number | string;
+  quantity: number | string; 
   variants?: { variantId: number; name: string; quantity: number }[];
-  id: number;
-  total_amount: number;
-  dish_size?: {
-    id: number;
-    size: string;
-    price: number;
-  };
+  id: number | string;
+  total_amount: number | string;
+  dish_size:number | string;
 }
 
 export interface Order {
-  id: number;
+  id: number | string;
   created_at: string;
   total_amount: string | number;
   status: "pending" | "approved" | "cancelled" | "delivered";
   bill_generated: boolean;
   items: OrderItem[];
-  order_type: "dining" | "takeaway" | "delivery";
+  order_type: "dining" | "takeaway" | "delivery" | "onlinedelivery";
+  online_order: string ;
   delivery_order_status:
     | "pending"
     | "accepted"
@@ -47,6 +45,7 @@ export interface Order {
     username: string;
     mobile_number: number;
     email: string;
+
 
   };
   
@@ -103,13 +102,13 @@ export interface DishFormData {
 
 export interface OrderFormData {
   items: {
-    id: number;
-    dish: number;
-    quantity: number;
+    id: number | string;
+    dish: number | string;
+    quantity: number | string;
     variants: {
       variantId: number;
       name: string;
-      quantity: number;
+      quantity: number | string;
     }[];
     is_newly_added: boolean;
     size?: number | null;
@@ -221,6 +220,7 @@ export interface UseDishesReturn {
   setPage: (page: number) => void;
 }
 export interface Size {
+  id: number;
   size: string;
   price: string;
 }
@@ -420,10 +420,13 @@ export interface FOCProduct {
 }
 
 export interface ChairDetail {
+  chair_id: number;
   chair_name: string;
+  customer_name: string;
+  customer_mob: string;
   start_time: string;
   end_time: string;
-  amount: string;
+  amount: string | number;
   total_time: string;
   id: number;
   order: number;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLocation, Link } from "react-router-dom";
 import {
   Tooltip,
@@ -25,6 +25,7 @@ import {
   Armchair,
   Menu,
   UserRoundCheck,
+  X,
 } from "lucide-react"; // Import the icons you'll use
 import { motion, AnimatePresence } from "framer-motion";
 import LogoutBtn from "./LogoutBtn";
@@ -32,6 +33,7 @@ import NotificationBadge from "./NotificationBadge";
 import { api } from "@/services/api";
 import { useSelector } from "react-redux";
 import { RootState } from "@/features/store";
+import { Button } from "../ui/button";
 
 const iconMap = {
   bell: Bell,
@@ -108,7 +110,32 @@ const Sidebar: React.FC = () => {
     fetchLogoInfo();
   }, []);
 
-  const toggleSidebar = () => setIsOpen(!isOpen);
+  const toggleSidebar = useCallback(() => {
+    setIsOpen(prevState => !prevState);
+  }, []);
+
+  const closeSidebar = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsOpen(true);
+      } else {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Call it initially
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    closeSidebar();
+  }, [location, closeSidebar]);
 
   const isActive = (path: string) => {
     return location.pathname === path
@@ -155,14 +182,13 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
-      {!isOpen && (
-        <button
-          onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-50 lg:hidden bg-[#6f42c1] text-white p-2 rounded-md shadow-md hover:bg-[#5a32a3] transition-colors duration-200"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
-      )}
+      <Button
+        onClick={toggleSidebar}
+        variant="outline"
+        className="fixed top-4 left-4 z-0 lg:hidden p-2 rounded-md shadow-xl"
+      >
+        {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+      </Button>
       <AnimatePresence>
         {(isOpen || window.innerWidth >= 1024) && (
           <motion.div
@@ -176,16 +202,16 @@ const Sidebar: React.FC = () => {
               <Link
                 to="/"
                 className="flex justify-center md:justify-start"
-                onClick={() => setIsOpen(false)}
+                onClick={closeSidebar}
               >
                 <img src={mainLogoUrl} alt="Logo" className="h-8 w-auto" />
               </Link>
 
               <button
-                onClick={toggleSidebar}
-                className="lg:hidden bg-[#6f42c1] text-white p-2 rounded-md shadow-md hover:bg-[#5a32a3] transition-colors duration-200"
+                onClick={closeSidebar}
+                className="lg:hidden text-gray-500 hover:text-gray-700 transition-colors duration-200"
               >
-                <Menu className="w-6 h-6" />
+                <X className="w-6 h-6" />
               </button>
             </div>
             <div className="flex items-center space-x-3 mb-6 p-3 bg-gray-100 rounded-lg">
@@ -256,7 +282,7 @@ const Sidebar: React.FC = () => {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
           className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={toggleSidebar}
+          onClick={closeSidebar}
         />
       )}
     </>

@@ -1,31 +1,39 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Order, Dish, OrderItem, Category } from "../../types/index";
-import { fetchDishSizes, getCategories } from "../../services/api";
-import { useQuery } from "react-query";
+import { Order,  OrderItem,  Dish } from "../../types/index";
+import { fetchDishSizes } from "../../services/api";
 
 interface KitchenPrintProps {
   order: Order;
   dishes: Dish[];
 }
+export interface DishItemProps {
+  dish: Dish;
+  onAddDish: (dish: Dish) => void;
+}
+// interface Dish {
+//   id: number;
+//   name: string;
+//   description: string;
+//   price: string;
+//   image: string;
+//   category: number | Category;
+//   sizes?: Size[];
+//   arabic_name: string;
+// }
 
 const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
   const [dishSizes, setDishSizes] = useState<{ [key: number]: any }>({});
-  const { data: categories } = useQuery<Category[]>(
-    "categories",
-    getCategories
-  );
-  const servicesCategory = categories?.find(
-    (category) => category.name.toLowerCase() === "service"
-  );
+ 
+
 
   useEffect(() => {
     const fetchSizes = async () => {
       const sizePromises = order.items
         .filter((item) => item.dish_size)
-        .map((item) => fetchDishSizes(item.dish_size));
+        .map((item) => fetchDishSizes(typeof item.dish_size === 'number' ? item.dish_size : parseFloat(item.dish_size)));
 
       const sizes = await Promise.all(sizePromises);
-      const sizeMap = sizes.reduce((acc, size, index) => {
+      const sizeMap = sizes.reduce((acc, size) => {
         const item = order.items.find((item) => item.dish_size === size.id);
         if (item) {
           acc[item.dish_size] = size;
@@ -60,10 +68,11 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
   };
 
   const calculateSubTotal = (item: OrderItem, dish: Dish | undefined) => {
-    if (item.dish_size && dishSizes[item.dish_size]) {
-      return dishSizes[item.dish_size].price * item.quantity;
+    if (item.dish_size && dishSizes[typeof item.dish_size === 'number' ? item.dish_size : parseFloat(item.dish_size)]) {
+      const size = dishSizes[typeof item.dish_size === 'number' ? item.dish_size : parseFloat(item.dish_size)];
+      return Number(size.price) * Number(item.quantity);
     } else if (dish) {
-      return dish.price * item.quantity;
+      return Number(dish.price) * Number(item.quantity);
     }
     return 0;
   };
@@ -75,7 +84,7 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
       const renderItems = (items: OrderItem[]) => {
         return items.map((item, index) => {
           const dish = dishes.find((d) => d.id === item.dish);
-          const sizeDetails = item.dish_size ? dishSizes[item.dish_size] : null;
+          const sizeDetails = item.dish_size ? dishSizes[typeof item.dish_size === 'number' ? item.dish_size : parseFloat(item.dish_size)] : null;
           const subTotal = calculateSubTotal(item, dish);
           total += subTotal;
 

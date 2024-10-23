@@ -1,7 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import {
   Dish,
-  ApiResponse,
   Category,
   OrderFormData,
   AnalyticsData,
@@ -64,9 +63,7 @@ export const logout = async () => {
 };
 
 export const getCategories = () =>
-  api
-    .get<ApiResponse<Category>>("/categories/")
-    .then((response) => response.data);
+  api.get<Category[]>("/categories/").then((response) => response.data);
 
 export const getDishes = () =>
   api
@@ -104,7 +101,7 @@ export const fetchOrders = async (page: number) => {
   return response.data;
 };
 
-export const fetchOrder = async (orderId: number) => {
+export const fetchOrder = async (orderId: number | string) => {
   const response = await api.get(`/orders/${orderId}/`);
   return response.data;
 };

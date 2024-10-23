@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { OrderItem, Dish, DishSize } from "../../types/index";
+import { OrderItem, DishSize, Category, Size } from "../../types/index";
 import { Trash } from "lucide-react";
 import { Button } from "../ui/button";
 import { api, fetchDishSizes } from "../../services/api";
@@ -24,6 +24,16 @@ interface OrderItemsProps {
   onItemDeleted: (deletedItemAmount: number) => void;
   order_status: string;
 }
+ interface Dish{
+  id: number | string;
+  name: string;
+  description: string;
+    price: string | number;
+    image: string;
+  category: number | Category;
+  sizes?: Size[];
+  arabic_name: string;
+ }
 
 const OrderItems: React.FC<OrderItemsProps> = ({
   orderItem,
@@ -41,7 +51,7 @@ const OrderItems: React.FC<OrderItemsProps> = ({
 
   useEffect(() => {
     if (orderItem.dish_size) {
-      fetchDishSizes(orderItem.dish_size)
+      fetchDishSizes(typeof orderItem.dish_size === 'number' ? orderItem.dish_size : parseFloat(orderItem.dish_size))
         .then((data) => setDishSize(data))
         .catch((error) => console.error("Error fetching dish size:", error));
     }
@@ -56,7 +66,7 @@ const OrderItems: React.FC<OrderItemsProps> = ({
     try {
       await api.delete(`/orders/${orderId}/remove-item/${orderItem.id}/`);
       setIsDeleted(true);
-      const deletedItemAmount = dish.price * orderItem.quantity;
+      const deletedItemAmount = Number(dish.price) * Number(orderItem.quantity);
       onItemDeleted(deletedItemAmount);
     } catch (error) {
       console.error("Error deleting item:", error);
@@ -127,7 +137,7 @@ const OrderItems: React.FC<OrderItemsProps> = ({
         </div>
         <p className="font-semibold">
           QAR {(
-            (dishSize ? (dishSize.price as any) : dish.price) * orderItem.quantity
+            (dishSize ? Number(dishSize.price) : Number(dish.price)) * Number(orderItem.quantity)
           ).toFixed(2)}
         </p>
         <p className="text-sm text-gray-600">

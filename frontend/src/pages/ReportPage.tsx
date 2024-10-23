@@ -10,7 +10,7 @@ import TransactionsModal from "@/components/Mess/TransactionsModal";
 import SalesHistoryModal from "@/components/SalesReport/SalesHistoryModal";
 import SalesEditModal from "@/components/SalesReport/SalesEditModal";
 import MessEditModal from "@/components/SalesReport/MessEditModal";
-import { format, isValid } from "date-fns";
+import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -129,12 +129,6 @@ interface StaffReport {
   staff_name: string;
 }
 
-interface StaffReportResponse {
-  results: StaffReport[];
-  count?: number;
-  next?: string | null;
-  previous?: string | null;
-}
 
 // Define the StaffUser interface
 interface StaffUser {
@@ -147,6 +141,18 @@ interface Driver {
   id: number;
   username: string;
   role: string;
+}
+
+interface DriverReport {
+  order_id: string;
+  invoice_number: string;
+  customer_name: string;
+  address: string;
+  payment_method: string;
+  total_amount: number;
+  bank_amount: number;
+  cash_amount: number;
+  delivery_charge: number;
 }
 
 const ReportPage: React.FC = () => {
@@ -289,21 +295,14 @@ const ReportPage: React.FC = () => {
       const url = staffId
         ? `${import.meta.env.VITE_APP_API_URL}/orders/${staffId}/staff-user-order-report/`
         : `${import.meta.env.VITE_APP_API_URL}/orders/staff-user-order-report/`;
-      const response = await api.get<StaffReportResponse>(url);
+      const response = await api.get<StaffReport[]>(url);
       console.log("Staff report response:", response.data);
       
-      setStaffReports(response.data);
-      console.log("Staff reports set:", response.data);
-      
-      if ('count' in response.data && 'next' in response.data && 'previous' in response.data) {
-        setStaffReportMeta({
-          count: response.data.count,
-          next: response.data.next,
-          previous: response.data.previous,
-        });
-      }
+      setStaffReports(response.data || []);
+      console.log("Staff reports set:", response.data || []);
     } catch (error) {
       console.error("Error fetching staff report:", error);
+      setStaffReports([]);
     }
   };
 
@@ -466,10 +465,7 @@ const ReportPage: React.FC = () => {
     setCurrentPage(1);
     fetchDataWithFilter({});
   };
-  const openModal = (driverId: string) => {
-    setSelectedDriverId(driverId);
-    setIsModalOpen(true);
-  };
+
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -509,14 +505,6 @@ const ReportPage: React.FC = () => {
         : reportType === "product"
           ? productReports.reduce((acc, report) => acc + parseFloat(report.bank_amount.toString()), 0)
           : onlineDeliveryReports.reduce((acc, report) => acc + (report.payment_method === "bank" ? report.total_amount : 0), 0);
-
-  const totalBankAmount = reports
-    .filter((report) => report.payment_method === "bank")
-    .reduce((acc, report) => acc + parseFloat(report.bank_amount || "0"), 0);
-
-  const totalCreditAmount = reports
-    .filter((report) => report.payment_method === "credit")
-    .reduce((acc, report) => acc + parseFloat(report.total_amount.toString() || "0"), 0);
 
 
   const fetchDriverReport = async (driverId: string | null) => {
@@ -731,7 +719,7 @@ const ReportPage: React.FC = () => {
                 <TableCell key={column.key} className={column.align === 'right' ? 'text-right font-bold' : ''}>
                   {column.key in totals ? (column.format ? column.format(totals[column.key]) : totals[column.key]) : 
                    column.key === columns[0].key ? 'Grand Total' : 
-                   column.key in grandTotals ? (column.format ? column.format(grandTotals[column.key]) : grandTotals[column.key]) : ''}
+                   column.key in grandTotals ? (column.format ? column.format(grandTotals[column.key as keyof typeof grandTotals]) : grandTotals[column.key as keyof typeof grandTotals]) : ''}
                 </TableCell>
               ))}
               {showActions && <TableCell />}
@@ -1004,3 +992,4 @@ const ReportPage: React.FC = () => {
 };
 
 export default ReportPage;  
+

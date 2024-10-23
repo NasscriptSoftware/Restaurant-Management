@@ -3,7 +3,7 @@ import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { TopDish } from '@/types';
+import { TopDish } from '@/types/index';
 import { Link } from 'react-router-dom';
 
 const TopDishesSlider = ({ topDishes }: { topDishes: TopDish[]}) => {
