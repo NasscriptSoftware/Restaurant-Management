@@ -614,6 +614,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 <Coffee size={30} className={`${
                   status !== "delivered" ? "animate-pulse" : ""
                 } text-red-500`} />
+                <span className="text-red-500">FOC</span>
               </button>
             </div>
         
@@ -1349,7 +1350,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                       </option>
                     ))
                 ) : (
-                  <option value="" disabled>
+                  <option value="none" disabled>
                     No active chairs available
                   </option>
                 )}
@@ -1412,6 +1413,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 value={chairData.end_time}
                 onChange={handleChairInputChange}
               />
+            </div>
+            <div>
             </div>
             <div>
               <label

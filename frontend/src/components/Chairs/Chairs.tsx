@@ -143,6 +143,7 @@ export default function Chairs({
         onClose={handleCloseModal}
         chair={{
           id,
+          order,
           chair_name,
           customer_name,
           customer_mob,

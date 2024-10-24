@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { api } from '@/services/api';
-import { parseISO, format } from 'date-fns';
 
 interface ChairEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   chair: {
     id: number;
+    order: number;
     chair_name: string;
     customer_name: string | null;
     customer_mob: string | null;
@@ -20,7 +20,7 @@ interface ChairEditModalProps {
   onUpdate: () => void;
 }
 
-export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: ChairEditModalProps) {
+const ChairEditModal: React.FC<ChairEditModalProps> = ({ isOpen, onClose, chair, onUpdate }) => {
   const [formData, setFormData] = useState(chair);
   const initialRender = useRef(true);
 
@@ -40,8 +40,6 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
       newValue = checked;
     } else if (type === 'number') {
       newValue = value === '' ? null : Number(value);
-    } else if (type === 'datetime-local') {
-      newValue = value === '' ? null : new Date(value).toISOString();
     }
 
     setFormData(prev => ({
@@ -56,27 +54,42 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
       // First, update the chair
       const chairResponse = await api.put(`/chairs/${chair.id}/`, formData);
       
-      // Then, update the order with the new chair details
       if (chairResponse.data.order) {
-        const orderResponse = await api.get(`/orders/${chairResponse.data.order}/`);
-        const orderData = orderResponse.data;
-        
-        // Calculate the new chair_amount
-        const newChairAmount = orderData.chair_details.reduce((total: number, chair: any) => {
-          return total + (parseFloat(chair.amount) || 0);
-        }, 0);
+        // Calculate total_time in hours
+        const startTime = new Date(formData.start_time);
+        const endTime = new Date(formData.end_time);
+        const totalTimeHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
 
-        // Calculate the new total_amount
-        const newTotalAmount = (parseFloat(orderData.total_amount) - parseFloat(orderData.chair_amount)) + newChairAmount;
+        // Calculate new chair amount and round to 2 decimal places
+        const newChairAmount = Number((Number(formData.amount) * totalTimeHours).toFixed(2));
+
+        // Fetch the current order to get previous amounts
+        const orderResponse = await api.get(`/orders/${chairResponse.data.order}/`);
+        const currentOrder = orderResponse.data;
+
+        // Ensure we're working with numbers and round to 2 decimal places
+        const currentTotalAmount = Number(currentOrder.total_amount) || 0;
+        const currentChairAmount = Number(currentOrder.chair_amount) || 0;
+
+        // Calculate new total amount and chair amount, rounding to 2 decimal places
+        const newTotalAmount = Number((currentTotalAmount + newChairAmount).toFixed(2));
+        const newOrderChairAmount = Number((currentChairAmount + newChairAmount).toFixed(2));
 
         // Update the order with new chair_amount, total_amount, and chair_details
         await api.patch(`/orders/${chairResponse.data.order}/`, {
-          chair_amount: newChairAmount.toFixed(2),
-          total_amount: newTotalAmount.toFixed(2),
-          chair_details: orderData.chair_details.map((chair: any) => ({
-            ...chair,
-            amount: parseFloat(chair.amount).toFixed(2)
-          }))
+          chair_amount: newOrderChairAmount,
+          total_amount: newTotalAmount,
+          chair_details: {
+            chair_id: chairResponse.data.id,
+            chair_name: formData.chair_name,
+            customer_name: formData.customer_name,
+            customer_mob: formData.customer_mob,
+            amount: newChairAmount,
+            start_time: formData.start_time,
+            end_time: formData.end_time,
+            total_time: Number(totalTimeHours.toFixed(2)),
+            order: chairResponse.data.order
+          }
         });
       }
 
@@ -87,12 +100,6 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
       // Add user feedback for error
       alert('An error occurred while updating the chair and order. Please try again.');
     }
-  };
-
-  const formatDateTime = (dateTimeString: string | null) => {
-    if (!dateTimeString) return '';
-    const date = parseISO(dateTimeString);
-    return format(date, "yyyy-MM-dd'T'HH:mm");
   };
 
   return (
@@ -163,7 +170,7 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
                       type="datetime-local"
                       name="start_time"
                       id="start_time"
-                      value={formatDateTime(formData.start_time)}
+                      value={formData?.start_time}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     />
@@ -176,7 +183,7 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
                       type="datetime-local"
                       name="end_time"
                       id="end_time"
-                      value={formatDateTime(formData.end_time)}
+                      value={formData?.end_time }
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                     />
@@ -230,4 +237,6 @@ export default function ChairEditModal({ isOpen, onClose, chair, onUpdate }: Cha
       </Dialog>
     </Transition>
   );
-}
+};
+
+export default ChairEditModal;

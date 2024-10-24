@@ -221,6 +221,7 @@ class OrderSerializer(serializers.ModelSerializer):
         return order
 
     def update(self, instance, validated_data):
+        print('111111111111111111',validated_data)
         items_data = validated_data.pop("items", None)
         foc_products_data = validated_data.pop("foc_products", None)
         for attr, value in validated_data.items():
