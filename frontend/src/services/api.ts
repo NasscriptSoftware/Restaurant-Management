@@ -236,6 +236,10 @@ export const updateDriverStatus = (driverId: number, action: string) => {
   return api.patch(`/delivery-drivers/${driverId}/${action}/`);
 };
 
+export const updateOrderPayment = (orderId:number) => {
+  return api.patch(`/orders/${orderId}/`);
+};
+
 // Update delivery status
 export const updateDeliveryOrderStatus = (orderId: number, status: string) => {
   return api.patch(`/delivery-orders/${orderId}/update_status/`, {
