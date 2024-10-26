@@ -61,13 +61,13 @@ const DishItem: React.FC<DishItemWithToggleProps> = ({
             dish.sizes.map((size: Size) => (
               <div
                 key={size.size}
-                className="flex items-center justify-between bg-gray-100 rounded-full px-3 py-1.5 sm:px-4 sm:py-2"
+                className="w-full flex items-center flex-col xl:flex-row justify-center bg-gray-100 rounded-full px-3 py-1.5 sm:px-4 sm:py-2"
                 onClick={(e) => {
                   e.stopPropagation();
                   onAddDish({ ...dish, sizes: [size], price: size.price });
                 }}  
               >
-                <span className="text-xs sm:text-[0.725rem] font-bold text-gray-700">
+                <span className="w-full text-xs text-center sm:text-[0.725rem] font-bold text-gray-700">
                   {size.size}
                 </span>
                 <div className="flex items-center">
@@ -75,7 +75,7 @@ const DishItem: React.FC<DishItemWithToggleProps> = ({
                     QAR {size.price}
                   </span>
                   <button
-                    className="bg-purple-600 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center hover:bg-purple-700 transition-colors duration-200"
+                    className="bg-purple-600 ml-3 xl:ml-0 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center hover:bg-purple-700 transition-colors duration-200"
                     onClick={(e) => {
                       e.stopPropagation();
                       onAddDish({ ...dish, sizes: [size], price: size.price });

@@ -25,22 +25,14 @@ const OrderItem: React.FC<OrderItemProps> = ({
 }) => {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between bg-white shadow-md rounded-lg p-4 mb-2 transition-all hover:shadow-lg">
-      <div className="flex items-center w-full sm:w-auto mb-4 sm:mb-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-red-500 mr-2"
-          onClick={() => removeItem(orderItem.id)}
-        >
-          <X size={16} />
-        </Button>
+      <div className="flex items-center flex-row md:flex-col xl:flex-row text-sm w-full sm:w-auto mb-4 sm:mb-0">
         <img
           src={orderItem.image || "/placeholder-image.png"}
           alt={orderItem.name}
           className="w-16 h-16 object-cover rounded-md"
         />
         <div className="ml-4 flex-grow">
-          <h4 className="font-semibold text-lg">{orderItem.name}</h4>
+          <h4 className="font-semibold text-sm">{orderItem.name}</h4>
           {orderItem.selectedSize && (
             <p className="text-sm text-gray-500">Size: {orderItem.selectedSize.size}</p>
           )}
@@ -68,6 +60,14 @@ const OrderItem: React.FC<OrderItemProps> = ({
           >
             <Plus size={16} />
           </Button>
+          <Button
+          variant="ghost"
+          size="icon"
+          className="text-red-500 ml-5"
+          onClick={() => removeItem(orderItem.id)}
+        >
+          <X size={16} />
+        </Button>
         </div>
         <span className="font-semibold text-lg text-green-600">
           QAR {(parseFloat(orderItem.price.toString()) * orderItem.quantity).toFixed(2)}

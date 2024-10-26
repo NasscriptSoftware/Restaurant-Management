@@ -250,7 +250,7 @@ const Sidebar: React.FC = () => {
                     {!isCompact && <span className="ml-3 font-bold text-lg">Notifications</span>}
                     <NotificationBadge className={`absolute ${isCompact ? 'top-2 right-2' : 'top-3 right-3'}`} />
                   </Link>
-                  <LogoutBtn />
+                  <LogoutBtn isCompact={isCompact} />
                 </div>
               </div>
             </div>
