@@ -2,6 +2,7 @@ from rest_framework import viewsets,status
 from django.db import transaction 
 from django.db.models import Sum, Q
 from datetime import datetime
+from django.db.models import F, Min
 
 from .models import (
     CashCountSheet,
@@ -68,6 +69,50 @@ class TransactionViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer2)
 
         return Response(serializer1.data, status=status.HTTP_201_CREATED) 
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        
+        serializer.is_valid(raise_exception=True)
+        
+        self.perform_update(serializer)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+    @action(detail=False, methods=['get'])
+    def filter_by_voucher_no(self, request):
+        voucher_no = request.query_params.get('voucher_no', None)
+        if voucher_no is not None:
+            transactions = self.queryset.filter(voucher_no=voucher_no)
+            serializer = self.get_serializer(transactions, many=True)
+            return Response(serializer.data)
+        else:
+            return Response({"error": "voucher_no parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+    @action(detail=False, methods=['get'])
+    def filter_transaction_by_transaction_type(self, request):
+        transaction_type = request.query_params.get('transaction_type', None)
+        
+        if transaction_type:
+            transactions = self.queryset.filter(transaction_type=transaction_type)
+        else:
+            transactions = self.queryset
+
+
+        filtered_transactions = transactions.filter(
+            id__in=transactions.values('voucher_no')
+                              .annotate(min_id=Min('id'))
+                              .values('min_id')
+        )
+
+        serializer = self.get_serializer(filtered_transactions, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def ledger_report(self, request):
