@@ -16,7 +16,12 @@ import {
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
 
-const LogoutBtn: React.FC = () => {
+interface LogoutBtnProps {
+  isCompact: boolean;
+}
+
+// const LogoutBtn: React.FC = ({ isCompact  }: any) => {
+  const LogoutBtn: React.FC<LogoutBtnProps> = ({ isCompact }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -38,7 +43,7 @@ const LogoutBtn: React.FC = () => {
       <AlertDialogTrigger asChild>
         <button className="w-full flex items-center space-x-2 px-3 hover:text-red-500 cursor-pointer mt-2 justify-start py-1 rounded-md focus:outline-none">
           <LogOutIcon />
-          <p className="hidden sm:block font-bold">Logout</p>
+          {!isCompact && <p className="hidden sm:block font-bold">Logout</p>}
         </button>
       </AlertDialogTrigger>
       <AlertDialogContent>
