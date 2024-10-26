@@ -428,7 +428,7 @@ export interface ChairDetail {
   end_time: string;
   amount: string | number;
   total_time: string;
-  id: number;
+  id: number | string ;
   order: number;
     
 }

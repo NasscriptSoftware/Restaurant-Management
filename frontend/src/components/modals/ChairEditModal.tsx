@@ -63,7 +63,7 @@ const ChairEditModal: React.FC<ChairEditModalProps> = ({ isOpen, onClose, chair,
         // Calculate new chair amount and round to 2 decimal places
         const newChairAmount = Number((Number(formData.amount) * totalTimeHours).toFixed(2));
 
-        // Fetch the current order to get previous amounts
+        // Fetch the current order to get previous amounts and chair details
         const orderResponse = await api.get(`/orders/${chairResponse.data.order}/`);
         const currentOrder = orderResponse.data;
 
@@ -75,21 +75,27 @@ const ChairEditModal: React.FC<ChairEditModalProps> = ({ isOpen, onClose, chair,
         const newTotalAmount = Number((currentTotalAmount + newChairAmount).toFixed(2));
         const newOrderChairAmount = Number((currentChairAmount + newChairAmount).toFixed(2));
 
+
+        // Create new chair detail entry
+        const newChairDetail = {
+          chair_id: chairResponse.data.id,
+          chair_name: formData.chair_name,
+          customer_name: formData.customer_name,
+          customer_mob: formData.customer_mob,
+          amount: formData.amount,
+          start_time: formData.start_time,
+          end_time: formData.end_time,
+          total_time: totalTimeHours,
+        };
+
+        // Append new chair detail to existing chair_details
+        const updatedChairDetails = [...currentOrder.chair_details, newChairDetail];
+
         // Update the order with new chair_amount, total_amount, and chair_details
         await api.patch(`/orders/${chairResponse.data.order}/`, {
           chair_amount: newOrderChairAmount,
           total_amount: newTotalAmount,
-          chair_details: {
-            chair_id: chairResponse.data.id,
-            chair_name: formData.chair_name,
-            customer_name: formData.customer_name,
-            customer_mob: formData.customer_mob,
-            amount: newChairAmount,
-            start_time: formData.start_time,
-            end_time: formData.end_time,
-            total_time: Number(totalTimeHours.toFixed(2)),
-            order: chairResponse.data.order
-          }
+          chair_details: updatedChairDetails,
         });
       }
 

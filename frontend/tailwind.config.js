@@ -9,6 +9,9 @@ module.exports = {
   ],
   prefix: "",
   theme: {
+    touchAction: {
+      manipulation: 'manipulation',
+    },
     container: {
       center: true,
       padding: "2rem",
@@ -37,6 +40,7 @@ module.exports = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      touchAction: ['responsive'],
     },
   },
   plugins: [require("tailwindcss-animate")],

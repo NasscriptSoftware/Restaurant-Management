@@ -91,7 +91,7 @@ class Dish(models.Model):
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to="images/", default="default_dish_image.jpg")
     price = models.DecimalField(
-        max_digits=6, decimal_places=2, null=True, blank=True, help_text="Base price if no variants are available"
+        max_digits=6, decimal_places=2, default=0, help_text="Base price if no variants are available"
     )
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name="dishes"

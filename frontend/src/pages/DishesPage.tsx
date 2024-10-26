@@ -506,10 +506,10 @@ const DishesPage: React.FC = () => {
         </div>
         {orderItems.length > 0 && (
           <div
-            className={`w-full flex  md:justify-center items-center md:items-start flex-col md:flex-row lg:w-[550px] bg-white p-8 mt-2 ${isOrderVisible ? "block" : "hidden lg:block"
+            className={`w-full flex md:justify-center items-center md:items-start flex-col md:flex-row lg:w-[550px] bg-white p-8 mt-2 ${isOrderVisible ? "block" : "hidden lg:block"
               }`}
           >
-            <div className="sticky top-0">
+            <div className="sticky top-0 max-h-[100vh] overflow-y-auto hidden-scrollbar px-2">
               <h2 className="text-2xl font-bold mb-4">New Order</h2>
               <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 invisible-scrollbar">
                 {orderItems.map((item) => (
@@ -759,7 +759,7 @@ const DishesPage: React.FC = () => {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              <Button className="w-full mt-6" onClick={handleCheckout}>
+              <Button className="w-full my-6" onClick={handleCheckout}>
                 Checkout
               </Button>
             </div>

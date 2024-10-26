@@ -249,7 +249,7 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
                         {formatTime(chair.end_time)}
                       </td>
                       <td className="text-center">{chair.total_time}</td>
-                      <td className="text-right">QAR {order.chair_amount ? order.chair_amount : '0.00'}</td>
+                      <td className="text-right">QAR {chair.amount}</td>
                     </tr>
                   );
                 })}

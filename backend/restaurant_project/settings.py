@@ -171,7 +171,7 @@ UNFOLD = {
             "images/nasscript_full_banner_logo.png"
         ),  # light mode
         "dark": lambda request: static(
-            "images/nasscript_full_banner_logo.png"
+            "images/dark_logo.jpeg"
         ),  # dark mode
     },
     "SITE_SYMBOL": "restaurant",

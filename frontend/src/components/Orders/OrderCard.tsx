@@ -73,18 +73,18 @@ interface OrderCardProps {
     phoneNumber: string;
     location: string;
     companyNameArabic: string;
-    printLogo: string;  
+    printLogo: string;
     locationArabic: string;
   } | null;
   chairs: Chair[];
 }
- interface Dish{
+interface Dish {
   id: number | string;
   name: string;
   description: string;
   price: string | number;
   image: string;
-  category: number | Category;  
+  category: number | Category;
   arabic_name: string;
 }
 
@@ -278,7 +278,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   ) => {
     try {
       const newTotalAmount = products.reduce<number>(
-        (sum, product) => sum + product.quantity * (typeof  product.dish.price === 'number' ?  product.dish.price : parseFloat( product.dish.price)),
+        (sum, product) => sum + product.quantity * (typeof product.dish.price === 'number' ? product.dish.price : parseFloat(product.dish.price)),
         Number(order.total_amount)
       );
 
@@ -286,7 +286,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         items: products.map((product) => ({
           dish: product.dish.id,
           quantity: product.quantity,
-          total_amount: product.quantity * (typeof  product.dish.price === 'number' ?  product.dish.price : parseFloat( product.dish.price)),
+          total_amount: product.quantity * (typeof product.dish.price === 'number' ? product.dish.price : parseFloat(product.dish.price)),
           is_newly_added: true,
         })),
         total_amount: newTotalAmount.toFixed(2),
@@ -384,7 +384,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
       if (response && response.detail) {
         const UpdatedOrder = await api.get(`/orders/${initialOrder.id}`);
         setOrder(UpdatedOrder.data);
-        console.log("UpdatedOrder", UpdatedOrder);
 
         const billsResponse = await api.post("/bills/", {
           order_id: Number(order.id),
@@ -393,6 +392,14 @@ const OrderCard: React.FC<OrderCardProps> = ({
         });
 
         if (billsResponse && billsResponse.status === 201) {
+          console.log(order.chair_details);
+
+          // Clear the chair after billing
+          if (order.chair_details && order.chair_details.length > 0) {
+            const chairId = order.chair_details[0].chair_id;
+            await api.patch(`/chairs/${chairId}/`, { is_active: true, order: null, customer_name: null, customer_mob: null, start_time: null, end_time: null, amount: null, total_time: null });
+          }
+
           setShowPaymentModal(false);
           setStatus("delivered");
           disableAllActions();
@@ -528,8 +535,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
       // Create chair details object
       const chairDetails: ChairDetail = {
-        id: Date.now(), // Generate a temporary id
-        chair_id: chairId ,
+        id: order.id, // Generate a temporary id
+        chair_id: chairId,
         chair_name: chairData.chair_name,
         customer_name: chairData.customer_name,
         customer_mob: chairData.customer_mob,
@@ -599,25 +606,23 @@ const OrderCard: React.FC<OrderCardProps> = ({
         </div>
 
         <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3 mt-4 sm:mt-0">
-          
+
           <div>
-              <button
-                onClick={() => setShowAddOptionsModal(true)}
-                disabled={status === "delivered"}
-                className={`text-gray-700 focus:outline-none ${
-                  status === "delivered"
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:text-red-500"
+            <button
+              onClick={() => setShowAddOptionsModal(true)}
+              disabled={status === "delivered"}
+              className={`text-gray-700 focus:outline-none ${status === "delivered"
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:text-red-500"
                 }`}
-                title="Add Options"
-              >
-                <Coffee size={30} className={`${
-                  status !== "delivered" ? "animate-pulse" : ""
+              title="Add Options"
+            >
+              <Coffee size={30} className={`${status !== "delivered" ? "animate-pulse" : ""
                 } text-red-500`} />
-                <span className="text-red-500">FOC</span>
-              </button>
-            </div>
-        
+              <span className="text-red-500">FOC</span>
+            </button>
+          </div>
+
           {/* Print Icon for Kitchen Bill */}
           {status === "approved" && (
             <button
@@ -837,15 +842,15 @@ const OrderCard: React.FC<OrderCardProps> = ({
           {order?.order_type === "dining" && (
             <Button
               variant="outline"
-              className={`font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105 ${order.status === "delivered" 
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+              className={`font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105 ${order.status === "delivered"
+                ? "opacity-50 cursor-not-allowed"
+                : ""
                 }`}
               onClick={() => setShowOrderTypeModal(true)}
             >
-              <HandPlatter size={18} className={`${order.status === "delivered" 
-                  ? "opacity-50 cursor-not-allowed"
-                  : "animate-bounce"
+              <HandPlatter size={18} className={`${order.status === "delivered"
+                ? "opacity-50 cursor-not-allowed"
+                : "animate-bounce"
                 }`} />
               {order?.order_type?.charAt(0).toUpperCase() +
                 order?.order_type?.slice(1)}
@@ -901,9 +906,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
               onClick={() => setIsChairModalOpen(true)}
               disabled={order.chair_details && order.chair_details.length > 0 || order.status === "delivered"}
             >
-            <Armchair size={18} className={`${order.chair_details && order.chair_details.length > 0  || order.status === "delivered"
-                  ? "opacity-50 cursor-not-allowed"
-                  : "animate-bounce"
+              <Armchair size={18} className={`${order.chair_details && order.chair_details.length > 0 || order.status === "delivered"
+                ? "opacity-50 cursor-not-allowed"
+                : "animate-bounce"
                 }`} />
               <span className="tracking-wide">Select Chair</span>
             </Button>

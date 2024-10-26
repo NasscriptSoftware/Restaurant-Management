@@ -101,7 +101,7 @@ export default function Chairs({
   return (
     <>
       <div
-        className={`bg-white p-4 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 ${is_active ? 'border-green-500 border-2' : 'border-red-500 border-2'} relative`}
+        className={`bg-white p-4 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 ${is_active ? 'border-green-600 border-4' : 'border-red-600 border-4'} relative`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >

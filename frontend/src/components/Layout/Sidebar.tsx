@@ -26,7 +26,9 @@ import {
   Menu,
   UserRoundCheck,
   X,
-} from "lucide-react"; // Import the icons you'll use
+  ChevronRight,
+  ChevronLeft,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import LogoutBtn from "./LogoutBtn";
 import NotificationBadge from "./NotificationBadge";
@@ -69,23 +71,19 @@ const Sidebar: React.FC = () => {
   const [mainLogoUrl, setMainLogoUrl] = useState<string>(
     "/images/nasscript_full_banner_logo.png"
   );
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
+  const [isCompact, setIsCompact] = useState(false);
 
+  // Fetch menu items and logo
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
-        const response = await api.get("/sidebar-items/"); // Ensure this returns all items
-        console.log("Menu items response:", response.data);
-
-        // Check if we have results and set menu items
+        const response = await api.get("/sidebar-items/");
         if (Array.isArray(response.data.results)) {
-          // Filter out inactive menu items
           const activeMenuItems = response.data.results.filter(
             (item: MenuItem) => item.active
           );
           setMenuItems(activeMenuItems);
-        } else {
-          console.error("Menu items response is not an array");
         }
       } catch (error) {
         console.error("Failed to fetch menu items:", error);
@@ -95,11 +93,8 @@ const Sidebar: React.FC = () => {
     const fetchLogoInfo = async () => {
       try {
         const response = await api.get("/logo-info/");
-        if (response.data.results && response.data.results.length > 0) {
-          const logoInfo = response.data.results[0];
-          if (logoInfo.main_logo) {
-            setMainLogoUrl(logoInfo.main_logo);
-          }
+        if (response.data.results?.[0]?.main_logo) {
+          setMainLogoUrl(response.data.results[0].main_logo);
         }
       } catch (error) {
         console.error("Failed to fetch logo info:", error);
@@ -110,32 +105,34 @@ const Sidebar: React.FC = () => {
     fetchLogoInfo();
   }, []);
 
-  const toggleSidebar = useCallback(() => {
-    setIsOpen(prevState => !prevState);
-  }, []);
-
-  const closeSidebar = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
+  // Handle responsive behavior
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
+      const width = window.innerWidth;
+      if (width >= 1280) {
         setIsOpen(true);
+        setIsCompact(false);
+      } else if (width >= 768) {
+        setIsOpen(true);
+        setIsCompact(true);
       } else {
         setIsOpen(false);
+        setIsCompact(false);
       }
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize(); // Call it initially
-
+    handleResize();
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    closeSidebar();
-  }, [location, closeSidebar]);
+  const toggleSidebar = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+
+  const toggleCompact = useCallback(() => {
+    setIsCompact(prev => !prev);
+  }, []);
 
   const isActive = (path: string) => {
     return location.pathname === path
@@ -153,28 +150,26 @@ const Sidebar: React.FC = () => {
           <TooltipTrigger asChild>
             <Link
               to={item.path}
-              className={`flex items-center justify-between space-x-2 p-2 rounded ${isActive(
+              className={`flex items-center justify-between p-3 rounded-lg touch-manipulation ${isActive(
                 item.path
               )}`}
             >
-              <div className="flex gap-2 items-center">
-                {IconComponent ? (
-                  <IconComponent className="w-5 h-5" />
-                ) : (
-                  <div className="w-5 h-5 text-gray-400">❓</div>
+              <div className="flex items-center gap-3">
+                {IconComponent && (
+                  <IconComponent className={`w-6 h-6 ${isCompact ? 'mx-auto' : ''}`} />
                 )}
-                <span className="font-bold">{item.label}</span>
+                {!isCompact && <span className="font-bold text-lg">{item.label}</span>}
               </div>
-              <span className="flex text-end">
-                {location.pathname === item.path && (
-                  <ArrowRight className="w-5 h-5" />
-                )}
-              </span>
+              {!isCompact && location.pathname === item.path && (
+                <ArrowRight className="w-6 h-6" />
+              )}
             </Link>
           </TooltipTrigger>
-          <TooltipContent side="right" className="md:hidden">
-            <p>{item.label}</p>
-          </TooltipContent>
+          {isCompact && (
+            <TooltipContent side="right" className="text-lg p-2">
+              <p>{item.label}</p>
+            </TooltipContent>
+          )}
         </Tooltip>
       </TooltipProvider>
     );
@@ -185,104 +180,110 @@ const Sidebar: React.FC = () => {
       <Button
         onClick={toggleSidebar}
         variant="outline"
-        className="fixed top-4 left-4 z-0 lg:hidden p-2 rounded-md shadow-xl"
+        className="fixed top-4 left-4 z-50 md:hidden p-3 rounded-lg shadow-xl touch-manipulation"
+        size="lg"
       >
-        {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        {isOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
       </Button>
+
       <AnimatePresence>
-        {(isOpen || window.innerWidth >= 1024) && (
+        {isOpen && (
           <motion.div
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed top-0 left-0 w-64 bg-white p-4 h-screen border-r border-gray-300 flex flex-col z-40 overflow-y-auto"
+            className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-300 shadow-lg z-40 overflow-y-auto invisible-scrollbar
+              ${isCompact ? 'w-20' : 'w-80'} transition-all duration-300`}
           >
-            <div className="flex items-center justify-between mb-8">
-              <Link
-                to="/"
-                className="flex justify-center md:justify-start"
-                onClick={closeSidebar}
-              >
-                <img src={mainLogoUrl} alt="Logo" className="h-8 w-auto" />
-              </Link>
-
-              <button
-                onClick={closeSidebar}
-                className="lg:hidden text-gray-500 hover:text-gray-700 transition-colors duration-200"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="flex items-center space-x-3 mb-6 p-3 bg-gray-100 rounded-lg">
-              <div className="bg-[#6f42c1] rounded-full p-2">
-                <UserRoundCheck size={24} className="text-white" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-gray-700">Logged in as</span>
-                <span className="text-base font-bold text-[#6f42c1]"> {username || 'Guest'}</span>
-              </div>
-            </div>
-
-            <div className="flex-grow mr-2">
-              <nav>
-                <ul className="space-y-2">
-                  {Array.isArray(menuItems) && menuItems.length > 0 ? (
-                    menuItems.map((item) => (
-                      <li key={item.id} onClick={() => setIsOpen(false)}>
-                        {renderMenuItem(item)}
-                      </li>
-                    ))
+            <div className="sticky top-0 bg-white z-10 p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                {!isCompact && (
+                  <Link to="/" className="flex justify-center items-center w-full">
+                    <img src={mainLogoUrl} alt="Logo" className="max-h-[75px] w-auto object-contain" />
+                  </Link>
+                )}
+                <Button
+                  onClick={toggleCompact}
+                  variant="ghost"
+                  className="p-2 hidden md:flex"
+                >
+                  {isCompact ? (
+                    <ChevronRight className="w-6 h-6" />
                   ) : (
-                    <p>No menu items available</p>
+                    <ChevronLeft className="w-6 h-6" />
                   )}
-                </ul>
-              </nav>
+                </Button>
+              </div>
+
+              {!isCompact && (
+                <div className="flex items-center space-x-3 p-3 bg-gray-100 rounded-lg">
+                  <div className="bg-[#6f42c1] rounded-full p-2">
+                    <UserRoundCheck size={28} className="text-white" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-gray-700">Logged in as</span>
+                    <span className="text-lg font-bold text-[#6f42c1]">{username || 'Guest'}</span>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="mt-6">
-              <h3 className="text-md text-black-500 mb-2 font-bold">Other</h3>
-              <ul>
-                <li onClick={() => setIsOpen(false)}>
+
+            <div className="p-4">
+              <nav className="space-y-3">
+                {menuItems.map((item) => (
+                  <div key={item.id} className="touch-manipulation">
+                    {renderMenuItem(item)}
+                  </div>
+                ))}
+              </nav>
+
+              <div className="mt-6 border-t pt-4">
+                <div className="space-y-3">
                   <Link
                     to="/notifications"
-                    className={`relative flex items-center space-x-2 p-2 mr-2 rounded ${isActive(
+                    className={`relative flex items-center p-3 rounded-lg touch-manipulation ${isActive(
                       "/notifications"
                     )}`}
                   >
                     <Bell className="w-6 h-6" />
-                    <span className="font-bold">Notifications</span>
-                    <NotificationBadge className="absolute top-2 right-3" />
+                    {!isCompact && <span className="ml-3 font-bold text-lg">Notifications</span>}
+                    <NotificationBadge className={`absolute ${isCompact ? 'top-2 right-2' : 'top-3 right-3'}`} />
                   </Link>
-                </li>
-                <li onClick={() => setIsOpen(false)}>
                   <LogoutBtn />
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
-            <a
-              href="https://nasscript.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 flex justify-center items-center flex-col"
-            >
-              <p className="text-black-600 text-md font-bold">Powered by</p>
-              <img
-                src="/images/nasscript_full_banner_logo.png"
-                alt="Logo"
-                className="h-5 w-auto"
-              />
-            </a>
+
+            {!isCompact && (
+              <div className="p-4 border-t mt-auto">
+                <a
+                  href="https://nasscript.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center"
+                >
+                  <p className="text-gray-600 text-sm mb-1">Powered by</p>
+                  <img
+                    src="/images/nasscript_full_banner_logo.png"
+                    alt="Logo"
+                    className="h-6 w-auto"
+                  />
+                </a>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
+
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={closeSidebar}
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          onClick={toggleSidebar}
         />
       )}
     </>

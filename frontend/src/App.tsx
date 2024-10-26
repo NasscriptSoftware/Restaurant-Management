@@ -143,7 +143,7 @@ function App() {
                 <Route
                   path="/salesreport"
                   element={
-                    <ProtectedRoute allowedRoles={["staff", "admin"]}>
+                    <ProtectedRoute allowedRoles={["admin"]}>
                       <SalesReportPage />
                     </ProtectedRoute>
                   }
@@ -151,7 +151,7 @@ function App() {
                 <Route
                   path="/credit-users"
                   element={
-                    <ProtectedRoute allowedRoles={["staff", "admin"]}>
+                    <ProtectedRoute allowedRoles={["admin"]}>
                       <CreditUsersPage />
                     </ProtectedRoute>
                   }
@@ -159,7 +159,7 @@ function App() {
                 <Route
                   path="/transactions"
                   element={
-                    <ProtectedRoute allowedRoles={["staff", "admin"]}>
+                    <ProtectedRoute allowedRoles={["admin"]}>
                       <TransactionsPage />
                     </ProtectedRoute>
                   }
@@ -167,7 +167,7 @@ function App() {
                 <Route
                   path="/share-management"
                   element={
-                    <ProtectedRoute allowedRoles={["staff", "admin"]}>
+                    <ProtectedRoute allowedRoles={["admin"]}>
                       <ShareManagement />
                     </ProtectedRoute>
                   }
@@ -175,7 +175,7 @@ function App() {
                 <Route
                   path="/day-book"
                   element={
-                    <ProtectedRoute allowedRoles={["staff", "admin"]}>
+                    <ProtectedRoute allowedRoles={["admin"]}>
                       <DayBookPage />
                     </ProtectedRoute>
                   }
