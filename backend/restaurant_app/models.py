@@ -52,6 +52,8 @@ class LogoInfo(models.Model):
     company_name = models.CharField(max_length=255)
     company_name_arabic = models.CharField(max_length=255, blank=True, null=True)
     phone_number = models.CharField(max_length=20)
+    landline_number = models.CharField(max_length=20, blank=True, null=True)
+    mobile_number =  models.CharField(max_length=20, blank=True, null=True)
     location = models.CharField(max_length=255)
     location_arabic = models.CharField(max_length=255, blank=True, null=True)
     office_number = models.CharField(max_length=20,blank=True)
