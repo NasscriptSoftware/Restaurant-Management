@@ -89,7 +89,7 @@ const DishesPage: React.FC = () => {
   const [isServicesView, setIsServicesView] = useState(false);
 
   const mainDishesCategory = categories?.find(
-    (category) => category.name.toLowerCase() === "maindishes"
+    (category) => category.name.toLowerCase() === "main dishes"
   );
 
   const servicesCategory = categories?.find(
