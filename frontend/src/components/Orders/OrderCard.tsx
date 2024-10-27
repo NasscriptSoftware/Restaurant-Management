@@ -90,7 +90,6 @@ interface Dish {
   arabic_name: string;
 }
 
-
 interface OnlineOrderData {
   id: number;
   order_id: number;
@@ -280,7 +279,12 @@ const OrderCard: React.FC<OrderCardProps> = ({
   ) => {
     try {
       const newTotalAmount = products.reduce<number>(
-        (sum, product) => sum + product.quantity * (typeof product.dish.price === 'number' ? product.dish.price : parseFloat(product.dish.price)),
+        (sum, product) =>
+          sum +
+          product.quantity *
+            (typeof product.dish.price === "number"
+              ? product.dish.price
+              : parseFloat(product.dish.price)),
         Number(order.total_amount)
       );
 
@@ -288,7 +292,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
         items: products.map((product) => ({
           dish: product.dish.id,
           quantity: product.quantity,
-          total_amount: product.quantity * (typeof product.dish.price === 'number' ? product.dish.price : parseFloat(product.dish.price)),
+          total_amount:
+            product.quantity *
+            (typeof product.dish.price === "number"
+              ? product.dish.price
+              : parseFloat(product.dish.price)),
           is_newly_added: true,
         })),
         total_amount: newTotalAmount.toFixed(2),
@@ -399,7 +407,16 @@ const OrderCard: React.FC<OrderCardProps> = ({
           // Clear the chair after billing
           if (order.chair_details && order.chair_details.length > 0) {
             const chairId = order.chair_details[0].chair_id;
-            await api.patch(`/chairs/${chairId}/`, { is_active: true, order: null, customer_name: null, customer_mob: null, start_time: null, end_time: null, amount: null, total_time: null });
+            await api.patch(`/chairs/${chairId}/`, {
+              is_active: true,
+              order: null,
+              customer_name: null,
+              customer_mob: null,
+              start_time: null,
+              end_time: null,
+              amount: null,
+              total_time: null,
+            });
           }
 
           setShowPaymentModal(false);
@@ -458,13 +475,13 @@ const OrderCard: React.FC<OrderCardProps> = ({
     const deliveryData =
       newOrderType === "delivery"
         ? {
-          customer_name: customerName,
-          address: deliveryAddress,
-          customer_phone_number: customerMobileNumber,
-          delivery_charge: parseFloat(deliveryCharge),
-          delivery_driver_id: selectedDriver?.id,
-          delivery_order_status: "pending",
-        }
+            customer_name: customerName,
+            address: deliveryAddress,
+            customer_phone_number: customerMobileNumber,
+            delivery_charge: parseFloat(deliveryCharge),
+            delivery_driver_id: selectedDriver?.id,
+            delivery_order_status: "pending",
+          }
         : {};
 
     try {
@@ -497,7 +514,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
     setChairData({ ...chairData, [name]: value });
 
     // Automatically close the modal for start_time and end_time inputs
-    if (name === 'start_time' || name === 'end_time') {
+    if (name === "start_time" || name === "end_time") {
       const inputElement = e.target as HTMLInputElement;
       inputElement.blur(); // Remove focus from the input to close the modal
     }
@@ -546,7 +563,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         end_time: chairData.end_time,
         amount: chairAmount.toFixed(2),
         total_time: totalTime,
-        order: Number(order.id)
+        order: Number(order.id),
       };
 
       // Update chair data
@@ -571,7 +588,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
         ).toFixed(2),
         chair_details: [...(order.chair_details || []), chairDetails],
       };
-
 
       // Update the order in the backend with chair details
       await api.patch(`/orders/${order.id}/`, {
@@ -608,19 +624,23 @@ const OrderCard: React.FC<OrderCardProps> = ({
         </div>
 
         <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3 mt-4 sm:mt-0">
-
           <div>
             <button
               onClick={() => setShowAddOptionsModal(true)}
               disabled={status === "delivered"}
-              className={`text-gray-700 focus:outline-none ${status === "delivered"
+              className={`text-gray-700 focus:outline-none ${
+                status === "delivered"
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:text-red-500"
-                }`}
+              }`}
               title="Add Options"
             >
-              <Coffee size={30} className={`${status !== "delivered" ? "animate-pulse" : ""
-                } text-red-500`} />
+              <Coffee
+                size={30}
+                className={`${
+                  status !== "delivered" ? "animate-pulse" : ""
+                } text-red-500`}
+              />
               <span className="text-red-500">FOC</span>
             </button>
           </div>
@@ -690,10 +710,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
           <button
             onClick={() => setShowAddProductModal(true)}
             className={`w-full sm:w-auto px-4 py-2 rounded-md flex items-center transition 
-    ${status === "delivered" || status === "cancelled"
-                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                : "bg-[#6f42c1] text-white hover:bg-[#6f42c1]"
-              }`}
+    ${
+      status === "delivered" || status === "cancelled"
+        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+        : "bg-[#6f42c1] text-white hover:bg-[#6f42c1]"
+    }`}
             disabled={status === "delivered" || status === "cancelled"}
           >
             <svg
@@ -777,9 +798,20 @@ const OrderCard: React.FC<OrderCardProps> = ({
               <HoverCardTrigger asChild>
                 <Button
                   variant="outline"
-                  className="font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105"
+                  className={`font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105 ${
+                    order.status === "delivered"
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
                 >
-                  <BadgeInfo size={18} className="mr-1 animate-bounce" />
+                  <BadgeInfo
+                    size={18}
+                    className={`${
+                      order.status === "delivered"
+                        ? "opacity-50 cursor-not-allowed"
+                        : "animate-bounce"
+                    }`}
+                  />
                   <span>Delivery Info</span>
                 </Button>
               </HoverCardTrigger>
@@ -791,15 +823,16 @@ const OrderCard: React.FC<OrderCardProps> = ({
                       Status:
                     </span>
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${order?.delivery_order_status === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : order?.delivery_order_status === "delivered"
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        order?.delivery_order_status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : order?.delivery_order_status === "delivered"
                           ? "bg-green-100 text-green-800"
                           : order?.delivery_order_status === "accepted" ||
                             order?.delivery_order_status === "in_progress"
-                            ? "bg-indigo-100 text-indigo-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+                          ? "bg-indigo-100 text-indigo-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
                     >
                       {order?.delivery_order_status
                         ?.replace("_", " ")
@@ -844,16 +877,21 @@ const OrderCard: React.FC<OrderCardProps> = ({
           {order?.order_type === "dining" && (
             <Button
               variant="outline"
-              className={`font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105 ${order.status === "delivered"
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-                }`}
+              className={`font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105 ${
+                order.status === "delivered"
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
               onClick={() => setShowOrderTypeModal(true)}
             >
-              <HandPlatter size={18} className={`${order.status === "delivered"
-                ? "opacity-50 cursor-not-allowed"
-                : "animate-bounce"
-                }`} />
+              <HandPlatter
+                size={18}
+                className={`${
+                  order.status === "delivered"
+                    ? "opacity-50 cursor-not-allowed"
+                    : "animate-bounce"
+                }`}
+              />
               {order?.order_type?.charAt(0).toUpperCase() +
                 order?.order_type?.slice(1)}
             </Button>
@@ -862,10 +900,21 @@ const OrderCard: React.FC<OrderCardProps> = ({
           {order?.order_type === "takeaway" && (
             <Button
               variant="outline"
-              className="font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105"
+              className={`font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105 ${
+                order.status === "delivered"
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
               onClick={() => setShowOrderTypeModal(true)}
             >
-              <ShoppingBag size={18} className="animate-bounce" />
+              <ShoppingBag
+                size={18}
+                className={`${
+                  order.status === "delivered"
+                    ? "opacity-50 cursor-not-allowed"
+                    : "animate-bounce"
+                }`}
+              />
               <span className="tracking-wide">
                 {order?.order_type?.charAt(0).toUpperCase() +
                   order?.order_type?.slice(1)}
@@ -900,18 +949,28 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 bg-gradient-to-r from-purple-200 to-purple-300 text-purple-800
                 hover:from-                transition-all duration-300 shadow-md hover:shadow-lg
                 flex items-center gap-3 transform hover:scale-105
-                ${order.chair_details && order.chair_details.length > 0 || order.status === "delivered"
-                  ? "opacity-50 cursor-not-allowed"
-                  : "cursor-pointer"
+                ${
+                  (order.chair_details && order.chair_details.length > 0) ||
+                  order.status === "delivered"
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer"
                 }
               `}
               onClick={() => setIsChairModalOpen(true)}
-              disabled={order.chair_details && order.chair_details.length > 0 || order.status === "delivered"}
+              disabled={
+                (order.chair_details && order.chair_details.length > 0) ||
+                order.status === "delivered"
+              }
             >
-              <Armchair size={18} className={`${order.chair_details && order.chair_details.length > 0 || order.status === "delivered"
-                ? "opacity-50 cursor-not-allowed"
-                : "animate-bounce"
-                }`} />
+              <Armchair
+                size={18}
+                className={`${
+                  (order.chair_details && order.chair_details.length > 0) ||
+                  order.status === "delivered"
+                    ? "opacity-50 cursor-not-allowed"
+                    : "animate-bounce"
+                }`}
+              />
               <span className="tracking-wide">Select Chair</span>
             </Button>
           )}
@@ -919,10 +978,13 @@ const OrderCard: React.FC<OrderCardProps> = ({
         <div className="mt-6 bg-gray-50 rounded-lg p-4 shadow-inner">
           <div className="flex flex-col space-y-2">
             {order.order_type === "dining" &&
-              order.chair_amount &&
-              parseFloat(order.chair_amount) > 0 ? (
+            order.chair_amount &&
+            parseFloat(order.chair_amount) > 0 ? (
               <div className="flex items-center space-x-2">
-                <Banknote size={24} className=" text-purple-600 animate-pulse" />
+                <Banknote
+                  size={24}
+                  className=" text-purple-600 animate-pulse"
+                />
                 <span className="text-base font-medium text-gray-700">
                   Chair Amount:
                 </span>
@@ -937,8 +999,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 Total Amount:
               </span>
               <span className="text-xl font-bold text-green-600">
-                QAR{" "}
-                {parseFloat(order.total_amount.toString()).toFixed(2)}
+                QAR {parseFloat(order.total_amount.toString()).toFixed(2)}
               </span>
             </div>
           </div>
@@ -1074,9 +1135,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
                   value={
                     selectedCreditUser
                       ? {
-                        value: selectedCreditUser.id,
-                        label: selectedCreditUser.username,
-                      }
+                          value: selectedCreditUser.id,
+                          label: selectedCreditUser.username,
+                        }
                       : null
                   }
                   onChange={(selectedOption) =>
@@ -1275,10 +1336,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
                                         }}
                                       >
                                         <Check
-                                          className={`mr-2 h-4 w-4 ${selectedDriver?.id === driver.id
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                            }`}
+                                          className={`mr-2 h-4 w-4 ${
+                                            selectedDriver?.id === driver.id
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          }`}
                                         />
                                         {driver.username}
                                       </CommandItem>
@@ -1421,8 +1483,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 onChange={handleChairInputChange}
               />
             </div>
-            <div>
-            </div>
+            <div></div>
             <div>
               <label
                 htmlFor="amount"

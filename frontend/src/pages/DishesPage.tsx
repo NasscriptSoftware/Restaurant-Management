@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, UseQueryResult } from "react-query";
-import { Check, ChevronsUpDown, CircleCheck, Search, Image, ImageOff, HandPlatter } from "lucide-react";
+import { Check, ChevronsUpDown, CircleCheck, Search, Image, ImageOff, HandPlatter, Coffee } from "lucide-react";
 import { motion } from "framer-motion";
 import Layout from "../components/Layout/Layout";
 import DishList from "../components/Dishes/DishList";
@@ -85,11 +85,15 @@ const DishesPage: React.FC = () => {
     fetchOnlineOrders
   );
 
+  const [isMainDishesView, setIsMainDishesView] = useState(false);
   const [isServicesView, setIsServicesView] = useState(false);
 
-  // Move this definition up, before it's used
-  const servicesCategory = categories?.find(
+  const mainDishesCategory = categories?.find(
     (category) => category.name.toLowerCase() === "maindishes"
+  );
+
+  const servicesCategory = categories?.find(
+    (category) => category.name.toLowerCase() === "services"
   );
 
   const [isOrderVisible, setIsOrderVisible] = useState(false);
@@ -129,6 +133,45 @@ const DishesPage: React.FC = () => {
   const navigate = useNavigate();
 
   const data = dishes || [];
+
+  const handleMainDishesClick = () => {
+    setIsMainDishesView(true);
+    setIsServicesView(false);
+    setSelectedCategory(mainDishesCategory?.id || null);
+    setSearchQuery("");
+  };
+
+  const handleServicesClick = () => {
+    setIsServicesView(true);
+    setIsMainDishesView(false);
+    setSelectedCategory(servicesCategory?.id || null);
+    setSearchQuery("");
+  };
+
+  const handleCategoryClick = (categoryId: number | null) => {
+    setSelectedCategory(categoryId);
+    setSearchQuery("");
+    setIsMainDishesView(false);
+    setIsServicesView(false);
+  };
+
+  const filteredDishes = data.filter((dish: Dish) => {
+    const categoryMatch =
+      selectedCategory === null ||
+      (typeof dish.category === "number"
+        ? dish.category === selectedCategory
+        : dish.category.id === selectedCategory);
+    const searchMatch = dish.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const mainDishesMatch = isMainDishesView
+      ? dish.category === mainDishesCategory?.id
+      : true;
+    const servicesMatch = isServicesView
+      ? dish.category === servicesCategory?.id
+      : true;
+    return categoryMatch && searchMatch && mainDishesMatch && servicesMatch;
+  });
 
   useEffect(() => {
     if (showSuccessModal) {
@@ -330,33 +373,6 @@ const DishesPage: React.FC = () => {
     setIsMemoModalOpen(false);
   };
 
-  const handleCategoryClick = (categoryId: number | null) => {
-    setSelectedCategory(categoryId);
-    setSearchQuery("");
-    setIsServicesView(false);
-  };
-
-  const handleServicesClick = () => {
-    setIsServicesView(true);
-    setSelectedCategory(servicesCategory?.id || null);
-    setSearchQuery("");
-  };
-
-  const filteredDishes = data.filter((dish: Dish) => {
-    const categoryMatch =
-      selectedCategory === null ||
-      (typeof dish.category === "number"
-        ? dish.category === selectedCategory
-        : dish.category.id === selectedCategory);
-    const searchMatch = dish.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const serviceMatch = isServicesView
-      ? dish.category === servicesCategory?.id
-      : dish.category !== servicesCategory?.id;
-    return categoryMatch && searchMatch && serviceMatch;
-  });
-
   // Helper function to filter out service dishes
   const filterOutServiceDishes = (dishes: Dish[]) => {
     return dishes.filter((dish) =>
@@ -430,28 +446,47 @@ const DishesPage: React.FC = () => {
                   </div>
                 </motion.div>
               </div>
-              {servicesCategory && (
-                <Button
-                  onClick={handleServicesClick}
-                  variant={isServicesView ? "default" : "outline"}
-                  className={`w-full h-14 sm:w-auto mt-2 px-4 py-2 rounded-lg transition-all duration-300 ${isServicesView
-                    ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg"
-                    : "bg-white text-gray-700 border border-gray-300 hover:border-purple-500 hover:text-purple-500"
+              <div className="flex space-x-2 mt-2">
+                {mainDishesCategory && (
+                  <Button
+                    onClick={handleMainDishesClick}
+                    variant={isMainDishesView ? "default" : "outline"}
+                    className={`w-full h-14 sm:w-auto px-4 py-2 rounded-lg transition-all duration-300 ${
+                      isMainDishesView
+                        ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg"
+                        : "bg-white text-gray-700 border border-gray-300 hover:border-purple-500 hover:text-purple-500"
                     }`}
-                >
-                  <div className="flex items-center justify-center">
-                    <HandPlatter  className="mr-2 h-5 w-5 animate-pulse"  />
-                    <span>Main Dishes</span>
-                  </div>
-                </Button>
-              )}
+                  >
+                    <div className="flex items-center justify-center">
+                      <HandPlatter className="mr-2 h-5 w-5 animate-pulse" />
+                      <span>Main Dishes</span>
+                    </div>
+                  </Button>
+                )}
+                {servicesCategory && (
+                  <Button
+                    onClick={handleServicesClick}
+                    variant={isServicesView ? "default" : "outline"}
+                    className={`w-full h-14 sm:w-auto px-4 py-2 rounded-lg transition-all duration-300 ${
+                      isServicesView
+                        ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg"
+                        : "bg-white text-gray-700 border border-gray-300 hover:border-purple-500 hover:text-purple-500"
+                    }`}
+                  >
+                    <div className="flex items-center justify-center">
+                      <Coffee className="mr-2 h-5 w-5 animate-pulse" />
+                      <span>Services</span>
+                    </div>
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex flex-wrap gap-2 mb-8">
             <Button
               onClick={() => handleCategoryClick(null)}
               variant={
-                selectedCategory === null && !isServicesView
+                selectedCategory === null && !isMainDishesView && !isServicesView
                   ? "default"
                   : "outline"
               }
@@ -459,13 +494,16 @@ const DishesPage: React.FC = () => {
               All items
             </Button>
             {categories
-              ?.filter((category) => category.name.toLowerCase() !== "service")
+              ?.filter(category => 
+                category.name.toLowerCase() !== "maindishes" && 
+                category.name.toLowerCase() !== "services"
+              )
               .map((category) => (
                 <Button
                   key={category.id}
                   onClick={() => handleCategoryClick(category.id)}
                   variant={
-                    selectedCategory === category.id && !isServicesView
+                    selectedCategory === category.id && !isMainDishesView && !isServicesView
                       ? "default"
                       : "outline"
                   }
