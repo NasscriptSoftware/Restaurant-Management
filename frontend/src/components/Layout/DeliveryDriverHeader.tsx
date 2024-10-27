@@ -11,7 +11,7 @@ export const DeliveryDriverHeader = () => {
         />
       </div>
       <div className="flex justify-end">
-        <LogoutBtn />
+        <LogoutBtn isCompact={false} />
       </div>
     </header>
   );
