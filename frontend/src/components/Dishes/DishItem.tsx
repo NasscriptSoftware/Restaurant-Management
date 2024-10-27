@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Plus, ChefHat } from "lucide-react";
 import { Button } from "../ui/button";
 import { Dish } from "@/types/index";
@@ -19,7 +19,6 @@ export interface DishItemProps {
   onAddDish: (dish: Dish) => void;
   showImage: boolean;
 }
-
 const DishItem: React.FC<DishItemWithToggleProps> = ({
   dish,
   onAddDish,

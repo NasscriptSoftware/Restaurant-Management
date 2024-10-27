@@ -2,6 +2,8 @@ import React from "react";
 import { Order, Dish } from "../../types/index";
 import { QRCodeSVG } from "qrcode.react";
 import { fetchDishSizes } from "../../services/api";
+import { Phone, MapPin } from "lucide-react";
+import { GiRotaryPhone } from "react-icons/gi";
 
 interface SalesPrintProps {
   order: Order;
@@ -10,6 +12,8 @@ interface SalesPrintProps {
     logoUrl: string;
     companyName: string;
     phoneNumber: string;
+    mobileNumber: string;
+    landlineNumber: string;
     location: string;
     companyNameArabic: string;
     printLogo: string;
@@ -39,7 +43,14 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
   };
 
   const totalQuantity = Array.isArray(order.items)
-    ? order.items.reduce((total, item) => total + (typeof item.quantity === 'number' ? item.quantity : parseFloat(item.quantity)), 0)
+    ? order.items.reduce(
+        (total, item) =>
+          total +
+          (typeof item.quantity === "number"
+            ? item.quantity
+            : parseFloat(item.quantity)),
+        0
+      )
     : 0;
 
   const [dishSizes, setDishSizes] = React.useState<{
@@ -55,7 +66,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
         }
         return null;
       });
-     
+
       const sizes = await Promise.all(sizePromises);
       const sizeObject = Object.assign({}, ...sizes.filter(Boolean));
       setDishSizes(sizeObject);
@@ -80,16 +91,27 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
             <h1 className="text-xl font-bold uppercase mb-2">
               {logoInfo?.companyName} / {logoInfo?.companyNameArabic}
             </h1>
-            <p className="text-sm mb-1">
-              <span className="font-semibold">Tel:</span>{" "}
-              {logoInfo?.phoneNumber}
-            </p>
-            <div className="text-sm italic flex justify-between">
+            <div className="text-sm space-y-2">
+              <p className="text-center flex items-center justify-center">
+                <GiRotaryPhone size={16} className="mr-2 text-gray-600" />
+                <span>{logoInfo?.landlineNumber}</span>
+              </p>
+              <div className="flex justify-between mt-4 gap-4">
+                <p className="flex items-center">
+                  <Phone size={16} className="mr-2 text-gray-600" />
+                  <span>{logoInfo?.mobileNumber}</span>
+                </p>
+                <p className="flex items-center">
+                  <Phone size={16} className="mr-2 text-gray-600" />
+                  <span>{logoInfo?.phoneNumber}</span>
+                </p>
+              </div>
+            </div>
+            <div className="text-sm italic flex justify-between mt-4">
+              <MapPin size={16} className="mr-2 text-gray-600" />
               <span className="text-right">
                 {logoInfo?.location?.split(" ").map((part, index) => (
-                  <React.Fragment key={index}>
-                    {part.trim()}
-                  </React.Fragment>
+                  <React.Fragment key={index}>{part.trim()}</React.Fragment>
                 ))}
               </span>
               <span className="text-left">
@@ -139,18 +161,20 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
                   className="flex justify-between py-1 border-b border-dotted border-black"
                 >
                   <span className="w-1/2">
-                    {dish ? dish.name : "Unknown Dish"} / {dish ? dish.arabic_name : "Unknown Dish"}
+                    {dish ? dish.name : "Unknown Dish"} /{" "}
+                    {dish ? dish.arabic_name : "Unknown Dish"}
                     {sizeInfo && (
                       <span className="text-xs ml-1">({sizeInfo.size})</span>
                     )}
                   </span>
                   <span className="w-1/4 text-center">{item.quantity}</span>
                   <span className="w-1/4 text-right">
-                    QAR {sizeInfo
-                        ? parseFloat(sizeInfo.price) * Number(item.quantity)
-                        : dish
-                        ? parseFloat(String(dish.price)) * Number(item.quantity)
-                        : 0}
+                    QAR{" "}
+                    {sizeInfo
+                      ? parseFloat(sizeInfo.price) * Number(item.quantity)
+                      : dish
+                      ? parseFloat(String(dish.price)) * Number(item.quantity)
+                      : 0}
                   </span>
                 </div>
               );
@@ -194,7 +218,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
         )}
         <div className="flex justify-between py-1 font-bold border-t border-black">
           <span>TOTAL AMOUNT:</span>
-          <span>{order.total_amount}</span>
+          <span>QAR{order.total_amount}</span>
         </div>
       </div>
 
@@ -220,7 +244,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
       {order.order_type === "delivery" && (
         <>
           <div className="mt-4 flex justify-center">
-            <QRCodeSVG value={`Order ID: ${order.id}`} size={64} />
+            <QRCodeSVG value={`${order.id}`} size={64} />
           </div>
           <p className="text-center text-xs mt-1">Scan for Order ID</p>
         </>

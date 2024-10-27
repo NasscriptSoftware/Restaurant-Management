@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, UseQueryResult } from "react-query";
-import { Check, ChevronsUpDown, CircleCheck, Search, Cog, Image, ImageOff } from "lucide-react";
+import { Check, ChevronsUpDown, CircleCheck, Search, Image, ImageOff, HandPlatter } from "lucide-react";
 import { motion } from "framer-motion";
 import Layout from "../components/Layout/Layout";
 import DishList from "../components/Dishes/DishList";
@@ -89,7 +89,7 @@ const DishesPage: React.FC = () => {
 
   // Move this definition up, before it's used
   const servicesCategory = categories?.find(
-    (category) => category.name.toLowerCase() === "service"
+    (category) => category.name.toLowerCase() === "maindishes"
   );
 
   const [isOrderVisible, setIsOrderVisible] = useState(false);
@@ -434,14 +434,14 @@ const DishesPage: React.FC = () => {
                 <Button
                   onClick={handleServicesClick}
                   variant={isServicesView ? "default" : "outline"}
-                  className={`w-full sm:w-auto mt-2 px-4 py-2 rounded-lg transition-all duration-300 ${isServicesView
+                  className={`w-full h-14 sm:w-auto mt-2 px-4 py-2 rounded-lg transition-all duration-300 ${isServicesView
                     ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg"
                     : "bg-white text-gray-700 border border-gray-300 hover:border-purple-500 hover:text-purple-500"
                     }`}
                 >
                   <div className="flex items-center justify-center">
-                    <Cog className="mr-2 h-5 w-5" />
-                    <span>Services</span>
+                    <HandPlatter  className="mr-2 h-5 w-5 animate-pulse"  />
+                    <span>Main Dishes</span>
                   </div>
                 </Button>
               )}

@@ -72,7 +72,11 @@ const Sidebar: React.FC = () => {
     "/images/nasscript_full_banner_logo.png"
   );
   const [isOpen, setIsOpen] = useState(true);
-  const [isCompact, setIsCompact] = useState(false);
+  const [isCompact, setIsCompact] = useState(() => {
+    // Initialize isCompact from localStorage, default to false if not set
+    const savedIsCompact = localStorage.getItem("sidebarCompact");
+    return savedIsCompact ? JSON.parse(savedIsCompact) : false;
+  });
 
   // Fetch menu items and logo
   useEffect(() => {
@@ -111,27 +115,32 @@ const Sidebar: React.FC = () => {
       const width = window.innerWidth;
       if (width >= 1280) {
         setIsOpen(true);
-        setIsCompact(false);
+        // Don't change isCompact here, let it be controlled by user preference
       } else if (width >= 768) {
         setIsOpen(true);
         setIsCompact(true);
       } else {
         setIsOpen(false);
-        setIsCompact(false);
+        // Don't change isCompact here either
       }
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
     handleResize();
-    return () => window.removeEventListener('resize', handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Update localStorage when isCompact changes
+  useEffect(() => {
+    localStorage.setItem("sidebarCompact", JSON.stringify(isCompact));
+  }, [isCompact]);
+
   const toggleSidebar = useCallback(() => {
-    setIsOpen(prev => !prev);
+    setIsOpen((prev) => !prev);
   }, []);
 
   const toggleCompact = useCallback(() => {
-    setIsCompact(prev => !prev);
+    setIsCompact((prev: any) => !prev);
   }, []);
 
   const isActive = (path: string) => {
@@ -156,9 +165,13 @@ const Sidebar: React.FC = () => {
             >
               <div className="flex items-center gap-3">
                 {IconComponent && (
-                  <IconComponent className={`w-6 h-6 ${isCompact ? 'mx-auto' : ''}`} />
+                  <IconComponent
+                    className={`w-6 h-6 ${isCompact ? "mx-auto" : ""}`}
+                  />
                 )}
-                {!isCompact && <span className="font-bold text-lg">{item.label}</span>}
+                {!isCompact && (
+                  <span className="font-bold text-lg">{item.label}</span>
+                )}
               </div>
               {!isCompact && location.pathname === item.path && (
                 <ArrowRight className="w-6 h-6" />
@@ -166,7 +179,7 @@ const Sidebar: React.FC = () => {
             </Link>
           </TooltipTrigger>
           {isCompact && (
-            <TooltipContent side="right" className="text-lg p-2">
+            <TooltipContent side="left" className="text-lg p-2 ">
               <p>{item.label}</p>
             </TooltipContent>
           )}
@@ -194,13 +207,20 @@ const Sidebar: React.FC = () => {
             exit={{ x: "-100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-300 shadow-lg z-40 overflow-y-auto invisible-scrollbar
-              ${isCompact ? 'w-20' : 'w-80'} transition-all duration-300`}
+              ${isCompact ? "w-20" : "w-80"} transition-all duration-300`}
           >
             <div className="sticky top-0 bg-white z-10 p-4 border-b border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 {!isCompact && (
-                  <Link to="/" className="flex justify-center items-center w-full">
-                    <img src={mainLogoUrl} alt="Logo" className="max-h-[75px] w-auto object-contain" />
+                  <Link
+                    to="/"
+                    className="flex justify-center items-center w-full"
+                  >
+                    <img
+                      src={mainLogoUrl}
+                      alt="Logo"
+                      className="max-h-[75px] w-auto object-contain"
+                    />
                   </Link>
                 )}
                 <Button
@@ -222,8 +242,12 @@ const Sidebar: React.FC = () => {
                     <UserRoundCheck size={28} className="text-white" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-700">Logged in as</span>
-                    <span className="text-lg font-bold text-[#6f42c1]">{username || 'Guest'}</span>
+                    <span className="text-sm font-semibold text-gray-700">
+                      Logged in as
+                    </span>
+                    <span className="text-lg font-bold text-[#6f42c1]">
+                      {username || "Guest"}
+                    </span>
                   </div>
                 </div>
               )}
@@ -247,8 +271,16 @@ const Sidebar: React.FC = () => {
                     )}`}
                   >
                     <Bell className="w-6 h-6" />
-                    {!isCompact && <span className="ml-3 font-bold text-lg">Notifications</span>}
-                    <NotificationBadge className={`absolute ${isCompact ? 'top-2 right-2' : 'top-3 right-3'}`} />
+                    {!isCompact && (
+                      <span className="ml-3 font-bold text-lg">
+                        Notifications
+                      </span>
+                    )}
+                    <NotificationBadge
+                      className={`absolute ${
+                        isCompact ? "top-2 right-2" : "top-3 right-3"
+                      }`}
+                    />
                   </Link>
                   <LogoutBtn isCompact={isCompact} />
                 </div>

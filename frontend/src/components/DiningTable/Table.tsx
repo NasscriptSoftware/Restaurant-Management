@@ -37,6 +37,7 @@ export default function Table({
     isReady,
   });
 
+
   const handleEditClick = async () => {
     try {
       const response = await api.get(`/tables/${id}/`);

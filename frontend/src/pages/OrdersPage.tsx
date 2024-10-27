@@ -47,6 +47,8 @@ const OrdersPage: React.FC = () => {
     logoUrl: string;
     companyName: string;
     phoneNumber: string;
+    mobileNumber: string;
+    landlineNumber: string;
     location: string;
     companyNameArabic: string;
     printLogo: string;
@@ -84,6 +86,8 @@ const OrdersPage: React.FC = () => {
             phoneNumber: results[0].phone_number,
             location: results[0].location,
             companyNameArabic: results[0].company_name_arabic,
+            mobileNumber: results[0].mobile_number,
+            landlineNumber: results[0].landline_number,
             printLogo: results[0].print_logo,
             locationArabic: results[0].location_arabic,
           };
