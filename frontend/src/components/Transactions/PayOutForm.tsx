@@ -171,7 +171,7 @@ const PayOut: React.FC = () => {
 
 
   return (
-    <div className="bg-red-500/5">
+    <div className="bg-purple-100">
       <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
         <h1 className="text-2xl font-bold mb-2 sm:mb-0">Pay Out</h1>
         <button

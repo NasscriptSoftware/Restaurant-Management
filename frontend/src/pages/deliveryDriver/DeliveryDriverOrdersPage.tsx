@@ -71,6 +71,8 @@ type ReportData = {
 
 export const DeliveryDriverOrdersPage: React.FC = () => {
   const [orders, setOrders] = useState<DeliveryOrder[]>([]);
+  console.log(orders);
+  
   const [reportData, setReportData] = useState<ReportData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<'orders' | 'reports'>('orders');
@@ -132,7 +134,7 @@ export const DeliveryDriverOrdersPage: React.FC = () => {
       <CardHeader>
         <div className="flex justify-between">
           <div>
-            <h3 className="text-lg font-semibold">Delivery OrderId #{order.id}</h3>
+            <h3 className="text-lg font-semibold">Delivery OrderId #{order.id} for the Order #{order.order.id}</h3>
             <p className="text-sm text-gray-500">
               {format(new Date(order.created_at), "PPpp")}
             </p>

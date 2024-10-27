@@ -17,7 +17,7 @@ class User(AbstractUser):
     ROLES = (
         ("admin", "Admin"),
         ("staff", "Staff"),
-        ("  ", "Driver"),
+        ("driver", "Driver"),
     )
     GENDERS = (
         ("male", "Male"),
@@ -54,7 +54,7 @@ class LogoInfo(models.Model):
     phone_number = models.CharField(max_length=20)
     location = models.CharField(max_length=255)
     location_arabic = models.CharField(max_length=255, blank=True, null=True)
-    office_number = models.CharField(max_length=20)
+    office_number = models.CharField(max_length=20,blank=True)
     main_logo = models.ImageField(upload_to='company_logos/')
     print_logo = models.ImageField(upload_to='company_logos/')
 
@@ -263,6 +263,8 @@ class Order(models.Model):
             self.save(update_fields=["invoice_number"])
 
     def is_delivery_order(self):
+        if not self.delivery_driver_id:
+            return False
         return self.order_type == "delivery"
     
     def recalculate_total(self):

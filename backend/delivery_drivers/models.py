@@ -49,10 +49,11 @@ class DeliveryOrder(models.Model):
 
 @receiver(post_save, sender=Order)
 def create_delivery_order(sender, instance, created, **kwargs):
-    if created and instance.is_delivery_order():
+    if instance.is_delivery_order():
         driver = None
         if instance.delivery_driver_id:
-            driver = DeliveryDriver.objects.filter(
+            driver = DeliveryDriver.objects.get(
                 id=instance.delivery_driver_id
-            ).first()
+            )
+            print(f"Driver: {driver}")
         DeliveryOrder.objects.create(order=instance, driver=driver)

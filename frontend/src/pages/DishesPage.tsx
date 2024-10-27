@@ -234,10 +234,10 @@ const DishesPage: React.FC = () => {
           setError("Delivery address is required for delivery orders.");
           return;
         }
-        if (!selectedDriver) {
-          setError("A delivery driver must be selected for delivery orders.");
-          return;
-        }
+        // if (!selectedDriver) {
+        //   setError("A delivery driver must be selected for delivery orders.");
+        //   return;
+        // }
       }
       const orderData: OrderFormData = {
         items: orderItems.map((item) => {

@@ -21,7 +21,7 @@ interface LogoutBtnProps {
 }
 
 // const LogoutBtn: React.FC = ({ isCompact  }: any) => {
-  const LogoutBtn: React.FC<LogoutBtnProps> = ({ isCompact }) => {
+const LogoutBtn: React.FC<LogoutBtnProps> = ({ isCompact }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
