@@ -495,7 +495,7 @@ const DishesPage: React.FC = () => {
             </Button>
             {categories
               ?.filter(category => 
-                category.name.toLowerCase() !== "maindishes" && 
+                category.name.toLowerCase() !== "main dishes" && 
                 category.name.toLowerCase() !== "services"
               )
               .map((category) => (
