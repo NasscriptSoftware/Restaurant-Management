@@ -51,9 +51,10 @@ class DeliveryOrder(models.Model):
 def create_delivery_order(sender, instance, created, **kwargs):
     if instance.is_delivery_order():
         driver = None
-        if instance.delivery_driver_id:
+        if not instance.is_scanned:
             driver = DeliveryDriver.objects.get(
                 id=instance.delivery_driver_id
             )
-            print(f"Driver: {driver}")
-        DeliveryOrder.objects.create(order=instance, driver=driver)
+            DeliveryOrder.objects.create(order=instance, driver=driver)
+            instance.is_scanned = True
+            instance.save()

@@ -247,6 +247,7 @@ class Order(models.Model):
     )
     chair_details = models.JSONField(default=list, blank=True)
     foc_products = models.ManyToManyField(FOCProduct, blank=True)
+    is_scanned = models.BooleanField(default=False)
 
     class Meta:
         ordering = ("-created_at",)
