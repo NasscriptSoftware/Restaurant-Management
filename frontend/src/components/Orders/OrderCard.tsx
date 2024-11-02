@@ -472,17 +472,14 @@ const OrderCard: React.FC<OrderCardProps> = ({
       return;
     }
 
-    const deliveryData =
-      newOrderType === "delivery"
-        ? {
-            customer_name: customerName,
-            address: deliveryAddress,
-            customer_phone_number: customerMobileNumber,
-            delivery_charge: parseFloat(deliveryCharge),
-            delivery_driver_id: selectedDriver?.id,
-            delivery_order_status: "pending",
-          }
-        : {};
+    const deliveryData = newOrderType === "delivery" ? {
+      customer_name: customerName,
+      address: deliveryAddress,
+      customer_phone_number: customerMobileNumber,
+      delivery_charge: parseFloat(deliveryCharge),
+      ...(selectedDriver && { delivery_driver_id: selectedDriver.id }),
+      delivery_order_status: "pending",
+    } : {};
 
     try {
       const response = await api.put(`/order-type/${order.id}/change-type/`, {
