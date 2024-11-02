@@ -358,8 +358,8 @@ class OrderTypeChangeSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Delivery address is required for delivery orders.")
             if not data.get('customer_phone_number'):
                 raise serializers.ValidationError("Customer phone number is required for delivery orders.")
-            if not data.get('delivery_driver_id'):
-                raise serializers.ValidationError("A delivery driver must be assigned for delivery orders.")
+            # if not data.get('delivery_driver_id'):
+            #     raise serializers.ValidationError("A delivery driver must be assigned for delivery orders.")
         return data
 
 
