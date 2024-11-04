@@ -14,6 +14,7 @@ interface SalesReport {
     customer_phone_number: string;
     customer_name: string;
     delivery_driver_id:string;
+    credit_amount:string;
 }
 
 interface SalesEditModalProps {

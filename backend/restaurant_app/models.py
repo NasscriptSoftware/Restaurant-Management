@@ -49,19 +49,20 @@ class User(AbstractUser):
         super().save(*args, **kwargs)
 
 class LogoInfo(models.Model):
-    company_name = models.CharField(max_length=255)
+    company_name = models.CharField(max_length=255,blank=True, null=True)
     company_name_arabic = models.CharField(max_length=255, blank=True, null=True)
-    phone_number = models.CharField(max_length=20)
+    phone_number = models.CharField(max_length=20,blank=True, null=True)
     landline_number = models.CharField(max_length=20, blank=True, null=True)
     mobile_number =  models.CharField(max_length=20, blank=True, null=True)
-    location = models.CharField(max_length=255)
+    company_mail =  models.CharField(max_length=20, blank=True, null=True)
+    location = models.CharField(max_length=255,blank=True, null=True)
     location_arabic = models.CharField(max_length=255, blank=True, null=True)
-    office_number = models.CharField(max_length=20,blank=True)
-    main_logo = models.ImageField(upload_to='company_logos/')
-    print_logo = models.ImageField(upload_to='company_logos/')
+    office_number = models.CharField(max_length=20,blank=True, null=True)
+    main_logo = models.ImageField(upload_to='company_logos/',blank=True, null=True)
+    print_logo = models.ImageField(upload_to='company_logos/',blank=True, null=True)
 
     def __str__(self):
-        return self.company_name        
+        return self.company_name
 
 class SidebarItem(models.Model):
     path = models.CharField(max_length=255, unique=True)
@@ -226,6 +227,7 @@ class Order(models.Model):
         default=0.00,
     )
     bank_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    credit_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     invoice_number = models.CharField(max_length=20, blank=True)
     customer_name = models.CharField(max_length=100, blank=True)
     address = models.TextField(blank=True)

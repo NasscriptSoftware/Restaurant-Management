@@ -185,8 +185,9 @@ class OrderSerializer(serializers.ModelSerializer):
             "chair_details",
             "foc_products",
             "foc_product_details",
+            "credit_amount"
         ]
-
+    
     def get_foc_product_details(self, obj):
         return [
             {
@@ -198,6 +199,7 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
+
         items_data = validated_data.pop("items")
         foc_products_data = validated_data.pop("foc_products", [])
         user = self.context["request"].user
@@ -269,6 +271,7 @@ class OrderStatusUpdateSerializer(serializers.Serializer):
     payment_method = serializers.ChoiceField(choices=Order.PAYMENT_METHOD_CHOICES, required=False)
     cash_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     bank_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    credit_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     credit_user_id = serializers.IntegerField(required=False)
 
     def validate(self, data):
@@ -293,6 +296,9 @@ class OrderStatusUpdateSerializer(serializers.Serializer):
                 data['bank_amount'] = data.get('bank_amount', 0)  # Default to 0 if not provided
 
             if payment_method == 'credit':
+                data['credit_amount'] = data.get('credit_amount', 0)
+                data['bank_amount'] = 0
+                data['cash_amount'] = 0 
                 if 'credit_user_id' not in data:
                     raise serializers.ValidationError("credit_user_id is required for credit payment method.")
                 try:
@@ -326,6 +332,7 @@ class OrderStatusUpdateSerializer(serializers.Serializer):
                 instance.bank_amount = validated_data.get('bank_amount', 0)  # Default to 0 if not provided
 
             if instance.payment_method == 'credit':
+                instance.credit_amount =  validated_data.get('credit_amount', 0)
                 instance.credit_user_id = validated_data.get('credit_user_id', instance.credit_user_id)
                 instance.cash_amount = 0  # Reset cash_amount if payment is credit
                 instance.bank_amount = 0  # Reset bank_amount if payment is credit

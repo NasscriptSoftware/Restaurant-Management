@@ -5,7 +5,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { RotateCcw, Eye, Pencil, Truck} from "lucide-react";
 import SalesPrint from "@/components/SalesReport/SalesPrint";
-import { api } from "@/services/api";
+import { api, fetchOnlineOrders } from "@/services/api";
 import TransactionsModal from "@/components/Mess/TransactionsModal";
 import SalesHistoryModal from "@/components/SalesReport/SalesHistoryModal";
 import SalesEditModal from "@/components/SalesReport/SalesEditModal";
@@ -35,6 +35,7 @@ interface SalesReport {
   invoice_number: string;
   cash_amount: string;
   bank_amount: string;
+  credit_amount: string;
   customer_phone_number: string;
   customer_name: string;
   delivery_driver_id:string;
@@ -71,6 +72,7 @@ interface ProductReport {
   order_type: string;
   cash_amount: string;
   bank_amount: string;
+  credit_amount: string;
   payment_method: string;
   created_at: string;
 }
@@ -126,6 +128,7 @@ interface StaffReport {
   total_amount: number;
   cash_amount: number;
   bank_amount: number;
+  credit_amount: number;
   staff_name: string;
 }
 
@@ -152,7 +155,17 @@ interface DriverReport {
   total_amount: number;
   bank_amount: number;
   cash_amount: number;
+  credit_amount: number;
   delivery_charge: number;
+}
+
+// Add interface for online platforms
+interface OnlinePlatform {
+  id: number;
+  name: string;
+  percentage: string;
+  reference: string;
+  logo: string;
 }
 
 const ReportPage: React.FC = () => {
@@ -185,6 +198,7 @@ const ReportPage: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [driverReports, setDriverReports] = useState<DriverReport[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [onlinePlatforms, setOnlinePlatforms] = useState<OnlinePlatform[]>([]);
 
   useEffect(() => {
     fetchDataWithFilter({});
@@ -202,6 +216,20 @@ const ReportPage: React.FC = () => {
   useEffect(() => {
     console.log("Staff reports updated:", staffReports);
   }, [staffReports]);
+
+  useEffect(() => {
+    if (reportType === "onlineDelivery") {
+      const loadOnlinePlatforms = async () => {
+        try {
+          const platforms = await fetchOnlineOrders();
+          setOnlinePlatforms(platforms);
+        } catch (error) {
+          console.error("Error fetching online platforms:", error);
+        }
+      };
+      loadOnlinePlatforms();
+    }
+  }, [reportType]);
 
 
 
@@ -331,7 +359,7 @@ const ReportPage: React.FC = () => {
     setShowCancelledOrders(!showCancelledOrders);
   };
 
-  const handleButtonClick = (buttonName: string) => {
+  const handleButtonClick = (buttonName: string, platformId?: number) => {
     let filter: Record<string, string> = {};
     setActiveButton(buttonName);
 
@@ -340,6 +368,9 @@ const ReportPage: React.FC = () => {
       setToDate(null);
       setCurrentPage(1);
       fetchDataWithFilter({});
+    } else if (reportType === "onlineDelivery") {
+      filter = { online_order_id: platformId?.toString() || '' };
+      fetchDataWithFilter(filter);
     } else if (reportType === "sales") {
       switch (buttonName) {
         case "Dining":
@@ -553,6 +584,7 @@ const ReportPage: React.FC = () => {
             { key: 'total_amount', header: 'Total Amount', align: 'right', format: (value: any) => formatNumber(value) },
             { key: 'cash_amount', header: 'Cash Amount', align: 'right', format: (value: any) => formatNumber(value) },
             { key: 'bank_amount', header: 'Bank Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'credit_amount', header: 'Credit Amount', align: 'right', format: (value: any) => formatNumber(value) },
           ];
         case 'mess':
           return [
@@ -575,6 +607,7 @@ const ReportPage: React.FC = () => {
             { key: 'order_type', header: 'Order Type' },
             { key: 'cash_amount', header: 'Cash Amount', align: 'right', format: (value: any) => formatNumber(value) },
             { key: 'bank_amount', header: 'Bank Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'credit_amount', header: 'Credit Amount', align: 'right', format: (value: any) => formatNumber(value) },
             { key: 'total_amount', header: 'Total Amount', align: 'right', format: (value: any) => formatNumber(value) },
             { key: 'payment_method', header: 'Payment Method' },
           ];
@@ -601,6 +634,7 @@ const ReportPage: React.FC = () => {
             { key: 'total_amount', header: 'Total Amount', align: 'right', format: (value: any) => formatNumber(value) },
             { key: 'cash_amount', header: 'Cash Amount', align: 'right', format: (value: any) => formatNumber(value) },
             { key: 'bank_amount', header: 'Bank Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'credit_amount', header: 'Credit Amount', align: 'right', format: (value: any) => formatNumber(value) },
           ];
         case 'driver':
           return [
@@ -610,8 +644,9 @@ const ReportPage: React.FC = () => {
             { key: 'address', header: 'Address' },
             { key: 'payment_method', header: 'Payment Method' },
             { key: 'total_amount', header: 'Total Amount', align: 'right', format: (value: any) => formatNumber(value) },
-            { key: 'bank_amount', header: 'Bank Amount', align: 'right', format: (value: any) => formatNumber(value) },
             { key: 'cash_amount', header: 'Cash Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'bank_amount', header: 'Bank Amount', align: 'right', format: (value: any) => formatNumber(value) },
+            { key: 'credit_amount', header: 'Credit Amount', align: 'right', format: (value: any) => formatNumber(value) },
             { key: 'delivery_charge', header: 'Delivery Charge', align: 'right', format: (value: any) => formatNumber(value) },
           ];
         default:
@@ -636,18 +671,29 @@ const ReportPage: React.FC = () => {
           total_amount: data.reduce((acc, item) => acc + parseFloat(item.total_amount.toString()), 0),
           cash_amount: data.reduce((acc, item) => acc + parseFloat(item.cash_amount.toString()), 0),
           bank_amount: data.reduce((acc, item) => acc + parseFloat(item.bank_amount.toString()), 0),
+          credit_amount: data.reduce((acc, item) => acc + parseFloat(item.credit_amount.toString()), 0),
         };
-      } else if (reportType === 'mess') {
+      } else if (reportType === 'product') {
         return {
           total_amount: data.reduce((acc, item) => acc + parseFloat(item.total_amount.toString()), 0),
-          paid_amount: data.reduce((acc, item) => acc + parseFloat(item.paid_amount.toString()), 0),
-          pending_amount: data.reduce((acc, item) => acc + parseFloat(item.pending_amount.toString()), 0),
+          cash_amount: data.reduce((acc, item) => acc + parseFloat(item.cash_amount.toString()), 0),
+          bank_amount: data.reduce((acc, item) => acc + parseFloat(item.bank_amount.toString()), 0),
+          credit_amount: data.reduce((acc, item) => acc + parseFloat(item.credit_amount.toString()), 0),
         };
       } else if (reportType === 'staff') {
         return {
           total_amount: data.reduce((acc, item) => acc + parseFloat(item.total_amount.toString()), 0),
           cash_amount: data.reduce((acc, item) => acc + parseFloat(item.cash_amount.toString()), 0),
           bank_amount: data.reduce((acc, item) => acc + parseFloat(item.bank_amount.toString()), 0),
+          credit_amount: data.reduce((acc, item) => acc + parseFloat(item.credit_amount.toString()), 0),
+        };
+      } else if (reportType === 'driver') {
+        return {
+          total_amount: data.reduce((acc, item) => acc + parseFloat(item.total_amount.toString()), 0),
+          cash_amount: data.reduce((acc, item) => acc + parseFloat(item.cash_amount.toString()), 0),
+          bank_amount: data.reduce((acc, item) => acc + parseFloat(item.bank_amount.toString()), 0),
+          credit_amount: data.reduce((acc, item) => acc + parseFloat(item.credit_amount.toString()), 0),
+          delivery_charge: data.reduce((acc, item) => acc + parseFloat(item.delivery_charge.toString()), 0),
         };
       }
       return {};
@@ -804,6 +850,15 @@ const ReportPage: React.FC = () => {
                 >
                   All
                 </Button>
+                {reportType === "onlineDelivery" && onlinePlatforms.map((platform) => (
+                  <Button
+                    key={platform.id}
+                    variant={activeButton === platform.name ? "default" : "outline"}
+                    onClick={() => handleButtonClick(platform.name, platform.id)}
+                  >
+                    {platform.name}
+                  </Button>
+                ))}
                 {reportType === "sales" && (
                   <>
                     {["Dining", "Takeaway", "Delivery","Online Delivery", "Cash", "Bank", "Cash-Bank", "Credit", "Delivered"].map((type) => (

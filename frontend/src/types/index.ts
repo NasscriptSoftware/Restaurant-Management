@@ -52,6 +52,7 @@ export interface Order {
   payment_method: "cash" | "bank" | "cash-bank" | "credit" | string;
   cash_amount: number;
   bank_amount: number;
+  delivery_charge: number;
   credit_user_id: number;
   customer_phone_number: number;
   customer_name: number;

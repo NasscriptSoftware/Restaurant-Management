@@ -132,7 +132,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
 
       {/* Order Info Section */}
       <div className="mb-4 pb-2 border-b border-black">
-        <h2 className="text-bold">Order Type :{order.order_type}</h2>
+        <h2 className="text-bold capitalize">Order Type :{order.order_type}</h2>
         <p className="text-center font-bold text-lg">ORDER #{order.id}</p>
         <div className="flex justify-between">
           <span>Date: {formatDate(order.created_at)}</span>
@@ -218,6 +218,12 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
           <div className="flex justify-between py-1">
             <span>Chair Amount:</span>
             <span>{order.chair_amount}</span>
+          </div>
+        )}
+        {order.order_type === 'delivery' && (
+          <div className="flex justify-between py-1">
+            <span>Delivery Charge:</span>
+            <span>QAR{order.delivery_charge}</span>
           </div>
         )}
         <div className="flex justify-between py-1 font-bold border-t border-black">

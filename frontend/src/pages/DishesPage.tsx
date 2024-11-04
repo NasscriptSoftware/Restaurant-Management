@@ -66,6 +66,9 @@ interface Size {
   price: string;
 }
 
+// Update the type definition
+type OnlineOrdersResponse = OnlineOrder[];
+
 const DishesPage: React.FC = () => {
   const dispatch = useDispatch();
   const orderItems = useSelector((state: RootState) => state.order.items);
@@ -80,7 +83,7 @@ const DishesPage: React.FC = () => {
     "deliveryDrivers",
     fetchDeliveryDrivers
   );
-  const { data: onlinedeliveryList } = useQuery<{ results: OnlineOrder[] }>(
+  const { data: onlinedeliveryList } = useQuery<OnlineOrdersResponse>(
     "onlinedelivery",
     fetchOnlineOrders
   );
@@ -640,7 +643,7 @@ const DishesPage: React.FC = () => {
                     <CommandList>
                       <CommandEmpty>No platforms found.</CommandEmpty>
                       <CommandGroup>
-                        {onlinedeliveryList?.results.map((onlineOrder) => (
+                        {onlinedeliveryList?.map((onlineOrder) => (
                           <CommandItem
                             key={onlineOrder.id}
                             value={onlineOrder.name}
@@ -661,10 +664,11 @@ const DishesPage: React.FC = () => {
                               <p className="font-medium">{onlineOrder.name}</p>
                             </div>
                             <Check
-                              className={`flex-shrink-0 h-5 w-5 text-green-500 ${onlineDeliveryData?.id === onlineOrder.id
-                                ? "opacity-100"
-                                : "opacity-0"
-                                }`}
+                              className={`flex-shrink-0 h-5 w-5 text-green-500 ${
+                                onlineDeliveryData?.id === onlineOrder.id
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              }`}
                             />
                           </CommandItem>
                         ))}

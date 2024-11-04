@@ -173,8 +173,9 @@ class OnlineOrderViewSet(viewsets.ModelViewSet):
     and manage order data in the system.
 
     """
-    queryset = OnlineOrder.objects.all()  
+    queryset = OnlineOrder.objects.all()    
     serializer_class = OnlineOrderSerializer
+    pagination_class = None
 
 
 class CustomerDetailsViewSet(viewsets.ModelViewSet):
@@ -459,6 +460,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             order_type=F('order__order_type'),
             cash_amount=F('order__cash_amount'),
             bank_amount=F('order__bank_amount'),
+            credit_amount=F('order__credit_amount'),
             payment_method=F('order__payment_method')
         )
 
@@ -470,55 +472,35 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'], url_path='online-delivery-report')
     def online_delivery_report(self, request):
         """
-        Retrieve a report of online delivery orders, optionally within a specified date range.
-
-        This endpoint allows third-party online order-taking platforms (like Zomato) to generate a report
-        based on online delivery orders. Users can specify a date range to filter the results.
-
-        Query Parameters:
-        ------------------
-        - from_date (optional): Start date for filtering the orders (YYYY-MM-DD).
-        - to_date (optional): End date for filtering the orders (YYYY-MM-DD).
-
-        Response Fields:
-        -----------------
-        - onlineordername: Name of the online order.
-        - percentage: Percentage associated with the online order.
-        - invoice: Invoice number of the order.
-        - date: Creation date of the order.
-        - order_type: Type of the order.
-        - payment_method: Method of payment used.
-        - order_status: Current status of the order.
-        - total_amount: Total amount of the order.
-        - percentage_amount: The percentage value of total_amount based on the percentage.
-        - balance_amount: Calculated balance amount (total_amount - percentage_amount).
-
-        Returns:
-        --------
-        A JSON response containing a list of online delivery orders matching the specified criteria.
+        Retrieve a report of online delivery orders, filtered by date range and/or online platform ID.
         """
         from_date = request.query_params.get('from_date')
         to_date = request.query_params.get('to_date')
+        online_order_id = request.query_params.get('online_order_id')
 
-        # If both dates are provided, apply the date filter
+        # Start with base query
+        orders = self.queryset.filter(order_type='onlinedelivery')
+
+        # Apply date filters if provided
         if from_date and to_date:
-            orders = self.queryset.filter(
+            orders = orders.filter(
                 created_at__date__gte=from_date,
-                created_at__date__lte=to_date,
-                order_type='onlinedelivery'
-            ).select_related('online_order')
-        else:
-            # If no date filters are provided, return all 'onlinedelivery' orders
-            orders = self.queryset.filter(
-                order_type='onlinedelivery'
-            ).select_related('online_order')
+                created_at__date__lte=to_date
+            )
+
+        # Apply online platform filter if provided
+        if online_order_id:
+            orders = orders.filter(online_order_id=online_order_id)
+
+        # Select related to avoid N+1 queries
+        orders = orders.select_related('online_order')
 
         report_data = []
         for order in orders:
             percentage = order.online_order.percentage if order.online_order else 0
             total_amount = order.total_amount
 
-            # Calculate percentage_amount and balance_amount correctly
+            # Calculate percentage_amount and balance_amount
             percentage_amount = (percentage / 100) * total_amount if percentage > 0 else 0
             balance_amount = total_amount - percentage_amount
 
@@ -531,8 +513,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                 'payment_method': order.payment_method,
                 'order_status': order.status,
                 'total_amount': total_amount,
-                'percentage_amount': percentage_amount,  # Correctly calculated percentage amount
-                'balance_amount': balance_amount,        # Correct balance amount after deduction
+                'percentage_amount': percentage_amount,
+                'balance_amount': balance_amount,
             })
 
         return Response(report_data)
@@ -640,7 +622,8 @@ class OrderViewSet(viewsets.ModelViewSet):
             'bank_amount',
             'cash_amount',
             'delivery_charge',
-            'delivery_driver_id'  # Include this to verify the driver ID
+            'delivery_driver_id',
+            'credit_amount'
         )
 
         print(f"Number of orders in report: {len(report_data)}")  # Add this log
@@ -653,6 +636,7 @@ class OrderStatusUpdateViewSet(viewsets.GenericViewSet):
     serializer_class = OrderStatusUpdateSerializer
 
     def partial_update(self, request, pk=None):
+        print(request.data)
         try:
             order = self.get_object()
         except Order.DoesNotExist:
@@ -994,6 +978,36 @@ class CreditUserViewSet(viewsets.ModelViewSet):
 
         credit_user.make_payment(amount)
         return Response(CreditUserSerializer(credit_user).data)
+
+    @action(detail=False, methods=["get"], url_path='find-user')
+    def find_user(self, request):
+        mobile_number = request.query_params.get('mobile_number', None)     
+        
+        if not mobile_number:
+            return Response(
+                {"error": "Mobile number is required."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Attempt to retrieve the user by mobile number
+            user = CreditUser.objects.get(mobile_number=mobile_number)
+            
+            # Check if the user is active
+            if user.is_active:
+                serializer = self.get_serializer(user)
+                return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"error": "The given user is not active."}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        
+        except CreditUser.DoesNotExist:
+            return Response(
+                {"error": "No credit user found with this mobile number."}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class CreditOrderViewSet(viewsets.ModelViewSet):

@@ -200,7 +200,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
       setBillType("kitchen");
       setShowModal(true);
       setStatus(newStatus);
-      console.log(newStatus);
 
       try {
         await updateOrderStatusNew(Number(order.id), "approved");
@@ -380,12 +379,14 @@ const OrderCard: React.FC<OrderCardProps> = ({
           payment_method: "credit",
           cash_amount: 0,
           bank_amount: 0,
+          credit_amount:order.total_amount,
           credit_user_id: selectedCreditUser
             ? selectedCreditUser.id
             : undefined,
         };
       }
-
+      console.log("aditionaldata",additionalData);
+      
       const response = await updateOrderStatusNew(
         Number(order.id),
         "delivered",
@@ -403,7 +404,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
         });
 
         if (billsResponse && billsResponse.status === 201) {
-          console.log(order.chair_details);
 
           // Clear the chair after billing
           if (order.chair_details && order.chair_details.length > 0) {
@@ -511,7 +511,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
           showConfirmButton: false,
         }).then(() => {
           // Optional: Additional actions after the success message
-          console.log("Order updated successfully:", updatedOrderData);
         });
       } else {
         throw new Error("Failed to update order type");
@@ -612,12 +611,10 @@ const OrderCard: React.FC<OrderCardProps> = ({
         total_amount: updatedOrder.total_amount,
         chair_details: updatedOrder.chair_details,
       });
-      console.log("totAmount", updatedOrder.total_amount);
 
       setOrder(updatedOrder);
       onStatusUpdated();
       setIsChairModalOpen(false);
-      console.log("Chair and order updated successfully");
     } catch (error) {
       console.error("Failed to update chair and order:", error);
     }
