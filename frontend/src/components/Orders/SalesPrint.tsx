@@ -90,7 +90,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
             />
           )}
           <div className="text-center">
-            <h1 className="text-xl font-bold uppercase mb-2">
+            <h1 className="text-md font-bold uppercase mb-2">
               {logoInfo?.companyName} / {logoInfo?.companyNameArabic}
             </h1>
             {logoInfo?.landlineNumber && (<div className="text-sm space-y-2">
@@ -132,7 +132,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
 
       {/* Order Info Section */}
       <div className="mb-4 pb-2 border-b border-black">
-        <h2 className="text-bold capitalize">Order Type :{order.order_type}</h2>
+        <h2 className=" font-medium capitalize">Order Type: <span className="font-bold capitalize" >{order.order_type}</span></h2>
         <p className="text-center font-bold text-lg">ORDER #{order.id}</p>
         <div className="flex justify-between">
           <span>Date: {formatDate(order.created_at)}</span>

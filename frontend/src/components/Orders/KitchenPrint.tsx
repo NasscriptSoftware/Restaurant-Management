@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Order,  OrderItem,  Dish } from "../../types/index";
+import { Order, OrderItem, Dish } from "../../types/index";
 import { fetchDishSizes } from "../../services/api";
 
 interface KitchenPrintProps {
@@ -23,8 +23,6 @@ export interface DishItemProps {
 
 const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
   const [dishSizes, setDishSizes] = useState<{ [key: number]: any }>({});
- 
-
 
   useEffect(() => {
     const fetchSizes = async () => {
@@ -32,7 +30,13 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
 
       const sizePromises = order.items
         .filter((item) => item.dish_size)
-        .map((item) => fetchDishSizes(typeof item.dish_size === 'number' ? item.dish_size : parseFloat(item.dish_size)));
+        .map((item) =>
+          fetchDishSizes(
+            typeof item.dish_size === "number"
+              ? item.dish_size
+              : parseFloat(item.dish_size)
+          )
+        );
 
       const sizes = await Promise.all(sizePromises);
       const sizeMap = sizes.reduce((acc, size) => {
@@ -70,8 +74,20 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
   };
 
   const calculateSubTotal = (item: OrderItem, dish: Dish | undefined) => {
-    if (item.dish_size && dishSizes[typeof item.dish_size === 'number' ? item.dish_size : parseFloat(item.dish_size)]) {
-      const size = dishSizes[typeof item.dish_size === 'number' ? item.dish_size : parseFloat(item.dish_size)];
+    if (
+      item.dish_size &&
+      dishSizes[
+        typeof item.dish_size === "number"
+          ? item.dish_size
+          : parseFloat(item.dish_size)
+      ]
+    ) {
+      const size =
+        dishSizes[
+          typeof item.dish_size === "number"
+            ? item.dish_size
+            : parseFloat(item.dish_size)
+        ];
       return Number(size.price) * Number(item.quantity);
     } else if (dish) {
       return Number(dish.price) * Number(item.quantity);
@@ -86,14 +102,21 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
       const renderItems = (items: OrderItem[]) => {
         return items.map((item, index) => {
           const dish = dishes.find((d) => d.id === item.dish);
-          const sizeDetails = item.dish_size ? dishSizes[typeof item.dish_size === 'number' ? item.dish_size : parseFloat(item.dish_size)] : null;
+          const sizeDetails = item.dish_size
+            ? dishSizes[
+                typeof item.dish_size === "number"
+                  ? item.dish_size
+                  : parseFloat(item.dish_size)
+              ]
+            : null;
           const subTotal = calculateSubTotal(item, dish);
           total += subTotal;
 
           return (
             <tr key={index} className="print-item">
               <td className="print-item-name">
-                {dish ? dish.name : "Unknown Dish"} / {dish ? dish.arabic_name : "Unknown Dish"}
+                {dish ? dish.name : "Unknown Dish"} /{" "}
+                {dish ? dish.arabic_name : "Unknown Dish"}
                 {sizeDetails && (
                   <span className="text-xs ml-1">({sizeDetails.size})</span>
                 )}
@@ -132,7 +155,10 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
   return (
     <div className="print-container w-full max-w-md mx-auto p-4 text-sm bg-white border-2 border-dashed rounded-lg">
       <h1 className="text-center text-lg font-bold mb-2">Kitchen Order</h1>
-      <h2 className="text-bold">Order Type :{order.order_type}</h2>
+      <h2 className=" font-medium capitalize">
+        Order Type:{" "}
+        <span className="font-bold capitalize">{order.order_type}</span>
+      </h2>{" "}
       <div className="print-order-id mb-2">Order_id #{order.id}</div>
       <div className="print-date mb-2">
         Date: {formatDate(order.created_at)}
@@ -140,7 +166,6 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
       <div className="print-time mb-2">
         Time: {formatTime(order.created_at)}
       </div>
-
       <div className="print-items">
         {renderedRegularItems.length > 0 && (
           <div>
@@ -261,7 +286,6 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
           </div>
         )}
 
-
         {order?.foc_product_details && order.foc_product_details.length > 0 && (
           <div className="mt-4">
             <div className="flex items-center justify-center mb-2">
@@ -290,12 +314,10 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
           </div>
         )}
       </div>
-
       <div className="mt-4 text-right">
         <hr className="border-gray-300 mb-2" />
         <p className="font-bold">Grand Total: QAR {grandTotal.toFixed(2)}</p>
       </div>
-
       {order.kitchen_note && (
         <div className="print-kitchen-note mt-4">
           <hr className="border-gray-300 mb-2" />
