@@ -45,8 +45,6 @@ export interface Order {
     username: string;
     mobile_number: number;
     email: string;
-
-
   };
   
   payment_method: "cash" | "bank" | "cash-bank" | "credit" | string;

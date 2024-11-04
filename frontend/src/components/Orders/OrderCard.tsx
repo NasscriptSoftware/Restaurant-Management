@@ -379,14 +379,14 @@ const OrderCard: React.FC<OrderCardProps> = ({
           payment_method: "credit",
           cash_amount: 0,
           bank_amount: 0,
-          credit_amount:order.total_amount,
+          credit_amount: order.total_amount,
           credit_user_id: selectedCreditUser
             ? selectedCreditUser.id
             : undefined,
         };
       }
-      console.log("aditionaldata",additionalData);
-      
+      console.log("aditionaldata", additionalData);
+
       const response = await updateOrderStatusNew(
         Number(order.id),
         "delivered",
@@ -404,7 +404,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
         });
 
         if (billsResponse && billsResponse.status === 201) {
-
           // Clear the chair after billing
           if (order.chair_details && order.chair_details.length > 0) {
             const chairId = order.chair_details[0].chair_id;
@@ -473,14 +472,17 @@ const OrderCard: React.FC<OrderCardProps> = ({
       return;
     }
 
-    const deliveryData = newOrderType === "delivery" ? {
-      customer_name: customerName,
-      address: deliveryAddress,
-      customer_phone_number: customerMobileNumber,
-      delivery_charge: parseFloat(deliveryCharge),
-      ...(selectedDriver && { delivery_driver_id: selectedDriver.id }),
-      delivery_order_status: "pending",
-    } : {};
+    const deliveryData =
+      newOrderType === "delivery"
+        ? {
+            customer_name: customerName,
+            address: deliveryAddress,
+            customer_phone_number: customerMobileNumber,
+            delivery_charge: parseFloat(deliveryCharge),
+            ...(selectedDriver && { delivery_driver_id: selectedDriver.id }),
+            delivery_order_status: "pending",
+          }
+        : {};
 
     try {
       const response = await api.put(`/order-type/${order.id}/change-type/`, {
@@ -490,16 +492,16 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
       if (response.status === 200) {
         const updatedOrderData = response.data;
-        
+
         // Update local state
         setOrder(updatedOrderData);
-        
+
         // Call the parent's update function
         onOrderUpdated(updatedOrderData);
-        
+
         // Close modal and show success message
         setShowOrderTypeModal(false);
-        
+
         // Trigger a refetch of orders to ensure everything is in sync
         onStatusUpdated(); // If you have this prop
         window.location.reload();
@@ -619,6 +621,10 @@ const OrderCard: React.FC<OrderCardProps> = ({
       console.error("Failed to update chair and order:", error);
     }
   };
+
+  // Add state for the delivery info modal
+  const [showDeliveryInfoModal, setShowDeliveryInfoModal] = useState(false);
+
   return (
     <div
       key={order.id}
@@ -808,84 +814,85 @@ const OrderCard: React.FC<OrderCardProps> = ({
       <div className="mt-4 flex justify-between items-center">
         <div className="flex items-center space-x-2">
           {order?.order_type === "delivery" && (
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={`font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105 ${
+            <>
+              <Button
+                variant="outline"
+                className={`font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105 ${
+                  order.status === "delivered" ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                onClick={() => setShowDeliveryInfoModal(true)}
+              >
+                <BadgeInfo
+                  size={18}
+                  className={`${
                     order.status === "delivered"
                       ? "opacity-50 cursor-not-allowed"
-                      : ""
+                      : "animate-bounce"
                   }`}
-                >
-                  <BadgeInfo
-                    size={18}
-                    className={`${
-                      order.status === "delivered"
-                        ? "opacity-50 cursor-not-allowed"
-                        : "animate-bounce"
-                    }`}
-                  />
-                  <span>Delivery Info</span>
-                </Button>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-80 p-6 bg-white rounded-lg shadow-xl border border-blue-100">
-                <div className="space-y-4">
-                  {/* Delivery Status */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-600">
-                      Status:
-                    </span>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        order?.delivery_order_status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : order?.delivery_order_status === "delivered"
-                          ? "bg-green-100 text-green-800"
-                          : order?.delivery_order_status === "accepted" ||
-                            order?.delivery_order_status === "in_progress"
-                          ? "bg-indigo-100 text-indigo-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {order?.delivery_order_status
-                        ?.replace("_", " ")
-                        .toUpperCase()}
-                    </span>
-                  </div>
+                />
+                <span>Delivery Info</span>
+              </Button>
 
-                  {/* Delivery Driver Details */}
-                  <div className="space-y-2 bg-gray-50 p-3 rounded-md">
-                    <h4 className="font-semibold text-gray-700">
-                      Driver Details
-                    </h4>
-                    <div className="grid grid-cols-[20px_1fr] gap-2 items-center text-sm">
-                      <Bike size={16} className="text-gray-400" />
-                      <span>{order?.delivery_driver?.username || "N/A"}</span>
-                      <Phone size={16} className="text-gray-400" />
-                      <span>
-                        {order?.delivery_driver?.mobile_number || "N/A"}
+              <Dialog open={showDeliveryInfoModal} onOpenChange={setShowDeliveryInfoModal}>
+                <DialogContent className="w-80 p-6 bg-white rounded-lg">
+                  <DialogHeader>
+                    <DialogTitle>Delivery Information</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    {/* Delivery Status */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-600">
+                        Status:
                       </span>
-                      <Mail size={16} className="text-gray-400" />
-                      <span>{order?.delivery_driver?.email || "N/A"}</span>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          order?.delivery_order_status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : order?.delivery_order_status === "delivered"
+                            ? "bg-green-100 text-green-800"
+                            : order?.delivery_order_status === "accepted" ||
+                              order?.delivery_order_status === "in_progress"
+                            ? "bg-indigo-100 text-indigo-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {order?.delivery_order_status?.replace("_", " ").toUpperCase()}
+                      </span>
                     </div>
-                  </div>
 
-                  {/* Customer Details */}
-                  <div className="space-y-2 bg-gray-50 p-3 rounded-md">
-                    <h4 className="font-semibold text-gray-700">
-                      Customer Details
-                    </h4>
-                    <div className="grid grid-cols-[20px_1fr] gap-2 items-center text-sm">
-                      <Phone size={16} className="text-gray-400" />
-                      <span>{order?.customer_phone_number || "N/A"}</span>
-                      <Mail size={16} className="text-gray-400" />
-                      <span>{order?.address || "N/A"}</span>
+                    {/* Delivery Driver Details */}
+                    <div className="space-y-2 bg-gray-50 p-3 rounded-md">
+                      <h4 className="font-semibold text-gray-700">
+                        Driver Details
+                      </h4>
+                      <div className="grid grid-cols-[20px_1fr] gap-2 items-center text-sm">
+                        <Bike size={16} className="text-gray-400" />
+                        <span>{order?.delivery_driver?.username || "N/A"}</span>
+                        <Phone size={16} className="text-gray-400" />
+                        <span>
+                          {order?.delivery_driver?.mobile_number || "N/A"}
+                        </span>
+                        <Mail size={16} className="text-gray-400" />
+                        <span>{order?.delivery_driver?.email || "N/A"}</span>
+                      </div>
+                    </div>
+
+                    {/* Customer Details */}
+                    <div className="space-y-2 bg-gray-50 p-3 rounded-md">
+                      <h4 className="font-semibold text-gray-700">
+                        Customer Details
+                      </h4>
+                      <div className="grid grid-cols-[20px_1fr] gap-2 items-center text-sm">
+                        <Phone size={16} className="text-gray-400" />
+                        <span>{order?.customer_phone_number || "N/A"}</span>
+                        <Mail size={16} className="text-gray-400" />
+                        <span>{order?.address || "N/A"}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </HoverCardContent>
-            </HoverCard>
+                </DialogContent>
+              </Dialog>
+            </>
           )}
 
           {order?.order_type === "dining" && (
@@ -1007,13 +1014,28 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 </span>
               </div>
             ) : null}
+            {order.order_type === "delivery" &&
+            order.delivery_charge &&
+            parseFloat(order.delivery_charge.toString()) > 0 ? (
+              <div className="flex items-center space-x-2">
+                <Banknote size={24} className="text-green-500 animate-pulse" />
+                <span className="text-base font-medium text-gray-700">
+                  Delivery Charge:
+                </span>
+                <span className="text-xl font-bold text-green-600">
+                  QAR {order.delivery_charge.toString()}
+                </span>
+              </div>
+            ) : null}
+
             <div className="flex items-center space-x-2">
               <Banknote size={24} className="text-green-500 animate-pulse" />
               <span className="text-base font-medium text-gray-700">
                 Total Amount:
               </span>
               <span className="text-xl font-bold text-green-600">
-                QAR {parseFloat((order?.total_amount || 0).toString()).toFixed(2)}
+                QAR{" "}
+                {parseFloat((order?.total_amount || 0).toString()).toFixed(2)}
               </span>
             </div>
           </div>

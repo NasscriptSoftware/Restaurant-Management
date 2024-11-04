@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,6 +23,14 @@ export interface Order {
   total_amount: string | number;
   status: string;
   order_type: "dining" | "takeaway" | "delivery";
+  delivery_driver: {
+    id: number;
+    username: string;
+    email: string;
+    mobile_number: string;
+    is_active: boolean;
+    is_available: boolean;
+  };
   billed_at: string;
   items: OrderItem[];
 }
@@ -130,6 +138,16 @@ const OrdersListing: React.FC<OrdersListingProps> = ({
                     {new Date(order.created_at).toLocaleString()}
                   </p>
                 </div>
+                
+                {order.order_type === "delivery" && (
+                  <div className="flex items-center gap-2 bg-blue-100 px-3 py-1.5 rounded-md">
+                    <Truck size={16} className="text-blue-800" />
+                    <span className="text-sm  text-blue-600">Delivery Driver:</span>
+                    <span className="text-sm font-medium text-blue-600">
+                      {order.delivery_driver?.username || 'Not Assigned'}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center space-x-4 capitalize">
                   <Badge className={getStatusColor(order.status)}>
                     {order.status}
@@ -159,7 +177,7 @@ const OrdersListing: React.FC<OrdersListingProps> = ({
                         orderItem={item}
                         dishes={dishes}
                         orderId={order.id}
-                        onItemDeleted={() => {}} // Add a proper handler if needed
+                        onItemDeleted={() => {""}} // Add a proper handler if needed
                         order_status={order.status}
                         isNewlyAdded={item.is_newly_added}
                       />
