@@ -42,15 +42,15 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
     return date.toLocaleTimeString(undefined, options);
   };
 
-  const totalQuantity = Array.isArray(order.items)
+  const totalQuantity = Array.isArray(order?.items)
     ? order.items.reduce(
-        (total, item) =>
-          total +
-          (typeof item.quantity === "number"
-            ? item.quantity
-            : parseFloat(item.quantity)),
-        0
-      )
+      (total, item) =>
+        total +
+        (typeof item.quantity === "number"
+          ? item.quantity
+          : parseFloat(item.quantity)),
+      0
+    )
     : 0;
 
   const [dishSizes, setDishSizes] = React.useState<{
@@ -59,6 +59,8 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
 
   React.useEffect(() => {
     const fetchSizes = async () => {
+      if (!order?.items) return;
+
       const sizePromises = order.items.map(async (item) => {
         if (item.dish_size) {
           const sizeData = await fetchDishSizes(Number(item.dish_size));
@@ -73,7 +75,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
     };
 
     fetchSizes();
-  }, [order.items]);
+  }, [order?.items]);
 
   return (
     <div className="print-container w-full max-w-sm mx-auto p-4 text-xs font-sans text-black border border-dotted border-black">
@@ -91,11 +93,12 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
             <h1 className="text-xl font-bold uppercase mb-2">
               {logoInfo?.companyName} / {logoInfo?.companyNameArabic}
             </h1>
-            <div className="text-sm space-y-2">
+            {logoInfo?.landlineNumber && (<div className="text-sm space-y-2">
               <p className="text-center flex items-center justify-center">
                 <GiRotaryPhone size={16} className="mr-2 text-gray-600" />
                 <span>{logoInfo?.landlineNumber}</span>
               </p>
+            </div>)}
               <div className="flex justify-between mt-4 gap-4">
                 <p className="flex items-center">
                   <Phone size={16} className="mr-2 text-gray-600" />
@@ -106,7 +109,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
                   <span>{logoInfo?.phoneNumber}</span>
                 </p>
               </div>
-            </div>
+
             <div className="text-sm italic flex justify-between mt-4">
               <MapPin size={16} className="mr-2 text-gray-600" />
               <span className="text-right">
@@ -129,6 +132,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
 
       {/* Order Info Section */}
       <div className="mb-4 pb-2 border-b border-black">
+        <h2 className="text-bold">Order Type :{order.order_type}</h2>
         <p className="text-center font-bold text-lg">ORDER #{order.id}</p>
         <div className="flex justify-between">
           <span>Date: {formatDate(order.created_at)}</span>
@@ -149,7 +153,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
           </div>
         </div>
         <div>
-          {Array.isArray(order.items) && order.items.length > 0 ? (
+          {Array.isArray(order?.items) && order.items.length > 0 ? (
             order.items.map((item, index) => {
               const dish = dishes.find((dish) => dish.id === item.dish);
               const sizeInfo = item.dish_size
@@ -173,8 +177,8 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
                     {sizeInfo
                       ? parseFloat(sizeInfo.price) * Number(item.quantity)
                       : dish
-                      ? parseFloat(String(dish.price)) * Number(item.quantity)
-                      : 0}
+                        ? parseFloat(String(dish.price)) * Number(item.quantity)
+                        : 0}
                   </span>
                 </div>
               );
@@ -223,7 +227,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
       </div>
 
       {/* FOC Products Section */}
-      {order.foc_product_details.length > 0 && (
+      {order.foc_product_details && order.foc_product_details.length > 0 && (
         <div className="mb-4">
           <p className="font-bold border-y border-black py-1">FOC PRODUCTS</p>
           <div>

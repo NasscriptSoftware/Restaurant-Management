@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.db.models import Sum, Count, Avg, F, Value,DecimalField, IntegerField
 from django.utils.dateparse import parse_date
-from django.db.models import Q
+from django.db.models import Q, Case, When
 from django.db.models.functions import TruncDate, TruncHour
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
@@ -26,7 +26,7 @@ from django.db.models.functions import Coalesce,Cast
 from django.shortcuts import render
 from rest_framework.pagination import PageNumberPagination
 
-
+    
 User = get_user_model()
 
 
@@ -443,15 +443,23 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         # Properly cast fields and define output fields in the aggregation
         order_items = OrderItem.objects.filter(order__in=orders).values(
+            'dish__name'
+        ).annotate(
             product_name=F('dish__name'),
-            total_quantity=Sum(Cast('quantity', output_field=IntegerField())),  # Cast quantity explicitly
-            total_amount=Coalesce(Sum(Cast(F('order__total_amount'), output_field=DecimalField())), Value(0, output_field=DecimalField())),  # Properly cast total_amount and use output_field
+            total_quantity=Sum('quantity'),
+            total_amount=Sum(
+                Case(
+                    When(order__total_amount__isnull=False, then=F('order__total_amount')),
+                    default=Value(0),
+                    output_field=DecimalField()
+                )
+            ),
             invoice_number=F('order__invoice_number'),
-            order_created_at=F('order__created_at'),  # Include order created_at
-            order_type=F('order__order_type'),        # Include order_type
-            cash_amount=F('order__cash_amount'),      # Include cash_amount
-            bank_amount=F('order__bank_amount'),      # Include bank_amount
-            payment_method=F('order__payment_method') # Include payment_method
+            order_created_at=F('order__created_at'),
+            order_type=F('order__order_type'),
+            cash_amount=F('order__cash_amount'),
+            bank_amount=F('order__bank_amount'),
+            payment_method=F('order__payment_method')
         )
 
         # Format the response
@@ -552,13 +560,17 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         if pk:
             try:
-                user = User.objects.get(pk=pk, role='staff')
+                # Check for both staff and admin roles
+                user = User.objects.get(
+                    pk=pk,
+                    role__in=['staff', 'admin']  # Allow both staff and admin roles
+                )
                 orders = Order.objects.filter(user=user)
             except User.DoesNotExist:
-                return Response({'error': 'Staff user not found.'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': 'Staff/Admin user not found.'}, status=status.HTTP_404_NOT_FOUND)
         else:
-            # Filter orders by all staff users
-            orders = Order.objects.filter(user__role='staff')
+            # Filter orders by all staff and admin users
+            orders = Order.objects.filter(user__role__in=['staff', 'admin'])
 
         # Apply date filtering if provided
         if from_date:

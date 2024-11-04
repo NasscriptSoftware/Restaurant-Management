@@ -98,7 +98,7 @@ export const getOrders = async () => {
 
 export const fetchOrders = async (page: number) => {
   const response = await api.get(`/orders/?page=${page}`);
-  return response.data;
+  return response.data.results;
 };
 
 export const fetchOrder = async (orderId: number | string) => {

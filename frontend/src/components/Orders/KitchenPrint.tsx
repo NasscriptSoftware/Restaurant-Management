@@ -28,6 +28,8 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
 
   useEffect(() => {
     const fetchSizes = async () => {
+      if (!order?.items) return;
+
       const sizePromises = order.items
         .filter((item) => item.dish_size)
         .map((item) => fetchDishSizes(typeof item.dish_size === 'number' ? item.dish_size : parseFloat(item.dish_size)));
@@ -45,7 +47,7 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
     };
 
     fetchSizes();
-  }, [order.items]);
+  }, [order?.items]);
 
   const formatDate = (datetime: string) => {
     const date = new Date(datetime);
@@ -130,6 +132,7 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
   return (
     <div className="print-container w-full max-w-md mx-auto p-4 text-sm bg-white border-2 border-dashed rounded-lg">
       <h1 className="text-center text-lg font-bold mb-2">Kitchen Order</h1>
+      <h2 className="text-bold">Order Type :{order.order_type}</h2>
       <div className="print-order-id mb-2">Order_id #{order.id}</div>
       <div className="print-date mb-2">
         Date: {formatDate(order.created_at)}
@@ -259,7 +262,7 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
         )}
 
 
-        {order.foc_product_details.length > 0 && (
+        {order?.foc_product_details && order.foc_product_details.length > 0 && (
           <div className="mt-4">
             <div className="flex items-center justify-center mb-2">
               <hr className="flex-grow border-gray-300" />
@@ -276,8 +279,8 @@ const KitchenPrint: React.FC<KitchenPrintProps> = ({ order, dishes }) => {
                 </tr>
               </thead>
               <tbody>
-                {order.foc_product_details.map((item: any) => (
-                  <tr key={item.id}>
+                {order.foc_product_details.map((item: any, index) => (
+                  <tr key={index}>
                     <td className="text-left">{item.name}</td>
                     <td className="text-right">{item.quantity}</td>
                   </tr>

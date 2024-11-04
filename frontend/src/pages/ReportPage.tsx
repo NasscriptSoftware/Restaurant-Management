@@ -193,6 +193,9 @@ const ReportPage: React.FC = () => {
   useEffect(() => {
     if (reportType === "staff" || reportType === "driver") {
       fetchStaffUsers();
+      if (reportType === "driver") {
+        fetchDriversList();
+      }
     }
   }, [reportType]);
 
@@ -207,21 +210,20 @@ const ReportPage: React.FC = () => {
       let baseUrl = "";
       switch (reportType) {
         case "sales":
-          baseUrl = `${import.meta.env.VITE_APP_API_URL}/orders/sales_report/`;
+          baseUrl = "/orders/sales_report/";
           break;
         case "mess":
-          baseUrl = `${import.meta.env.VITE_APP_API_URL}/messes/mess_report/`;
+          baseUrl = "/messes/mess_report/";
           break;
         case "product":
-          baseUrl = `${import.meta.env.VITE_APP_API_URL}/orders/product_wise_report/`;
+          baseUrl = "/orders/product_wise_report/";
           break;
         case "onlineDelivery":
-          baseUrl = `${import.meta.env.VITE_APP_API_URL}/orders/online-delivery-report/`;
+          baseUrl = "/orders/online-delivery-report/";
           break;
       }
 
-      const url = new URL(baseUrl);
-      const token = localStorage.getItem("token");
+      const params = new URLSearchParams();
 
       const convertToUTCDate = (date: Date) => {
         const utcDate = new Date(
@@ -231,49 +233,40 @@ const ReportPage: React.FC = () => {
       };
 
       if (fromDate) {
-        url.searchParams.append("from_date", convertToUTCDate(fromDate));
+        params.append("from_date", convertToUTCDate(fromDate));
       }
       if (toDate) {
-        url.searchParams.append("to_date", convertToUTCDate(toDate));
+        params.append("to_date", convertToUTCDate(toDate));
       }
 
       if (reportType !== "product" && !showCancelledOrders) {
-        url.searchParams.append("order_status", "delivered");
+        params.append("order_status", "delivered");
       } else if (reportType !== "product" && showCancelledOrders) {
-        url.searchParams.append("order_status", "cancelled");
+        params.append("order_status", "cancelled");
       }
 
       Object.entries(filter).forEach(([key, value]) => {
-        url.searchParams.append(key, value);
+        params.append(key, value);
       });
 
-      const response = await fetch(url.toString(), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await api.get(baseUrl, { params });
 
-      if (response.ok) {
-        const data = await response.json();
-        switch (reportType) {
-          case "sales":
-            setReports(data);
-            break;
-          case "mess":
-            setMessReports(data);
-            break;
-          case "product":
-            setProductReports(data);
-            break;
-          case "onlineDelivery":
-            setOnlineDeliveryReports(data);
-            break;
-        }
-        setCurrentPage(1);
-      } else {
-        console.error("HTTP error! status:", response.status);
+      switch (reportType) {
+        case "sales":
+          setReports(response.data);
+          break;
+        case "mess":
+          setMessReports(response.data);
+          break;
+        case "product":
+          setProductReports(response.data);
+          break;
+        case "onlineDelivery":
+          setOnlineDeliveryReports(response.data);
+          break;
       }
+      setCurrentPage(1);
+
     } catch (error) {
       console.error("Error fetching reports:", error);
     }
@@ -283,8 +276,8 @@ const ReportPage: React.FC = () => {
     try {
       const response = await api.get("/users/");
       const allUsers = response.data.results;
-      setStaffUsers(allUsers.filter((user: StaffUser) => user.role === "staff"));
-      setDrivers(allUsers.filter((user: Driver) => user.role === "driver"));
+      setStaffUsers(allUsers.filter((user: StaffUser) => user.role === "staff" || user.role === "admin"));
+      // setDrivers(allUsers.filter((user: Driver) => user.role === "driver"));
     } catch (error) {
       console.error("Error fetching staff users:", error);
     }
@@ -728,6 +721,17 @@ const ReportPage: React.FC = () => {
         </Table>
       </div>
     );
+  };
+
+  const fetchDriversList = async () => {
+    try {
+      const response = await api.get('/delivery-drivers/');
+      if (response.data && response.data.results) {
+        setDrivers(response.data.results);
+      }
+    } catch (error) {
+      console.error("Error fetching drivers:", error);
+    }
   };
 
   return (

@@ -67,6 +67,7 @@ interface OrderCardProps {
   onOrderSelection: (selectedOrderIds: number[]) => void;
   onStatusUpdated: () => void;
   onOrderUpdated: (updatedOrder: Order) => void;
+  refetchOrders: () => void;
   logoInfo: {
     logoUrl: string;
     companyName: string;
@@ -489,12 +490,31 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
       if (response.status === 200) {
         const updatedOrderData = response.data;
+        
+        // Update local state
         setOrder(updatedOrderData);
-
+        
+        // Call the parent's update function
+        onOrderUpdated(updatedOrderData);
+        
+        // Close modal and show success message
         setShowOrderTypeModal(false);
+        
+        // Trigger a refetch of orders to ensure everything is in sync
+        onStatusUpdated(); // If you have this prop
         window.location.reload();
+        Swal.fire({
+          title: "Success",
+          text: "Order type updated successfully",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        }).then(() => {
+          // Optional: Additional actions after the success message
+          console.log("Order updated successfully:", updatedOrderData);
+        });
       } else {
-        Swal.fire("Error", "Failed to update order type.", "error");
+        throw new Error("Failed to update order type");
       }
     } catch (error) {
       console.error("Failed to update order type:", error);
@@ -996,7 +1016,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 Total Amount:
               </span>
               <span className="text-xl font-bold text-green-600">
-                QAR {parseFloat(order.total_amount.toString()).toFixed(2)}
+                QAR {parseFloat((order?.total_amount || 0).toString()).toFixed(2)}
               </span>
             </div>
           </div>

@@ -120,7 +120,7 @@ const OrdersPage: React.FC = () => {
     isError: ordersError,
     refetch: refetchOrders,
   } = usePaginatedOrders(currentPage);
-console.log("orders", orders);
+  console.log("orders", orders);
 
   const {
     dishes,
@@ -132,36 +132,36 @@ console.log("orders", orders);
 
   useEffect(() => {
     if (orders) {
-      setFilteredOrders(orders.results);
+      setFilteredOrders(orders);
     }
   }, [orders]);
 
   useEffect(() => {
     if (orders && searchQuery) {
-      const filtered = orders.results.filter((order: any) =>
+      const filtered = orders.filter((order: any) =>
         order.id.toString().includes(searchQuery)
       );
       setFilteredOrders(filtered);
     } else if (orders) {
-      setFilteredOrders(orders.results);
+      setFilteredOrders(orders);
     }
   }, [searchQuery, orders]);
 
   const handleSearch = () => {
     if (orders && searchQuery) {
-      const filtered = orders.results.filter((order: any) =>
+      const filtered = orders.filter((order: any) =>
         order.id.toString().includes(searchQuery)
       );
       setFilteredOrders(filtered);
     } else {
-      setFilteredOrders(orders.results);
+      setFilteredOrders(orders);
     }
   };
 
   const handleFilterOrders = (status: string) => {
     setStatusFilter(status);
     setSelectedOrders(
-      orders.results
+      orders
         .filter((order: any) => order.status === status)
         .map((order: any) => order.id)
     );
@@ -438,7 +438,7 @@ console.log("orders", orders);
               logoInfo={logoInfo}
               chairs={chairs}
               onOrderUpdated={handleOrderUpdated}
-              
+              refetchOrders={refetchOrders}
             />
           ))}
           <PaginationControls
@@ -462,10 +462,19 @@ console.log("orders", orders);
           .map((order: any) => (
             <div key={order.id} style={{ pageBreakAfter: "always" }}>
               {printType === "kitchen" ? (
-                <KitchenPrint order={order} dishes={dishes } />
+                <KitchenPrint 
+                  order={{
+                    ...order,
+                    foc_product_details: order.foc_product_details || []
+                  }} 
+                  dishes={dishes} 
+                />
               ) : (
                 <SalesPrint
-                  order={order}
+                  order={{
+                    ...order,
+                    foc_product_details: order.foc_product_details || []
+                  }}
                   dishes={dishes}
                   logoInfo={logoInfo}
                 />
