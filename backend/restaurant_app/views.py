@@ -315,7 +315,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset_by_time_range(time_range)
 
         daily_sales = (
-            queryset.annotate(date=TruncDate("created_at"))
+            queryset.filter(status="delivered").annotate(date=TruncDate("created_at"))
             .values("date")
             .annotate(total_sales=Sum("total_amount"), order_count=Count("id"))
             .order_by("date")
