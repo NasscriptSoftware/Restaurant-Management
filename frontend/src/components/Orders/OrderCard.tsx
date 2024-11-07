@@ -22,11 +22,6 @@ import {
 } from "../../services/api";
 import ReactSelect from "react-select";
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "../ui/hover-card";
-import {
   BadgeInfo,
   Bike,
   HandPlatter,
