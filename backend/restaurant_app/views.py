@@ -322,11 +322,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         )
 
         total_income = (
-            queryset.aggregate(total_income=Sum("total_amount"))["total_income"] or 0
+            queryset.filter(status="delivered").aggregate(total_income=Sum("total_amount"))["total_income"] or 0
         )
 
         popular_time_slots = (
-            queryset.annotate(hour=TruncHour("created_at"))
+            queryset.filter(status="delivered").annotate(hour=TruncHour("created_at"))
             .values("hour")
             .annotate(order_count=Count("id"))
             .order_by("-order_count")[:5]
@@ -349,7 +349,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             .order_by("-value")
         )
 
-        total_orders = queryset.count()
+        total_orders = queryset.filter(status="delivered").count()
 
         avg_order_value = (
             queryset.aggregate(avg_value=Avg("total_amount"))["avg_value"] or 0
