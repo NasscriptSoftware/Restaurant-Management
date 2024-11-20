@@ -64,6 +64,7 @@ class LogoInfo(models.Model):
     def __str__(self):
         return self.company_name
 
+
 class SidebarItem(models.Model):
     path = models.CharField(max_length=255, unique=True)
     icon = models.CharField(max_length=255, unique=True)
@@ -72,6 +73,7 @@ class SidebarItem(models.Model):
 
     def __str__(self):
         return self.label
+
 
 class Category(models.Model):
     name = models.CharField(max_length=200, unique=True)
@@ -211,7 +213,8 @@ class Order(models.Model):
     ]
 
     user = models.ForeignKey(User, related_name="orders", on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
+    # created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     total_amount = models.DecimalField(max_digits=8, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     bill_generated = models.BooleanField(default=False)

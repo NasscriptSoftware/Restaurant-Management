@@ -20,6 +20,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
 INSTALLED_APPS = [
     "unfold",
+    "unfold.contrib.import_export",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -30,6 +31,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "django_filters",
+    "import_export",
     "restaurant_app.apps.RestaurantAppConfig",
     "delivery_drivers.apps.DeliveryDriversConfig",
     "transactions_app.apps.TransactionsAppConfig",

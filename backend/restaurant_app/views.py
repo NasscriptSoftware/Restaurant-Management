@@ -320,7 +320,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             .annotate(total_sales=Sum("total_amount"), order_count=Count("id"))
             .order_by("date")
         )
-
+        print("dialy_sales",daily_sales)
         total_income = (
             queryset.filter(status="delivered").aggregate(total_income=Sum("total_amount"))["total_income"] or 0
         )

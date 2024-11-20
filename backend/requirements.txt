@@ -11,3 +11,4 @@ django-unfold
 psycopg2-binary
 whitenoise
 gunicorn
+django-import-export

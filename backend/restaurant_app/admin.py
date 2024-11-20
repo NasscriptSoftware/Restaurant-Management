@@ -1,3 +1,5 @@
+from unfold.contrib.import_export.forms import ExportForm, ImportForm
+from import_export.admin import ImportExportModelAdmin
 from unfold.admin import ModelAdmin as UnflodModelAdmin
 from django.utils.translation import gettext_lazy as _
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
@@ -99,7 +101,9 @@ admin.site.register(MessTransaction, UnflodModelAdmin)
 admin.site.register(LogoInfo, UnflodModelAdmin)
 
 @admin.register(SidebarItem)
-class SidebarItemAdmin(UnflodModelAdmin):
+class SidebarItemAdmin(UnflodModelAdmin,ImportExportModelAdmin):
+    import_form_class = ImportForm
+    export_form_class = ExportForm
     list_display = ('label', 'path', 'icon', 'active_status')
     list_filter = ('active',)
     search_fields = ('label', 'path')
