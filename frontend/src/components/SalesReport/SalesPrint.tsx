@@ -91,6 +91,7 @@ interface SalesPrintProps {
   onlineDeliveryReports: OnlineDeliveryReport[];
   staffReports: StaffReport[];
   driverReports: DriverReport[];
+  className?: string;
   // Other props...
 }
 
@@ -105,6 +106,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
   onlineDeliveryReports,
   staffReports, // Ensure staffReports is included in the props
   driverReports,
+  className
 }) => {
   const printContent = () => {
     const printWindow = window.open("", "_blank");
@@ -480,7 +482,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
     <div>
       <button
         onClick={printContent}
-        className="p-2 bg-green-500 text-white rounded-lg"
+        className={`p-2 bg-green-500 text-white rounded-lg ${className}`}
       >
         Print Report
       </button>

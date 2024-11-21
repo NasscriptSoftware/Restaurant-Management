@@ -785,156 +785,201 @@ const ReportPage: React.FC = () => {
       <div className="container mx-auto p-4 space-y-6">
         <Card>
           <CardContent className="p-6">
-            <Tabs defaultValue="sales" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-6 lg:w-auto">
-                <TabsTrigger value="sales" onClick={() => setReportType("sales")} className="data-[state=active]:bg-purple-600 bg-white rounded-l-lg data-[state=active]:text-white border border-purple-600">Sales Report</TabsTrigger>
-                <TabsTrigger value="mess" onClick={() => setReportType("mess")} className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600">Mess Report</TabsTrigger>
-                <TabsTrigger value="product" onClick={() => setReportType("product")} className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600">Product Report</TabsTrigger>
-                <TabsTrigger value="onlineDelivery" onClick={() => setReportType("onlineDelivery")} className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600">Online Delivery Report</TabsTrigger>
-                <TabsTrigger value="staff" onClick={() => setReportType("staff")} className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600">Staff Report</TabsTrigger>
-                <TabsTrigger value="driver" onClick={() => setReportType("driver")} className="data-[state=active]:bg-purple-600 bg-white rounded-r-lg data-[state=active]:text-white border border-purple-600">
-                  <Truck className="w-4 h-4 mr-2" />
+            <Tabs defaultValue="sales" className="space-y-8">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 lg:w-auto">
+                <TabsTrigger 
+                  value="sales" 
+                  onClick={() => setReportType("sales")} 
+                  className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600 rounded-none first:rounded-tl-lg last:rounded-tr-lg md:first:rounded-l-lg md:last:rounded-r-lg md:rounded-none"
+                >
+                  Sales Report
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="mess" 
+                  onClick={() => setReportType("mess")} 
+                  className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600"
+                >
+                  Mess Report
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="product" 
+                  onClick={() => setReportType("product")} 
+                  className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600"
+                >
+                  Product Report
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="onlineDelivery" 
+                  onClick={() => setReportType("onlineDelivery")} 
+                  className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600"
+                >
+                  Online Delivery
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="staff" 
+                  onClick={() => setReportType("staff")} 
+                  className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600"
+                >
+                  Staff Report
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="driver" 
+                  onClick={() => setReportType("driver")} 
+                  className="data-[state=active]:bg-purple-600 bg-white data-[state=active]:text-white border border-purple-600"
+                >
+                  <Truck className="w-4 h-4 mr-2 hidden sm:inline-block" />
                   Driver Report
                 </TabsTrigger>
               </TabsList>
 
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                <Button
-                  variant={showCancelledOrders ? "destructive" : "outline"}
-                  onClick={handleShowCancelledOrdersClick}
-                >
-                  {showCancelledOrders ? "Show All Orders" : "Show Cancelled Orders"}
-                </Button>
+              <div className="flex flex-col space-y-4" style={{marginTop:"6rem"}}>
+                <div className="w-full">
+                  <Button
+                    variant={showCancelledOrders ? "destructive" : "outline"}
+                    onClick={handleShowCancelledOrdersClick}
+                    className="w-full sm:w-auto"
+                  >
+                    {showCancelledOrders ? "Show All Orders" : "Show Cancelled Orders"}
+                  </Button>
+                </div>
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
-                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0">
-                  <DatePicker
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="grid grid-cols-2 sm:flex gap-2 flex-grow">
+                    <DatePicker
                       selected={fromDate}
                       onChange={(date) => setFromDate(date)}
                       dateFormat="yyyy-MM-dd"
                       placeholderText="From Date"
-                      className="w-full sm:w-auto p-2 border rounded"
-                      />
+                      className="w-full p-2 border rounded"
+                    />
                     <DatePicker
                       selected={toDate}
                       onChange={(date) => setToDate(date)}
                       dateFormat="yyyy-MM-dd"
                       placeholderText="To Date"
-                      className="w-full sm:w-auto p-2 border rounded"
+                      className="w-full p-2 border rounded"
                     />
                   </div>
-                  <Button variant="outline" onClick={handleReset} className="w-full sm:w-auto">
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Reset
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={handleReset} 
+                      className="flex-1 sm:flex-none"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Reset
+                    </Button>
+                    <div className="flex-1 sm:flex-none ">
+                      <SalesPrint
+                        reportType={reportType as "sales" | "mess" | "product" | "onlineDelivery" | "staff" | "driver"}
+                        reports={reports}
+                        messReports={messReports}
+                        productReports={productReports}
+                        onlineDeliveryReports={onlineDeliveryReports}
+                        staffReports={staffReports}
+                        driverReports={driverReports}
+                        totalAmount={totalAmount}
+                        totalCashAmount={totalCashAmount}
+                        totalCardAmount={totalCardAmount}
+                        className="text-xs sm:text-base"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <SalesPrint
-                  reportType={reportType as "sales" | "mess" | "product" | "onlineDelivery" | "staff" | "driver"}
-                  reports={reports}
-                  messReports={messReports}
-                  productReports={productReports}
-                  onlineDeliveryReports={onlineDeliveryReports}
-                  staffReports={staffReports}
-                  driverReports={driverReports}
-                  totalAmount={totalAmount}
-                  totalCashAmount={totalCashAmount}
-                  totalCardAmount={totalCardAmount}
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={activeButton === "All" ? "default" : "outline"}
-                  onClick={() => handleButtonClick("All")}
-                >
-                  All
-                </Button>
-                {reportType === "onlineDelivery" && onlinePlatforms.map((platform) => (
-                  <Button
-                    key={platform.id}
-                    variant={activeButton === platform.name ? "default" : "outline"}
-                    onClick={() => handleButtonClick(platform.name, platform.id)}
-                  >
-                    {platform.name}
-                  </Button>
-                ))}
-                {reportType === "sales" && (
-                  <>
-                    {["Dining", "Takeaway", "Delivery","Online Delivery", "Cash", "Bank", "Cash-Bank", "Credit", "Delivered"].map((type) => (
-                      <Button
-                        key={type}
-                        variant={activeButton === type ? "default" : "outline"}
-                        onClick={() => handleButtonClick(type)}
-                      >
-                        {type}
-                      </Button>
-                    ))}
-                  </>
-                )}
-                {reportType === "mess" && (
-                  <>
-                    {[
-                      "Cash",
-                      "Bank",
-                      "Cash-Bank",
-                      "Credit",
-                      "Breakfast and Lunch",
-                      "Breakfast and Dinner",
-                      "Lunch and Dinner",
-                      "Breakfast and Lunch and Dinner",
-                    ].map((type) => (
-                      <Button
-                        key={type}
-                        variant={activeButton === type ? "default" : "outline"}
-                        onClick={() => handleButtonClick(type)}
-                      >
-                        {type}
-                      </Button>
-                    ))}
-                  </>
-                )}
-              </div>
-
-              {reportType === "staff" && (
                 <div className="flex flex-wrap gap-2">
                   <Button
-                    variant={selectedStaffId === null ? "default" : "outline"}
-                    onClick={() => handleStaffButtonClick(null)}
+                    variant={activeButton === "All" ? "default" : "outline"}
+                    onClick={() => handleButtonClick("All")}
                   >
-                    All Staff
+                    All
                   </Button>
-                  {staffUsers.map((staff) => (
+                  {reportType === "onlineDelivery" && onlinePlatforms.map((platform) => (
                     <Button
-                      key={staff.id}
-                      variant={selectedStaffId === staff.id ? "default" : "outline"}
-                      onClick={() => handleStaffButtonClick(staff.id)}
+                      key={platform.id}
+                      variant={activeButton === platform.name ? "default" : "outline"}
+                      onClick={() => handleButtonClick(platform.name, platform.id)}
                     >
-                      {staff.username}
+                      {platform.name}
                     </Button>
                   ))}
+                  {reportType === "sales" && (
+                    <>
+                      {["Dining", "Takeaway", "Delivery","Online Delivery", "Cash", "Bank", "Cash-Bank", "Credit", "Delivered"].map((type) => (
+                        <Button
+                          key={type}
+                          variant={activeButton === type ? "default" : "outline"}
+                          onClick={() => handleButtonClick(type)}
+                        >
+                          {type}
+                        </Button>
+                      ))}
+                    </>
+                  )}
+                  {reportType === "mess" && (
+                    <>
+                      {[
+                        "Cash",
+                        "Bank",
+                        "Cash-Bank",
+                        "Credit",
+                        "Breakfast and Lunch",
+                        "Breakfast and Dinner",
+                        "Lunch and Dinner",
+                        "Breakfast and Lunch and Dinner",
+                      ].map((type) => (
+                        <Button
+                          key={type}
+                          variant={activeButton === type ? "default" : "outline"}
+                          onClick={() => handleButtonClick(type)}
+                        >
+                          {type}
+                        </Button>
+                      ))}
+                    </>
+                  )}
                 </div>
-              )}
 
-              {reportType === "driver" && (
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant={selectedDriverId === null ? "default" : "outline"}
-                    onClick={() => handleDriverButtonClick(null)}
-                  >
-                    All Drivers
-                  </Button>
-                  {drivers.map((driver) => (
+                {reportType === "staff" && (
+                  <div className="flex flex-wrap gap-2">
                     <Button
-                      key={driver.id}
-                      variant={selectedDriverId === driver.id.toString() ? "default" : "outline"}
-                      onClick={() => handleDriverButtonClick(driver.id.toString())}
+                      variant={selectedStaffId === null ? "default" : "outline"}
+                      onClick={() => handleStaffButtonClick(null)}
                     >
-                      {driver.username}
+                      All Staff
                     </Button>
-                  ))}
-                </div>
-              )}
+                    {staffUsers.map((staff) => (
+                      <Button
+                        key={staff.id}
+                        variant={selectedStaffId === staff.id ? "default" : "outline"}
+                        onClick={() => handleStaffButtonClick(staff.id)}
+                      >
+                        {staff.username}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+
+                {reportType === "driver" && (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={selectedDriverId === null ? "default" : "outline"}
+                      onClick={() => handleDriverButtonClick(null)}
+                    >
+                      All Drivers
+                    </Button>
+                    {drivers.map((driver) => (
+                      <Button
+                        key={driver.id}
+                        variant={selectedDriverId === driver.id.toString() ? "default" : "outline"}
+                        onClick={() => handleDriverButtonClick(driver.id.toString())}
+                      >
+                        {driver.username}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <TabsContent value="sales" className="space-y-4">
                 <ReportTable 

@@ -208,12 +208,12 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
 
       <div className="flex flex-col space-y-4 mb-6">
         {/* Status Buttons */}
-        <div className="flex flex-wrap justify-between space-x-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-none sm:flex sm:flex-wrap sm:justify-between sm:space-x-2 sm:gap-0">
           {["delivered", "pending", "cancelled"].map((status) => (
             <Button
               key={status}
               variant={activeStatus === status ? "default" : "outline"}
-              className="flex-grow"
+              className="w-full sm:w-auto sm:flex-grow"
               onClick={() => handleStatusClick(status as StatusType)}
             >
               {status.charAt(0).toUpperCase() + status.slice(1)}

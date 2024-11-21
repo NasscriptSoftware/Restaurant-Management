@@ -547,12 +547,13 @@ const DishesPage: React.FC = () => {
         </div>
         {orderItems.length > 0 && (
           <div
-            className={`w-full flex md:justify-center items-center md:items-start flex-col md:flex-row lg:w-[550px] bg-white p-8 mt-2 ${isOrderVisible ? "block" : "hidden lg:block"
-              }`}
+            className={`w-full lg:w-[550px] bg-white p-4 md:p-8 mt-2 ${
+              isOrderVisible ? "block" : "hidden lg:block"
+            }`}
           >
-            <div className="sticky top-0 max-h-[100vh] overflow-y-auto hidden-scrollbar px-2">
+            <div className="w-full sticky top-0 max-h-[100vh] overflow-y-auto hidden-scrollbar px-0 md:px-2">
               <h2 className="text-2xl font-bold mb-4">New Order</h2>
-              <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 invisible-scrollbar">
+              <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-0 md:pr-2 invisible-scrollbar w-full">
                 {orderItems.map((item) => (
                   <OrderItem
                     key={item.id}
@@ -572,20 +573,21 @@ const DishesPage: React.FC = () => {
                   />
                 ))}
               </div>
-              <div className="mt-8">
-                <div className="flex justify-between mb-2">
+              <div className="mt-8 w-full">
+                <div className="flex justify-between mb-2 w-full">
                   <span>Subtotal</span>
                   <span>QAR {subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between font-bold">
+                <div className="flex justify-between font-bold w-full">
                   <span>Total</span>
                   <span>QAR {total.toFixed(2)}</span>
                 </div>
               </div>
-              <div className="mt-8">
+              <div className="mt-8 w-full">
                 <RadioGroup
                   value={orderType}
                   onValueChange={(value) => setOrderType(value as OrderType)}
+                  className="w-full"
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem
@@ -631,11 +633,11 @@ const DishesPage: React.FC = () => {
               </div>
 
               {orderType === "onlinedelivery" && (
-                <div className="mt-4">
+                <div className="mt-4 w-full">
                   <Label className="text-sm font-medium mb-2 block">
                     Select Online Order Platform
                   </Label>
-                  <Command className="rounded-lg border shadow-sm">
+                  <Command className="rounded-lg border shadow-sm w-full">
                     <CommandInput
                       placeholder="Search platforms..."
                       className="h-9"
@@ -678,8 +680,8 @@ const DishesPage: React.FC = () => {
                 </div>
               )}
               {orderType === "delivery" && (
-                <>
-                  <div className="mt-4 flex flex-col gap-2">
+                <div className="w-full">
+                  <div className="mt-4 flex flex-col gap-2 w-full">
                     <Label className="text-sm font-medium mb-2 block">
                       Select Customer
                     </Label>
@@ -688,10 +690,10 @@ const DishesPage: React.FC = () => {
                       placeholder="Search Customer..."
                       value={customerSearchQuery}
                       onChange={(e) => setCustomerSearchQuery(e.target.value)}
-                      className="h-9"
+                      className="h-9 w-full"
                     />
                     {customers.length > 0 ? (
-                      <ul className="mt-2 border rounded-md shadow-sm">
+                      <ul className="mt-2 border rounded-md shadow-sm w-full">
                         {customers.map((customer) => (
                           <li
                             key={customer.id}
@@ -707,103 +709,122 @@ const DishesPage: React.FC = () => {
                         <p className="mt-2 text-sm text-gray-500">No customers found</p>
                       )
                     )}
-                    <Label htmlFor="customerName">Customer Name</Label>
-                    <Input
-                      id="customerName"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="Enter customer name"
-                    />
-                  </div>
-                  <div className="mt-4 flex flex-col gap-2">
-                    <Label htmlFor="deliveryAddress">Delivery Address</Label>
-                    <Input
-                      id="deliveryAddress"
-                      value={deliveryAddress}
-                      onChange={(e) => setDeliveryAddress(e.target.value)}
-                      placeholder="Enter delivery address"
-                    />
-                  </div>
-                  <div className="mt-4 flex flex-col gap-2">
-                    <Label htmlFor="customerMobileNumber">
-                      Customer Number
-                    </Label>
-                    <Input
-                      id="customerMobileNumber"
-                      value={customerMobileNumber}
-                      onChange={(e) => setCustomerMobileNumber(e.target.value)}
-                      placeholder="Enter customer contact number"
-                    />
-                  </div>
-                  <div className="mt-4 flex flex-col gap-2">
-                    <Label htmlFor="deliveryCharge">Delivery Charge</Label>
-                    <Input
-                      id="deliveryCharge"
-                      value={deliveryCharge}
-                      onChange={(e) => setDeliveryCharge(e.target.value)}
-                      placeholder="Enter delivery charge"
-                    />
-                  </div>
-                  <div className="mt-4">
-                    <Label>Select Delivery Driver</Label>
-                    <Popover
-                      open={openDriverSelect}
-                      onOpenChange={setOpenDriverSelect}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openDriverSelect}
-                          className="w-full justify-between"
+                    <div className="w-full space-y-4">
+                      <div className="flex flex-col gap-2 w-full">
+                        <Label htmlFor="customerName">Customer Name</Label>
+                        <Input
+                          id="customerName"
+                          value={customerName}
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          placeholder="Enter customer name"
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2 w-full">
+                        <Label htmlFor="deliveryAddress">Delivery Address</Label>
+                        <Input
+                          id="deliveryAddress"
+                          value={deliveryAddress}
+                          onChange={(e) => setDeliveryAddress(e.target.value)}
+                          placeholder="Enter delivery address"
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2 w-full">
+                        <Label htmlFor="customerMobileNumber">
+                          Customer Number
+                        </Label>
+                        <Input
+                          id="customerMobileNumber"
+                          value={customerMobileNumber}
+                          onChange={(e) => setCustomerMobileNumber(e.target.value)}
+                          placeholder="Enter customer contact number"
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2 w-full">
+                        <Label htmlFor="deliveryCharge">Delivery Charge</Label>
+                        <Input
+                          id="deliveryCharge"
+                          value={deliveryCharge}
+                          onChange={(e) => setDeliveryCharge(e.target.value)}
+                          placeholder="Enter delivery charge"
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="mt-4">
+                        <Label>Select Delivery Driver</Label>
+                        <Popover
+                          open={openDriverSelect}
+                          onOpenChange={setOpenDriverSelect}
                         >
-                          {selectedDriver
-                            ? selectedDriver.username
-                            : "Select driver..."}{" "}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full m-10">
-                        <Command>
-                          <CommandInput placeholder="Search drivers..." />
-                          <CommandList>
-                            <CommandEmpty>No driver found.</CommandEmpty>
-                            <CommandGroup>
-                              {deliveryDriversList?.results.map((driver) => (
-                                <CommandItem
-                                  key={driver.id}
-                                  value={driver.username}
-                                  onSelect={() => {
-                                    setSelectedDriver(driver);
-                                    setOpenDriverSelect(false);
-                                  }}
-                                >
-                                  <Check
-                                    className={`mr-2 h-4 w-4 ${selectedDriver?.id === driver.id
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                      }`}
-                                  />
-                                  {driver.username}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openDriverSelect}
+                              className="w-full justify-between"
+                            >
+                              {selectedDriver
+                                ? selectedDriver.username
+                                : "Select driver..."}{" "}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full m-10">
+                            <Command>
+                              <CommandInput placeholder="Search drivers..." />
+                              <CommandList>
+                                <CommandEmpty>No driver found.</CommandEmpty>
+                                <CommandGroup>
+                                  {deliveryDriversList?.results.map((driver) => (
+                                    <CommandItem
+                                      key={driver.id}
+                                      value={driver.username}
+                                      onSelect={() => {
+                                        setSelectedDriver(driver);
+                                        setOpenDriverSelect(false);
+                                      }}
+                                    >
+                                      <Check
+                                        className={`mr-2 h-4 w-4 ${selectedDriver?.id === driver.id
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                          }`}
+                                      />
+                                      {driver.username}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </div>
+                    {error && (
+                      <Alert variant="destructive" className="mt-4">
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    )}
+                    <Button className="w-full my-6" onClick={handleCheckout}>
+                      Checkout
+                    </Button>
                   </div>
-                </>
+                </div>
               )}
-
-              {error && (
-                <Alert variant="destructive" className="mt-4">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
+              {orderType !== "delivery" && (
+                <div className="mt-4 w-full">
+                  {error && (
+                    <Alert variant="destructive" className="mt-4">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  <Button className="w-full my-6" onClick={handleCheckout}>
+                    Checkout
+                  </Button>
+                </div>
               )}
-              <Button className="w-full my-6" onClick={handleCheckout}>
-                Checkout
-              </Button>
             </div>
           </div>
         )}

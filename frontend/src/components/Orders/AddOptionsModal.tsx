@@ -93,61 +93,106 @@ const AddOptionsModal: React.FC<AddOptionsModalProps> = ({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="border-b pb-4">
-          <div className="flex justify-between items-center">
-            <DialogTitle className="text-2xl font-bold">Add FOC to Order</DialogTitle>
-            <Badge variant="secondary" className="text-lg mt-2">Order ID: #{orderId}</Badge>
+      <DialogContent className="sm:max-w-[800px] h-[95vh] sm:h-[90vh] w-[95vw] overflow-hidden flex flex-col p-2 sm:p-6">
+        <DialogHeader className="border-b pb-2 sm:pb-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+            <DialogTitle className="text-lg sm:text-2xl font-bold">Add FOC to Order</DialogTitle>
+            <Badge variant="secondary" className="text-sm sm:text-lg w-fit">
+              Order ID: #{orderId}
+            </Badge>
           </div>
         </DialogHeader>
-        <div className="flex-grow overflow-hidden flex flex-col py-4">
-          <div className="mb-4 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+
+        <div className="flex-1 overflow-hidden flex flex-col py-2 sm:py-4">
+          <div className="mb-2 sm:mb-4 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Search FOC products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-10"
+              className="pl-9 pr-8 h-9 text-sm"
             />
             {searchTerm && (
               <Button
                 onClick={() => setSearchTerm("")}
                 variant="ghost"
                 size="sm"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
               >
                 <X className="h-4 w-4" />
               </Button>
             )}
           </div>
-          <div className="flex-grow overflow-hidden flex gap-6">
-            <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
-              <h4 className="text-lg font-semibold mb-3">Available FOC Products</h4>
-              <div className="grid grid-cols-1 gap-3">
+
+          <div className="flex-1 overflow-hidden flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 min-h-[200px] sm:min-h-0">
+              <h4 className="text-sm sm:text-lg font-semibold mb-2">Available FOC Products</h4>
+              <div className="h-[30vh] sm:h-auto overflow-y-auto custom-scrollbar pr-2">
+                <div className="grid grid-cols-1 gap-2">
+                  <AnimatePresence>
+                    {filteredFocProducts.map((item) => (
+                      <motion.div
+                        key={item.id}
+                        layout
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.2 }}
+                        className="bg-white p-2 sm:p-4 rounded-lg shadow-sm border border-gray-200 group"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex-1 min-w-0 mr-2">
+                            <h3 className="font-semibold text-sm sm:text-base truncate">{item.name}</h3>
+                            <p className="text-xs text-gray-600">Quantity: {item.quantity}</p>
+                          </div>
+                          <Button
+                            onClick={() => handleAddOption(item)}
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 sm:px-3"
+                          >
+                            <Plus className="h-4 w-4" />
+                            <span className="hidden sm:inline ml-1">Add</span>
+                          </Button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 min-h-[200px] sm:min-h-0">
+              <h4 className="text-sm sm:text-lg font-semibold mb-2 flex items-center">
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Added Options
+                <Badge variant="secondary" className="ml-2 text-xs">{addedOptions.length}</Badge>
+              </h4>
+              <div className="h-[30vh] sm:h-auto overflow-y-auto custom-scrollbar pr-2">
                 <AnimatePresence>
-                  {filteredFocProducts.map((item) => (
+                  {addedOptions.map((item) => (
                     <motion.div
                       key={item.id}
                       layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.2 }}
-                      className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-all border border-gray-200 group"
-                      onClick={() => handleAddOption(item)}
+                      className="bg-white p-2 sm:p-4 rounded-lg shadow-sm mb-2 border border-gray-200"
                     >
                       <div className="flex justify-between items-center">
-                        <div>
-                          <h3 className="font-semibold text-lg group-hover:text-blue-600 transition-colors">{item.name}</h3>
-                          <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                        <div className="flex-1 min-w-0 mr-2">
+                          <h3 className="font-semibold text-sm sm:text-base truncate">{item.name}</h3>
+                          <p className="text-xs text-gray-600">Quantity: {item.quantity}</p>
                         </div>
                         <Button
-                          onClick={() => handleAddOption(item)}
-                          variant="outline"
+                          onClick={() => handleRemoveOption(item.id)}
+                          variant="ghost"
                           size="sm"
-                          className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="text-red-500 hover:text-red-700 h-8 px-2 sm:px-3"
                         >
-                          <Plus className="h-4 w-4 mr-1" /> Add
+                          <Minus className="h-4 w-4" />
+                          <span className="hidden sm:inline ml-1">Remove</span>
                         </Button>
                       </div>
                     </motion.div>
@@ -155,54 +200,21 @@ const AddOptionsModal: React.FC<AddOptionsModalProps> = ({
                 </AnimatePresence>
               </div>
             </div>
-            <div className="w-px bg-gray-200" />
-            <div className="flex-1 overflow-y-auto pl-4 custom-scrollbar">
-              <h4 className="text-lg font-semibold mb-3 flex items-center">
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                Added Options
-                <Badge variant="secondary" className="ml-2">{addedOptions.length}</Badge>
-              </h4>
-              <AnimatePresence>
-                {addedOptions.map((item) => (
-                  <motion.div
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
-                    className="bg-white p-4 rounded-lg shadow-sm mb-3 border border-gray-200 group hover:bg-gray-50 transition-all z-10 hover:z-20 hover:shadow-md"
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                        <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                      </div>
-                      <Button
-                        onClick={() => handleRemoveOption(item.id)}
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
-                      >
-                        <Minus className="h-4 w-4 mr-1" /> Remove
-                      </Button>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
           </div>
         </div>
-        <DialogFooter className="border-t pt-4">
-          <Button onClick={onClose} variant="outline">
+
+        <DialogFooter className="border-t pt-2 sm:pt-4 flex flex-col sm:flex-row gap-2 sm:gap-2 mt-2">
+          <Button onClick={onClose} variant="outline" className="w-full sm:w-auto text-sm">
             Cancel
           </Button>
           <Button 
             onClick={handleFinalSubmit} 
             variant="default"
             disabled={addedOptions.length === 0}
+            className="w-full sm:w-auto text-sm"
           >
-            Add {addedOptions.length} {addedOptions.length === 1 ? 'FOC PRODUCT' : 'FOC PRODUCTS'} TO ORDER
+            Add {addedOptions.length} FOC
+            <span className="hidden sm:inline"> PRODUCT{addedOptions.length !== 1 ? 'S' : ''}</span>
           </Button>
         </DialogFooter>
       </DialogContent>

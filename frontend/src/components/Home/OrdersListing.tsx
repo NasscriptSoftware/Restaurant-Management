@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, Truck } from "lucide-react";
+import { ChevronDown, ChevronUp, Truck, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -129,7 +129,7 @@ const OrdersListing: React.FC<OrdersListingProps> = ({
               className="bg-white p-4 rounded-lg shadow-md border border-gray-200"
             >
               <div
-                className="flex justify-between items-center cursor-pointer"
+                className="flex flex-col sm:flex-row justify-between items-start sm:items-center cursor-pointer gap-2 sm:gap-0"
                 onClick={() => toggleOrderExpansion(order.id)}
               >
                 <div>
@@ -140,19 +140,21 @@ const OrdersListing: React.FC<OrdersListingProps> = ({
                 </div>
                 
                 {order.order_type === "delivery" && (
-                  <div className="flex items-center gap-2 bg-blue-100 px-3 py-1.5 rounded-md">
-                    <Truck size={16} className="text-blue-800" />
-                    <span className="text-sm  text-blue-600">Delivery Driver:</span>
-                    <span className="text-sm font-medium text-blue-600">
+                  <div className="flex items-center flex-wrap gap-2 bg-blue-100 px-3 py-1.5 rounded-md w-full sm:w-auto">
+                    <div className="flex items-center gap-2">
+                      <Truck size={16} className="text-blue-800" />
+                      <span className="text-[12px] sm:text-sm text-blue-600">Delivery Driver:</span>
+                    </div>
+                    <span className="text-[12px] sm:text-sm font-medium text-blue-600 break-all">
                       {order.delivery_driver?.username || 'Not Assigned'}
                     </span>
                   </div>
                 )}
-                <div className="flex items-center space-x-4 capitalize">
+                <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto space-x-4 capitalize">
                   <Badge className={getStatusColor(order.status)}>
                     {order.status}
                   </Badge>
-                  <p className="font-semibold">
+                  <p className="font-semibold  sm:text-base font-semibold">
                     QAR {Number(order.total_amount).toFixed(2)}
                   </p>
                   {expandedOrder === order.id ? (
@@ -190,15 +192,18 @@ const OrdersListing: React.FC<OrdersListingProps> = ({
         </AnimatePresence>
       </motion.ul>
       {filteredOrders && filteredOrders.length > ordersPerPage && (
-        <div className="flex justify-between mt-6">
+        <div className="flex justify-between items-center mt-6">
           <Button
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
             variant="outline"
+            size="icon"
+            className="h-8 w-8 sm:h-10 sm:w-auto"
           >
-            Previous
+            <ChevronLeft className="h-4 w-4 sm:hidden" />
+            <span className="w-[100px] hidden sm:inline">Previous</span>
           </Button>
-          <span className="flex items-center">
+          <span className="text-sm sm:text-base flex items-center">
             Page {currentPage} of{" "}
             {Math.ceil(filteredOrders.length / ordersPerPage)}
           </span>
@@ -208,8 +213,11 @@ const OrdersListing: React.FC<OrdersListingProps> = ({
               currentPage >= Math.ceil(filteredOrders.length / ordersPerPage)
             }
             variant="outline"
+            size="icon"
+            className="h-8 w-8 sm:h-10 sm:w-auto"
           >
-            Next
+            <ChevronRight className="h-4 w-4 sm:hidden" />
+            <span className=" w-[100px] hidden sm:inline">Next</span>
           </Button>
         </div>
       )}

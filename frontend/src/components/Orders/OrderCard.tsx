@@ -625,129 +625,135 @@ const OrderCard: React.FC<OrderCardProps> = ({
       key={order.id}
       className="bg-white p-6 rounded-lg shadow mb-6 border border-gray-200"
     >
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            checked={selectedOrders.includes(Number(order.id))}
-            onChange={handleOrderSelection}
-            className="mr-4 w-6 h-6 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-          />
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
-            Order #{order.id}
-          </h2>
-        </div>
+      <div className="flex flex-col space-y-4 md:space-y-0 mb-4">
+        {/* Top Section - Order ID and Actions */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center">
+          {/* Order ID and Checkbox */}
+          <div className="flex items-center mb-4 md:mb-0">
+            <input
+              type="checkbox"
+              checked={selectedOrders.includes(Number(order.id))}
+              onChange={handleOrderSelection}
+              className="mr-4 w-6 h-6 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <h2 className="text-lg font-semibold text-gray-800">
+              Order #{order.id}
+            </h2>
+          </div>
 
-        <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3 mt-4 sm:mt-0">
-          <div>
+          {/* Action Buttons Container */}
+          <div className="flex flex-wrap md:flex-nowrap gap-2 md:items-center">
+            {/* FOC Button */}
             <button
               onClick={() => setShowAddOptionsModal(true)}
               disabled={status === "delivered"}
-              className={`text-gray-700 focus:outline-none ${
+              className={`flex items-center justify-center px-3 py-2 rounded-lg border ${
                 status === "delivered"
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:text-red-500"
+                  ? "opacity-50 cursor-not-allowed border-gray-200"
+                  : "border-red-200 hover:bg-red-50"
               }`}
               title="Add Options"
             >
               <Coffee
-                size={30}
+                size={20}
                 className={`${
                   status !== "delivered" ? "animate-pulse" : ""
-                } text-red-500`}
+                } text-red-500 mr-2`}
               />
-              <span className="text-red-500">FOC</span>
+              <span className="text-red-500 text-sm">FOC</span>
+            </button>
+
+            {/* Print Kitchen Bill Button */}
+            {status === "approved" && (
+              <button
+                onClick={handlePrintKitchenBill}
+                className="flex items-center justify-center px-3 py-2 rounded-lg border border-blue-200 hover:bg-blue-50"
+                title="Print Kitchen Bill"
+              >
+                <svg
+                  className="w-5 h-5  text-blue-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 9V2h12v7M6 18h12v5H6v-5zm2-3h8v3H8v-3zM6 11h12v4H6v-4z"
+                  ></path>
+                </svg>
+              </button>
+            )}
+
+            {/* Print Sales Bill Button */}
+            {status === "delivered" && (
+              <button
+                onClick={handlePrintSalesBill}
+                className="flex items-center justify-center px-3 py-2 rounded-lg border border-green-200 hover:bg-green-50"
+                title="Print Sales Bill"
+              >
+                <svg
+                  className="w-5 h-5  text-green-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 9V2h12v7M6 18h12v5H6v-5zm2-3h8v3H8v-3zM6 11h12v4H6v-4z"
+                  ></path>
+                </svg>
+              </button>
+            )}
+
+            {/* Status Select */}
+            <select
+              value={status}
+              onChange={handleStatusChange}
+              className="px-3 py-2 text-sm border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[120px]"
+              disabled={status === "delivered" || status === "cancelled"}
+            >
+              <option value="pending" disabled={status === "approved"}>
+                Pending
+              </option>
+              <option value="approved">Kitchen Bill</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="delivered">Order Success</option>
+            </select>
+
+            {/* Add Product Button */}
+            <button
+              onClick={() => setShowAddProductModal(true)}
+              className={`flex items-center justify-center px-4 py-2 rounded-lg transition 
+                ${
+                  status === "delivered" || status === "cancelled"
+                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                    : "bg-[#6f42c1] text-white hover:bg-[#6f42c1]/90"
+                }`}
+              disabled={status === "delivered" || status === "cancelled"}
+            >
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 4v16m8-8H4"
+                ></path>
+              </svg>
+              <span className="text-sm">Add Product</span>
             </button>
           </div>
-
-          {/* Print Icon for Kitchen Bill */}
-          {status === "approved" && (
-            <button
-              onClick={handlePrintKitchenBill}
-              className="text-gray-700 hover:text-blue-500 focus:outline-none"
-              title="Print Kitchen Bill"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 9V2h12v7M6 18h12v5H6v-5zm2-3h8v3H8v-3zM6 11h12v4H6v-4z"
-                ></path>
-              </svg>
-            </button>
-          )}
-
-          {/* Print Icon for Sales Bill */}
-          {status === "delivered" && (
-            <button
-              onClick={handlePrintSalesBill}
-              className="text-green-500 hover:text-gray-700 focus:outline-none"
-              title="Print Sales Bill"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 9V2h12v7M6 18h12v5H6v-5zm2-3h8v3H8v-3zM6 11h12v4H6v-4z"
-                ></path>
-              </svg>
-            </button>
-          )}
-
-          <select
-            value={status}
-            onChange={handleStatusChange}
-            className="border rounded-md p-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={status === "delivered" || status === "cancelled"}
-          >
-            <option value="pending" disabled={status === "approved"}>
-              Pending
-            </option>
-            <option value="approved">Kitchen Bill</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="delivered">Order Success</option>
-          </select>
-
-          <button
-            onClick={() => setShowAddProductModal(true)}
-            className={`w-full sm:w-auto px-4 py-2 rounded-md flex items-center transition 
-    ${
-      status === "delivered" || status === "cancelled"
-        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-        : "bg-[#6f42c1] text-white hover:bg-[#6f42c1]"
-    }`}
-            disabled={status === "delivered" || status === "cancelled"}
-          >
-            <svg
-              className="w-5 h-5 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 4v16m8-8H4"
-              ></path>
-            </svg>
-            Add Product
-          </button>
         </div>
       </div>
 
@@ -806,13 +812,13 @@ const OrderCard: React.FC<OrderCardProps> = ({
             )}
         </div>
       </div>
-      <div className="mt-4 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
+      <div className="mt-4 flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
+        <div className="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-2">
           {order?.order_type === "delivery" && (
             <>
               <Button
                 variant="outline"
-                className={`font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105 ${
+                className={`w-full md:w-auto font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-3 transform hover:scale-105 ${
                   order.status === "delivered" ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 onClick={() => setShowDeliveryInfoModal(true)}
@@ -893,7 +899,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           {order?.order_type === "dining" && (
             <Button
               variant="outline"
-              className={`font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105 ${
+              className={`w-full md:w-auto font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-3 transform hover:scale-105 ${
                 order.status === "delivered"
                   ? "opacity-50 cursor-not-allowed"
                   : ""
@@ -916,7 +922,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           {order?.order_type === "takeaway" && (
             <Button
               variant="outline"
-              className={`font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105 ${
+              className={`w-full md:w-auto font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-3 transform hover:scale-105 ${
                 order.status === "delivered"
                   ? "opacity-50 cursor-not-allowed"
                   : ""
@@ -938,10 +944,10 @@ const OrderCard: React.FC<OrderCardProps> = ({
             </Button>
           )}
           {order?.order_type === "onlinedelivery" && onlineOrderData && (
-            <div className="flex items-center space-x-2">
+            <div className="w-full md:w-auto">
               <Button
                 variant="outline"
-                className="font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-3 transform hover:scale-105"
+                className="w-full font-semibold text-sm px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-200 to-amber-300 text-amber-800 hover:from-amber-300 hover:to-amber-400 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-3 transform hover:scale-105"
               >
                 <Bike size={18} className="animate-bounce" />
                 <span className="tracking-wide">{onlineOrderData.name}</span>
@@ -950,7 +956,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                     <img
                       src={onlineOrderData.logo}
                       alt={`${onlineOrderData.name} logo`}
-                      className="w-full h-full object-contain  "
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 )}
@@ -960,11 +966,10 @@ const OrderCard: React.FC<OrderCardProps> = ({
           {order?.order_type === "dining" && (
             <Button
               variant="outline"
-              className={`
-                font-semibold text-sm px-5 py-2.5 rounded-full
+              className={`w-full md:w-auto font-semibold text-sm px-5 py-2.5 rounded-full
                 bg-gradient-to-r from-purple-200 to-purple-300 text-purple-800
-                hover:from-                transition-all duration-300 shadow-md hover:shadow-lg
-                flex items-center gap-3 transform hover:scale-105
+                hover:from-purple-300 hover:to-purple-400 transition-all duration-300 shadow-md hover:shadow-lg
+                flex items-center justify-center gap-3 transform hover:scale-105
                 ${
                   (order.chair_details && order.chair_details.length > 0) ||
                   order.status === "delivered"
@@ -991,20 +996,21 @@ const OrderCard: React.FC<OrderCardProps> = ({
             </Button>
           )}
         </div>
-        <div className="mt-6 bg-gray-50 rounded-lg p-4 shadow-inner">
+
+        <div className="w-full md:w-auto bg-gray-50 rounded-lg p-4 shadow-inner">
           <div className="flex flex-col space-y-2">
             {order.order_type === "dining" &&
             order.chair_amount &&
             parseFloat(order.chair_amount) > 0 ? (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-between md:justify-start md:space-x-2">
                 <Banknote
-                  size={24}
-                  className=" text-purple-600 animate-pulse"
+                  size={20}
+                  className="text-purple-600 animate-pulse"
                 />
-                <span className="text-base font-medium text-gray-700">
+                <span className="text-sm md:text-base font-medium text-gray-700">
                   Chair Amount:
                 </span>
-                <span className="text-lg font-semibold text-purple-600">
+                <span className="text-sm md:text-lg font-semibold text-purple-600">
                   QAR {parseFloat(order.chair_amount).toFixed(2)}
                 </span>
               </div>
@@ -1013,24 +1019,23 @@ const OrderCard: React.FC<OrderCardProps> = ({
             order.delivery_charge &&
             parseFloat(order.delivery_charge.toString()) > 0 ? (
               <div className="flex items-center space-x-2">
-                <Banknote size={24} className="text-green-500 animate-pulse" />
-                <span className="text-base font-medium text-gray-700">
+                <Bike size={20} className="text-green-500 animate-pulse" />
+                <span className="text-sm md:text-base font-medium text-gray-700">
                   Delivery Charge:
                 </span>
-                <span className="text-xl font-bold text-green-600">
+                <span className="text-sm md:text-xl font-bold text-green-600">
                   QAR {order.delivery_charge.toString()}
                 </span>
               </div>
             ) : null}
 
             <div className="flex items-center space-x-2">
-              <Banknote size={24} className="text-green-500 animate-pulse" />
-              <span className="text-base font-medium text-gray-700">
+              <Banknote size={20} className="text-green-500 animate-pulse" />
+              <span className="text-sm md:text-base font-medium text-gray-700">
                 Total Amount:
               </span>
-              <span className="text-xl font-bold text-green-600">
-                QAR{" "}
-                {parseFloat((order?.total_amount || 0).toString()).toFixed(2)}
+              <span className="text-sm md:text-xl font-bold text-green-600">
+                QAR {parseFloat((order?.total_amount || 0).toString()).toFixed(2)}
               </span>
             </div>
           </div>

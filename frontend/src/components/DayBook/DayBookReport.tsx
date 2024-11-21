@@ -103,8 +103,8 @@ const DayBookReport: React.FC = () => {
       <h1 className="text-2xl font-bold mb-2 sm:mb-0">DayBook Report</h1>
 
       <div className="bg-white p-6 shadow-md rounded-lg mb-6">
-        <div className="flex flex-wrap gap-4 items-end"> {/* Use flex here */}
-          <div className="flex-1">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-end">
+          <div className="w-full sm:flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
             <input
               type="date"
@@ -114,7 +114,7 @@ const DayBookReport: React.FC = () => {
             />
           </div>
 
-          <div className="flex-1">
+          <div className="w-full sm:flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
             <input
               type="date"
@@ -124,20 +124,22 @@ const DayBookReport: React.FC = () => {
             />
           </div>
 
-          <button
-            onClick={handleSearch}
-            disabled={isSearching}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition duration-300 ease-in-out disabled:opacity-50"
-          >
-            {isSearching ? "Searching..." : "Search"}
-          </button>
+          <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={handleSearch}
+              disabled={isSearching}
+              className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition duration-300 ease-in-out disabled:opacity-50"
+            >
+              {isSearching ? "Searching..." : "Search"}
+            </button>
 
-          <button
-            onClick={handleCreateModalOpen}
-            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition duration-300 ease-in-out"
-          >
-            Create Cash Count Sheet
-          </button>
+            <button
+              onClick={handleCreateModalOpen}
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition duration-300 ease-in-out text-sm sm:text-base"
+            >
+              Create Cash Count Sheet
+            </button>
+          </div>
         </div>
       </div>
 
