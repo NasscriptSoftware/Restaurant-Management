@@ -53,7 +53,7 @@ const OrdersPage: React.FC = () => {
     companyNameArabic: string;
     printLogo: string;
     locationArabic: string; 
-      
+    company_mail: string;
   } | null>(null);
   const [chairs, setChairs] = useState<Chair[]>([]);
 
@@ -90,6 +90,7 @@ const OrdersPage: React.FC = () => {
             landlineNumber: results[0].landline_number,
             printLogo: results[0].print_logo,
             locationArabic: results[0].location_arabic,
+            company_mail: results[0].company_mail,
           };
           setLogoInfo(logoData);
         } else {

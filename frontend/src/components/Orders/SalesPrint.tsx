@@ -2,7 +2,7 @@ import React from "react";
 import { Order, Dish } from "../../types/index";
 import { QRCodeSVG } from "qrcode.react";
 import { fetchDishSizes } from "../../services/api";
-import { Phone, MapPin } from "lucide-react";
+import { Phone, MapPin, Mail } from "lucide-react";
 import { GiRotaryPhone } from "react-icons/gi";
 
 interface SalesPrintProps {
@@ -18,6 +18,7 @@ interface SalesPrintProps {
     companyNameArabic: string;
     printLogo: string;
     locationArabic: string;
+    company_mail: string;
   } | null;
 }
 
@@ -44,13 +45,13 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
 
   const totalQuantity = Array.isArray(order?.items)
     ? order.items.reduce(
-      (total, item) =>
-        total +
-        (typeof item.quantity === "number"
-          ? item.quantity
-          : parseFloat(item.quantity)),
-      0
-    )
+        (total, item) =>
+          total +
+          (typeof item.quantity === "number"
+            ? item.quantity
+            : parseFloat(item.quantity)),
+        0
+      )
     : 0;
 
   const [dishSizes, setDishSizes] = React.useState<{
@@ -86,53 +87,72 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
             <img
               src={logoInfo.printLogo}
               alt="Logo"
-              className="h-10 w-auto mb-3 object-contain"
+              className="h-12 w-auto mb-4 object-contain"
             />
           )}
-          <div className="text-center">
-            <h1 className="text-md font-bold uppercase mb-2">
+          <div className="text-center w-full">
+            <h1 className="text-lg font-bold uppercase mb-3">
               {logoInfo?.companyName} / {logoInfo?.companyNameArabic}
             </h1>
-            {logoInfo?.landlineNumber && (<div className="text-sm space-y-2">
-              <p className="text-center flex items-center justify-center">
-                <GiRotaryPhone size={16} className="mr-2 text-gray-600" />
-                <span>{logoInfo?.landlineNumber}</span>
-              </p>
-            </div>)}
-              <div className="flex justify-between mt-4 gap-4">
-                <p className="flex items-center">
-                  <Phone size={16} className="mr-2 text-gray-600" />
-                  <span>{logoInfo?.mobileNumber}</span>
-                </p>
-                <p className="flex items-center">
-                  <Phone size={16} className="mr-2 text-gray-600" />
-                  <span>{logoInfo?.phoneNumber}</span>
-                </p>
+            <div className="grid grid-cols-1 gap-2 mb-3">
+              {logoInfo?.landlineNumber && (
+                <div className="flex items-center justify-center space-x-2">
+                  <GiRotaryPhone size={16} className="text-gray-700" />
+                  <span className="font-medium">{logoInfo?.landlineNumber}</span>
+                </div>
+              )}
+              <div className="flex justify-center space-x-4">
+                {logoInfo?.mobileNumber && (
+                  <div className="flex items-center space-x-2">
+                    <Phone size={16} className="text-gray-700" />
+                    <span className="font-medium">{logoInfo?.mobileNumber}</span>
+                  </div>
+                )}
+                {logoInfo?.phoneNumber && (
+                  <div className="flex items-center space-x-2">
+                    <Phone size={16} className="text-gray-700" />
+                    <span className="font-medium">{logoInfo?.phoneNumber}</span>
+                  </div>
+                )}
               </div>
-
-            <div className="text-sm italic flex justify-between mt-4">
-              <MapPin size={16} className="mr-2 text-gray-600" />
-              <span className="text-right">
-                {logoInfo?.location?.split(" ").map((part, index) => (
-                  <React.Fragment key={index}>{part.trim()}</React.Fragment>
-                ))}
-              </span>
-              <span className="text-left">
-                {logoInfo?.locationArabic?.split(",").map((part, index) => (
-                  <React.Fragment key={index}>
-                    {part.trim()}
-                    <br />
-                  </React.Fragment>
-                ))}
-              </span>
+              {logoInfo?.company_mail && (
+                <div className="flex items-center justify-center space-x-2">
+                  <Mail size={16} className="text-gray-700" />
+                  <span className="font-medium">{logoInfo?.company_mail}</span>
+                </div>
+              )}
             </div>
+            {logoInfo?.location && (
+              <div className="flex items-start justify-between mt-3 px-2 pt-2 border-t border-gray-300">
+                <MapPin size={16} className="text-gray-700 mt-1" />
+                <div className="flex-1 flex justify-between px-2">
+                  <span className="text-right text-sm">
+                    {logoInfo?.location?.split(" ").map((part, index) => (
+                      <React.Fragment key={index}>
+                        {part.trim()}<br />
+                      </React.Fragment>
+                    ))}
+                  </span>
+                  <span className="text-left text-sm mr-2">
+                    {logoInfo?.locationArabic?.split(",").map((part, index) => (
+                      <React.Fragment key={index}>
+                        {part.trim()}<br />
+                      </React.Fragment>
+                    ))}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Order Info Section */}
       <div className="mb-4 pb-2 border-b border-black">
-        <h2 className=" font-medium capitalize">Order Type: <span className="font-bold capitalize" >{order.order_type}</span></h2>
+        <h2 className=" font-medium capitalize">
+          Order Type:{" "}
+          <span className="font-bold capitalize">{order.order_type}</span>
+        </h2>
         <p className="text-center font-bold text-lg">ORDER #{order.id}</p>
         <div className="flex justify-between">
           <span>Date: {formatDate(order.created_at)}</span>
@@ -177,8 +197,8 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
                     {sizeInfo
                       ? parseFloat(sizeInfo.price) * Number(item.quantity)
                       : dish
-                        ? parseFloat(String(dish.price)) * Number(item.quantity)
-                        : 0}
+                      ? parseFloat(String(dish.price)) * Number(item.quantity)
+                      : 0}
                   </span>
                 </div>
               );
@@ -220,7 +240,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
             <span>{order.chair_amount}</span>
           </div>
         )}
-        {order.order_type === 'delivery' && (
+        {order.order_type === "delivery" && (
           <div className="flex justify-between py-1">
             <span>Delivery Charge:</span>
             <span>QAR{order.delivery_charge}</span>

@@ -73,6 +73,7 @@ interface OrderCardProps {
     locationArabic: string;
     mobileNumber: string;
     landlineNumber: string;
+    company_mail: string;
   } | null;
   chairs: Chair[];
 }
