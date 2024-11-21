@@ -92,7 +92,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
           )}
           <div className="text-center w-full">
             <h1 className="text-lg font-bold uppercase mb-3">
-              {logoInfo?.companyName} / {logoInfo?.companyNameArabic}
+              {logoInfo?.companyName} {logoInfo?.companyNameArabic && (" / " + logoInfo?.companyNameArabic)}
             </h1>
             <div className="grid grid-cols-1 gap-2 mb-3">
               {logoInfo?.landlineNumber && (
