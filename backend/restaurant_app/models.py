@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
+from django.core.exceptions import ValidationError
 
 from transactions_app.models import MainGroup,Ledger
 from .utils import default_time_period
@@ -747,6 +748,7 @@ class Chairs(models.Model):
     - amount: The amount charged for the chair booking.
     - is_active: Indicates if the chair booking is currently active.
     - order: Reference to the related order.
+    - booked_date: The date when the chair was booked.
     """
     chair_name = models.CharField(max_length=100)
     customer_name = models.CharField(max_length=100,blank=True, null=True)
@@ -754,12 +756,79 @@ class Chairs(models.Model):
     start_time = models.DateTimeField(blank=True, null=True) 
     end_time = models.DateTimeField(blank=True, null=True) 
     amount = models.DecimalField(max_digits=8, decimal_places=2,null=True,blank=True)
-    
+    booked_date = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='chairs', blank=True, null=True)
 
     def __str__(self):
         return self.chair_name
+
+
+class ChairBooking(models.Model):
+    """
+    Model for managing chair bookings and their details.
+    
+    Fields:
+    -------
+    - selected_chair: Reference to the Chairs model
+    - customer_name: Name of the customer making the booking
+    - customer_mob: Mobile number of the customer
+    - booked_date: Date when the booking was made
+    - start_time: Start time of the booking
+    - end_time: End time of the booking
+    - amount: Amount charged for the booking
+    - status: Current status of the booking
+    """
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('cancelled', 'Cancelled'),
+        ('completed', 'Completed'),
+    ]
+    
+    selected_chair = models.ForeignKey(
+        Chairs, 
+        on_delete=models.CASCADE,
+        related_name='bookings'
+    )
+    customer_name = models.CharField(max_length=100)
+    customer_mob = models.CharField(max_length=15)
+    booked_date = models.DateField(auto_now_add=True)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+    
+    class Meta:
+        ordering = ['-booked_date', 'start_time']
+        
+    def __str__(self):
+        return f"Booking for {self.selected_chair.chair_name} by {self.customer_name}"
+    
+    def clean(self):
+        """
+        Custom validation to ensure:
+        1. End time is after start time
+        2. No overlapping bookings for the same chair
+        """
+        if self.end_time <= self.start_time:
+            raise ValidationError("End time must be after start time")
+            
+        # Check for overlapping bookings
+        overlapping_bookings = ChairBooking.objects.filter(
+            selected_chair=self.selected_chair,
+            status='confirmed',
+            start_time__lt=self.end_time,
+            end_time__gt=self.start_time
+        ).exclude(pk=self.pk)
+        
+        if overlapping_bookings.exists():
+            raise ValidationError("This time slot is already booked for this chair")
 
 
 

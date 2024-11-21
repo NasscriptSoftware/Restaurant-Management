@@ -607,6 +607,7 @@ class ChairsSerializer(serializers.ModelSerializer):
     - amount: The amount charged for the chair booking.
     - is_active: Indicates if the chair booking is currently active.
     - order: Reference to the related order.
+    - booked_date: The date when the chair was booked.
     """
     class Meta:
         model = Chairs
@@ -619,7 +620,8 @@ class ChairsSerializer(serializers.ModelSerializer):
             "end_time",
             "amount",
             "is_active",
-            "order"
+            "order",
+            "booked_date"
         ]
 
 
@@ -637,4 +639,49 @@ class FOCProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = FOCProduct
         fields = ['id', 'name', 'quantity']
+
+
+class ChairBookingSerializer(serializers.ModelSerializer):
+    chair_name = serializers.CharField(source='selected_chair.chair_name', read_only=True)
+    
+    class Meta:
+        model = ChairBooking
+        fields = [
+            'id',
+            'selected_chair',
+            'chair_name',
+            'customer_name',
+            'customer_mob',
+            'booked_date',
+            'start_time',
+            'end_time',
+            'amount',
+            'status'
+        ]
+        read_only_fields = ['booked_date']
+        
+    def validate(self, data):
+        """
+        Validate the booking data:
+        - Check if end_time is after start_time
+        - Check for booking conflicts
+        """
+        if data['end_time'] <= data['start_time']:
+            raise serializers.ValidationError("End time must be after start time")
+            
+        # Check for overlapping bookings
+        overlapping_bookings = ChairBooking.objects.filter(
+            selected_chair=data['selected_chair'],
+            status='confirmed',
+            start_time__lt=data['end_time'],
+            end_time__gt=data['start_time']
+        )
+        
+        if self.instance:
+            overlapping_bookings = overlapping_bookings.exclude(pk=self.instance.pk)
+            
+        if overlapping_bookings.exists():
+            raise serializers.ValidationError("This time slot is already booked for this chair")
+            
+        return data
 

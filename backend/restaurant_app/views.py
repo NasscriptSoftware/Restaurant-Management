@@ -1102,3 +1102,91 @@ class FOCProductViewSet(viewsets.ModelViewSet):
     queryset = FOCProduct.objects.all()
     serializer_class = FOCProductSerializer
     pagination_class = None
+
+class ChairBookingViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing chair bookings.
+    
+    Provides CRUD operations for chair bookings with additional endpoints for:
+    - Checking availability
+    - Confirming bookings
+    - Cancelling bookings
+    """
+    queryset = ChairBooking.objects.all()
+    serializer_class = ChairBookingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    @action(detail=False, methods=['GET'])
+    def check_availability(self, request):
+        """
+        Check chair availability for a given time period.
+        """
+        chair_id = request.query_params.get('chair_id')
+        start_time = request.query_params.get('start_time')
+        end_time = request.query_params.get('end_time')
+        
+        if not all([chair_id, start_time, end_time]):
+            return Response(
+                {"error": "chair_id, start_time, and end_time are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        try:
+            start_time = parse_datetime(start_time)
+            end_time = parse_datetime(end_time)
+        except ValueError:
+            return Response(
+                {"error": "Invalid datetime format"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        overlapping_bookings = ChairBooking.objects.filter(
+            selected_chair_id=chair_id,
+            status='confirmed',
+            start_time__lt=end_time,
+            end_time__gt=start_time
+        )
+        
+        is_available = not overlapping_bookings.exists()
+        
+        return Response({
+            "is_available": is_available,
+            "conflicting_bookings": ChairBookingSerializer(
+                overlapping_bookings, 
+                many=True
+            ).data if not is_available else []
+        })
+    
+    @action(detail=True, methods=['POST'])
+    def confirm_booking(self, request, pk=None):
+        """
+        Confirm a pending booking.
+        """
+        booking = self.get_object()
+        if booking.status != 'pending':
+            return Response(
+                {"error": "Only pending bookings can be confirmed"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        booking.status = 'confirmed'
+        booking.save()
+        
+        return Response(ChairBookingSerializer(booking).data)
+    
+    @action(detail=True, methods=['POST'])
+    def cancel_booking(self, request, pk=None):
+        """
+        Cancel a booking.
+        """
+        booking = self.get_object()
+        if booking.status == 'completed':
+            return Response(
+                {"error": "Completed bookings cannot be cancelled"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        booking.status = 'cancelled'
+        booking.save()
+        
+        return Response(ChairBookingSerializer(booking).data)

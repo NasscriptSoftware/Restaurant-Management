@@ -28,6 +28,7 @@ import {
   X,
   ChevronRight,
   ChevronLeft,
+  CalendarCheck ,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import LogoutBtn from "./LogoutBtn";
@@ -54,6 +55,7 @@ const iconMap = {
   chartcolumn: ChartColumn,
   calendarrange: CalendarRange,
   armchair: Armchair,
+  calendarcheck: CalendarCheck,
 };
 
 interface MenuItem {

@@ -17,6 +17,7 @@ import { DeliveryDriverOrdersPage } from "./pages/deliveryDriver/DeliveryDriverO
 import { DeliveryDriverProfile } from "./pages/deliveryDriver/DeliveryDriverProfile";
 import CreditUsersPage from "./pages/CreditUsersPage";
 import ChairsPage from "./pages/ChairsPage";
+import ChairBooking from "./pages/ChairBookingPage";
 
 const queryClient = new QueryClient();
 
@@ -145,6 +146,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={["admin"]}>
                       <SalesReportPage />
+                    </ProtectedRoute>
+                  }
+                />
+                 <Route
+                  path="/chair-booking"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin","staff"]}>
+                      <ChairBooking />
                     </ProtectedRoute>
                   }
                 />
