@@ -99,21 +99,21 @@ const LedgerReport: React.FC = () => {
   let runningCreditTotal = 0;
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-semibold mb-6">Transactions</h1>
+    <div className="p-2 md:p-6">
+      <h1 className="text-2xl md:text-3xl font-semibold mb-4 md:mb-6">Transactions</h1>
 
-      {/* Form Inputs */}
-      <div className="bg-white p-6 shadow-md rounded-lg mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Form Container */}
+      <div className="bg-white p-3 md:p-6 shadow-md rounded-lg mb-4 md:mb-6">
+        <div className="flex flex-col md:grid md:grid-cols-3 gap-4">
           {/* Select Account */}
-          <div className="col-span-1">
+          <div className="w-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Select Account
             </label>
             <select
               value={selectedLedger}
               onChange={(e) => setSelectedLedger(e.target.value)}
-              className="block w-full py-2 px-4 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none"
+              className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none text-sm"
             >
               <option value="">Select a ledger</option>
               {ledgers.map((ledger) => (
@@ -125,7 +125,7 @@ const LedgerReport: React.FC = () => {
           </div>
 
           {/* From Date */}
-          <div className="col-span-1">
+          <div className="w-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               From Date
             </label>
@@ -133,12 +133,12 @@ const LedgerReport: React.FC = () => {
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="block w-full py-2 px-4 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none"
+              className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none text-sm"
             />
           </div>
 
           {/* To Date */}
-          <div className="col-span-1">
+          <div className="w-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               To Date
             </label>
@@ -146,17 +146,17 @@ const LedgerReport: React.FC = () => {
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="block w-full py-2 px-4 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none"
+              className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none text-sm"
             />
           </div>
         </div>
 
         {/* Search Button */}
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-center md:justify-end mt-4">
           <button
             onClick={handleSearch}
             disabled={isSearching}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition duration-300 ease-in-out disabled:opacity-50"
+            className="w-full md:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition duration-300 ease-in-out disabled:opacity-50 text-sm"
           >
             {isSearching ? "Searching..." : "Search"}
           </button>

@@ -130,38 +130,42 @@ const BalanceSheet: React.FC = () => {
     return (
         <div className="p-4">
             {/* Search Form */}
-            <div className="bg-white p-6 shadow-md rounded-lg mb-6">
-                <div className="flex flex-col md:flex-row items-end gap-4">
+            <div className="bg-white p-4 sm:p-6 shadow-md rounded-lg mb-6">
+                <div className="flex flex-col space-y-4">
                     {/* From Date */}
-                    <div className="flex-1">
-                        <label htmlFor="fromDate" className="block text-sm font-medium text-gray-700">From Date</label>
+                    <div className="w-full">
+                        <label htmlFor="fromDate" className="block text-sm font-medium text-gray-700 mb-1">
+                            From Date
+                        </label>
                         <input
                             type="date"
                             id="fromDate"
                             value={fromDate}
                             onChange={(e) => setFromDate(e.target.value)}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                         />
                     </div>
 
                     {/* To Date */}
-                    <div className="flex-1">
-                        <label htmlFor="toDate" className="block text-sm font-medium text-gray-700">To Date</label>
+                    <div className="w-full">
+                        <label htmlFor="toDate" className="block text-sm font-medium text-gray-700 mb-1">
+                            To Date
+                        </label>
                         <input
                             type="date"
                             id="toDate"
                             value={toDate}
                             onChange={(e) => setToDate(e.target.value)}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                         />
                     </div>
 
                     {/* Search Button */}
-                    <div className="mt-1">
+                    <div className="w-full">
                         <button
                             type="button"
                             onClick={handleSearch}
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className="w-full sm:w-auto px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
                             {isSearching ? 'Searching...' : 'Search'}
                         </button>

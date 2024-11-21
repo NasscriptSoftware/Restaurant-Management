@@ -96,10 +96,10 @@ const aggregateByLedger = (data: Transaction[], key: 'debit_amount' | 'credit_am
     return (
         <div className="p-4">
             {/* Search Form */}
-            <div className="bg-white p-6 shadow-md rounded-lg mb-6">
-                <div className="flex items-center space-x-4">
+            <div className="bg-white p-4 sm:p-6 shadow-md rounded-lg mb-6">
+                <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
                     {/* From Date */}
-                    <div className="flex-1">
+                    <div className="w-full sm:flex-1">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             From Date
                         </label>
@@ -112,7 +112,7 @@ const aggregateByLedger = (data: Transaction[], key: 'debit_amount' | 'credit_am
                     </div>
 
                     {/* To Date */}
-                    <div className="flex-1">
+                    <div className="w-full sm:flex-1">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             To Date
                         </label>
@@ -125,11 +125,11 @@ const aggregateByLedger = (data: Transaction[], key: 'debit_amount' | 'credit_am
                     </div>
 
                     {/* Search Button */}
-                    <div className="flex-shrink-0">
+                    <div className="w-full sm:w-auto">
                         <button
                             onClick={handleSearch}
                             disabled={isSearching}
-                            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-300 ease-in-out disabled:opacity-50"
+                            className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-300 ease-in-out disabled:opacity-50"
                         >
                             {isSearching ? "Searching..." : "Search"}
                         </button>
