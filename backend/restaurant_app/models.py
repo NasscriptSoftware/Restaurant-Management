@@ -794,7 +794,7 @@ class ChairBooking(models.Model):
     )
     customer_name = models.CharField(max_length=100)
     customer_mob = models.CharField(max_length=15)
-    booked_date = models.DateField(auto_now_add=True)
+    booked_date = models.DateField(default=timezone.now)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     amount = models.DecimalField(max_digits=10, decimal_places=2)

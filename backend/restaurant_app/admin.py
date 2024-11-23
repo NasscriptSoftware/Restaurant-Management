@@ -128,4 +128,4 @@ class SidebarItemAdmin(UnflodModelAdmin,ImportExportModelAdmin):
         js = ('admin/js/list_filter_toggle.js',)
 
 admin.site.register(DishVariant, UnflodModelAdmin)
-admin.site.register(CreditTransaction,UnflodModelAdmin)
+admin.site.register(ChairBooking,UnflodModelAdmin)

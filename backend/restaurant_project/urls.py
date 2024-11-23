@@ -6,6 +6,7 @@ from django.urls import path, include
 
 from rest_framework_simplejwt.views import TokenRefreshView
 from restaurant_app.views import (
+    ChairBookingViewSet,
     ChairsViewSet,
     CustomerDetailsViewSet,
     DishSizeViewSet,
@@ -85,7 +86,7 @@ router.register(r'focproducts', FOCProductViewSet, basename='focproduct')
 
 #Chair Mangement
 router.register(r'chairs', ChairsViewSet)
-
+router.register(r'chair-bookings', ChairBookingViewSet)
 # Credit User URLs
 router.register(r"credit-users", CreditUserViewSet, basename="credit_users")
 router.register(r"credit-orders", CreditOrderViewSet, basename="credit_orders")
@@ -114,7 +115,7 @@ router.register(r'cashcount-sheet', CashCountSheetViewSet,basename="cashcount-sh
 
 urlpatterns = [
     path('', landing_page, name='landing_page'),
-    path("admin/", admin.site.urls),
+    path("admin/", admin.site.urls),        
     path("api/", include(router.urls)),
     path("api/login-passcode/", PasscodeLoginView.as_view(), name="login-passcode"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

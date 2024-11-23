@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 from decimal import Decimal
 from urllib import response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -1115,6 +1115,20 @@ class ChairBookingViewSet(viewsets.ModelViewSet):
     queryset = ChairBooking.objects.all()
     serializer_class = ChairBookingSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+    
+    def get_queryset(self):
+        queryset = ChairBooking.objects.all()
+        from_date = self.request.query_params.get('from_date')
+        to_date = self.request.query_params.get('to_date')
+        
+        if from_date and to_date:
+            # Convert string dates to datetime objects
+            from_date = datetime.strptime(from_date, '%Y-%m-%d').date()
+            to_date = datetime.strptime(to_date, '%Y-%m-%d').date()
+            queryset = queryset.filter(booked_date__range=[from_date, to_date])
+        
+        return queryset.order_by('-booked_date', '-start_time')
     
     @action(detail=False, methods=['GET'])
     def check_availability(self, request):
@@ -1190,3 +1204,24 @@ class ChairBookingViewSet(viewsets.ModelViewSet):
         booking.save()
         
         return Response(ChairBookingSerializer(booking).data)
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Handle PATCH requests to update booking status
+        """
+        booking = self.get_object()
+        new_status = request.data.get('status')
+        
+        # Validate status transitions
+        if booking.status == 'completed' and new_status != 'completed':
+            return Response(
+                {"error": "Completed bookings cannot be changed"},
+                status=status.HTTP_400_BAD_REQUEST
+            )            
+        if booking.status == 'cancelled' and new_status not in ['pending', 'cancelled']:
+            return Response(
+                {"error": "Cancelled bookings can only be set to pending"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return super().partial_update(request, *args, **kwargs)

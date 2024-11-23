@@ -643,6 +643,7 @@ class FOCProductSerializer(serializers.ModelSerializer):
 
 class ChairBookingSerializer(serializers.ModelSerializer):
     chair_name = serializers.CharField(source='selected_chair.chair_name', read_only=True)
+    booked_date = serializers.DateField(format='%Y-%m-%d', input_formats=['%Y-%m-%d'])
     
     class Meta:
         model = ChairBooking
@@ -658,30 +659,11 @@ class ChairBookingSerializer(serializers.ModelSerializer):
             'amount',
             'status'
         ]
-        read_only_fields = ['booked_date']
         
-    def validate(self, data):
-        """
-        Validate the booking data:
-        - Check if end_time is after start_time
-        - Check for booking conflicts
-        """
-        if data['end_time'] <= data['start_time']:
-            raise serializers.ValidationError("End time must be after start time")
-            
-        # Check for overlapping bookings
-        overlapping_bookings = ChairBooking.objects.filter(
-            selected_chair=data['selected_chair'],
-            status='confirmed',
-            start_time__lt=data['end_time'],
-            end_time__gt=data['start_time']
-        )
-        
-        if self.instance:
-            overlapping_bookings = overlapping_bookings.exclude(pk=self.instance.pk)
-            
-        if overlapping_bookings.exists():
-            raise serializers.ValidationError("This time slot is already booked for this chair")
-            
-        return data
+    def create(self, validated_data):
+        # Extract the date from start_time and set it as booked_date
+        start_time = validated_data.get('start_time')
+        if start_time:
+            validated_data['booked_date'] = start_time.date()
+        return super().create(validated_data)
 
