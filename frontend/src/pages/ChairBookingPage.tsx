@@ -110,17 +110,15 @@ export default function ChairBookingPage() {
   )
 
   const AvailableChairs = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
       {availableChairs.map(chair => (
-        <Card key={chair.id}>
-          <CardHeader>
-            <CardTitle>{chair.chair_name}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Status: Available</p>
-            <p>Is Active: {chair.is_active ? 'Yes' : 'No'}</p>
-          </CardContent>
-        </Card>
+        <div 
+          key={chair.id} 
+          className="bg-white flex flex-col items-center justify-center gap-2 p-4 hover:bg-gray-50 rounded-lg transition-colors"
+        >
+          <Armchair className="w-12 h-12 text-green-500" />
+          <span className="text-sm font-medium text-center">{chair.chair_name}</span>
+        </div>
       ))}
     </div>
   )
@@ -233,27 +231,31 @@ export default function ChairBookingPage() {
       const startTime = form.start_time.value
       const endTime = form.end_time.value
       
-      // Combine date with time and create ISO string
+      // Create dates with proper timezone handling
       const startDateTime = new Date(
         bookingDate.getFullYear(),
         bookingDate.getMonth(),
         bookingDate.getDate(),
         ...startTime.split(':').map(Number)
-      ).toISOString()
+      )
       
       const endDateTime = new Date(
         bookingDate.getFullYear(),
         bookingDate.getMonth(),
         bookingDate.getDate(),
         ...endTime.split(':').map(Number)
-      ).toISOString()
+      )
+
+      // Convert to UTC ISO string and preserve the local time
+      const startISO = new Date(startDateTime.getTime() - startDateTime.getTimezoneOffset() * 60000).toISOString()
+      const endISO = new Date(endDateTime.getTime() - endDateTime.getTimezoneOffset() * 60000).toISOString()
 
       const bookingData = {
         selected_chair: selectedChair?.id,
         customer_name: form.customer_name.value,
         customer_mob: form.customer_mob.value,
-        start_time: startDateTime,
-        end_time: endDateTime,
+        start_time: startISO,
+        end_time: endISO,
         amount: parseFloat(form.amount.value),
         status: 'pending',
         booked_date: bookingDate.toISOString().split('T')[0]
@@ -672,8 +674,14 @@ export default function ChairBookingPage() {
       // Format the value based on the field type
       let formattedValue = value;
       if (field === 'start_time' || field === 'end_time') {
-        // Ensure datetime is in ISO format
-        formattedValue = new Date(value).toISOString();
+        // Create a date object from the input value
+        const dateObj = new Date(value);
+        // Adjust for timezone offset
+        const adjustedDate = new Date(
+          dateObj.getTime() - dateObj.getTimezoneOffset() * 60000
+        );
+        // Convert to ISO string
+        formattedValue = adjustedDate.toISOString();
       } else if (field === 'booked_date') {
         // Format date as YYYY-MM-DD
         formattedValue = new Date(value).toISOString().split('T')[0];
@@ -683,7 +691,7 @@ export default function ChairBookingPage() {
         [field]: formattedValue
       });
       
-      // Update the local state with the new value
+      // Update the local state with the original input value
       setBookingHistory(prevHistory => 
         prevHistory.map(booking => 
           booking.id === bookingId 

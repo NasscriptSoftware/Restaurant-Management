@@ -1,7 +1,7 @@
 from datetime import timedelta
 from django.db import models,transaction
 from django.contrib.auth.models import AbstractUser
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
@@ -756,7 +756,7 @@ class Chairs(models.Model):
     start_time = models.DateTimeField(blank=True, null=True) 
     end_time = models.DateTimeField(blank=True, null=True) 
     amount = models.DecimalField(max_digits=8, decimal_places=2,null=True,blank=True)
-    booked_date = models.DateField(auto_now_add=True)
+    booked_date = models.DateField(default=timezone.now)
     is_active = models.BooleanField(default=True)
     order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='chairs', blank=True, null=True)
 
@@ -829,7 +829,4 @@ class ChairBooking(models.Model):
         
         if overlapping_bookings.exists():
             raise ValidationError("This time slot is already booked for this chair")
-
-
-
 
