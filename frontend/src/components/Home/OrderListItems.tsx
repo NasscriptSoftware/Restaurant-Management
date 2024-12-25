@@ -1,82 +1,75 @@
 import React, { useState, useEffect } from "react";
-import { OrderItem, DishSize, Size, Category } from "../../types/index";
+import { OrderItem } from "../../types/index";
+import { api } from "@/services/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
-import { fetchDishSizes } from "../../services/api";
-
-
-
-export interface DishItemProps {
-  dish: Dish;
-  onAddDish: (dish: Dish) => void;
-}
-interface Dish {
-  id: number | string;
-  name: string;
-  description: string;
-  price: string | number;
-  image: string;
-  category: number | Category;
-  sizes?: Size[];
-  arabic_name: string;
-}
 interface OrderListItemsProps {
   orderItem: OrderItem;
-  dishes: Dish[] | undefined;
   isNewlyAdded?: boolean;
   orderId: number;
   onItemDeleted: (deletedItemAmount: number) => void;
   order_status: string;
 }
 
+interface Dish {
+  id: number;
+  name: string;
+  image: string;
+}
+
 const OrderListItems: React.FC<OrderListItemsProps> = ({
   orderItem,
-  dishes,
   isNewlyAdded,
-
-
-
 }) => {
-
-
-  const [dishSize, setDishSize] = useState<DishSize | null>(null);
-  const dish = dishes ? dishes.find((d) => d.id === orderItem.dish) : undefined;
-
+  const [dishImage, setDishImage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (orderItem.dish_size) {
-      fetchDishSizes(Number(orderItem.dish_size))
-        .then((data) => setDishSize(data))
-        .catch((error) => console.error("Error fetching dish size:", error));
-    }
-  }, [orderItem.dish_size]);
+    const fetchDishImage = async () => {
+      try {
+        const response = await api.get('/dishes/');
+        const dishes: Dish[] = response.data;
+        const dish = dishes.find(d => d.name === orderItem.dish_name);
+        if (dish?.image) {
+          setDishImage(dish.image);
+        }
+      } catch (error) {
+        console.error('Error fetching dish image:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  if (!dish) {
-    return null;
-  }
-
-
+    fetchDishImage();
+  }, [orderItem.dish_name]);
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-50 p-3 rounded-lg ${isNewlyAdded ? "border-2 border-green-500" : ""
-        }`}
+      className={`flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-50 p-3 rounded-lg ${
+        isNewlyAdded ? "border-2 border-green-500" : ""
+      }`}
     >
       <div className="flex items-center space-x-4 mb-3 sm:mb-0">
-        <img
-          src={dish.image}
-          alt={dish.name}
-          className="w-16 h-16 object-cover rounded"
-        />
+        {isLoading ? (
+          <Skeleton className="h-12 w-12 rounded-md" />
+        ) : (
+          dishImage && (
+            <img
+              src={dishImage}
+              alt={orderItem.dish_name}
+              className="h-12 w-12 object-cover rounded-md"
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder-image.jpg'; // Add a placeholder image
+              }}
+            />
+          )
+        )}
         <div>
-          <h4
-            className={`font-semibold ${isNewlyAdded ? "text-green-600" : ""}`}
-          >
-            {dish.name} / {dish.arabic_name}
+          <h4 className={`font-semibold ${isNewlyAdded ? "text-green-600" : ""}`}>
+            {orderItem.dish_name}
           </h4>
-          {dishSize && (
-            <p>
-              Size: {dishSize.size}
-            </p>
+          {orderItem.size_name && (
+            <p className="text-sm text-gray-600">Size: {orderItem.size_name}</p>
           )}
           <p className="text-sm text-gray-600">
             Quantity: {orderItem.quantity}
@@ -87,14 +80,11 @@ const OrderListItems: React.FC<OrderListItemsProps> = ({
         </div>
       </div>
       <div className="text-left sm:text-right">
-
         <p className="font-semibold">
-          QAR {(
-            (dishSize ? (dishSize.price as any) : dish.price) * Number(orderItem.quantity)
-          ).toFixed(2)}
+          QAR {(Number(orderItem.price) * orderItem.quantity).toFixed(2)}
         </p>
         <p className="text-sm text-gray-600">
-          QAR {dishSize ? Number(dishSize.price).toFixed(2) : (dish.price)} each
+          QAR {Number(orderItem.price).toFixed(2)} each
         </p>
       </div>
     </div>

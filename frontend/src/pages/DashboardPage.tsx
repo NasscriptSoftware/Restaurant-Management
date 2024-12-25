@@ -61,6 +61,8 @@ const timeRangeHeadings : { day: string, week: string, month: string, year: stri
   year: "Yearly",
 };
 
+// Add interface for time slot da
+
 const RestaurantDashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState<string>("week");
   const heading = timeRangeHeadings[timeRange as keyof typeof timeRangeHeadings];
@@ -112,9 +114,11 @@ const RestaurantDashboard: React.FC = () => {
     avg_order_value_trend,
   } = dashboardData;
 
-  const formattedPopularTimeSlots = popular_time_slots.map((slot) => ({
+  const formattedPopularTimeSlots = popular_time_slots.map((slot: any) => ({
     ...slot,
-    formattedHour: formatHour(slot.hour),
+    hour: parseInt(slot.hour.toString()), // Ensure hour is a number
+    formattedHour: formatHour(parseInt(slot.hour.toString())),
+    order_count: slot.order_count
   }));
 
   return (
@@ -144,7 +148,7 @@ const RestaurantDashboard: React.FC = () => {
           />
           <DashboardCard
             title="Peak Hour"
-            value={formatHour(popular_time_slots[0]?.hour)}
+            value={formatHour(parseInt(popular_time_slots[0]?.hour?.toString() || "0"))}
             icon={<ClockIcon className="h-4 w-4 text-muted-foreground" />}
           />
           <DashboardCard
@@ -209,7 +213,7 @@ const RestaurantDashboard: React.FC = () => {
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={top_dishes}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="dish__name" />
+                    <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
@@ -265,7 +269,10 @@ const RestaurantDashboard: React.FC = () => {
                 <ResponsiveContainer width="100%" height={300}>
                   <RadarChart outerRadius={90} data={formattedPopularTimeSlots}>
                     <PolarGrid />
-                    <PolarAngleAxis dataKey="formattedHour" />
+                    <PolarAngleAxis 
+                      dataKey="formattedHour"
+                      tickFormatter={(value) => value}
+                    />
                     <PolarRadiusAxis angle={30} domain={[0, "auto"]} />
                     <Radar
                       name="Order Count"
@@ -274,7 +281,9 @@ const RestaurantDashboard: React.FC = () => {
                       fill="#8884d8"
                       fillOpacity={0.6}
                     />
-                    <Tooltip />
+                    <Tooltip 
+                      formatter={(value: number, _: string, props: any) => [value, props.payload.formattedHour]}
+                    />
                     <Legend />
                   </RadarChart>
                 </ResponsiveContainer>

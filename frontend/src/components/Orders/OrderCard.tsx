@@ -33,6 +33,10 @@ import {
   Armchair,
   Banknote,
   Coffee,
+  StickyNote,
+  Eye,
+  EyeOff,
+  Plus,
 } from "lucide-react";
 import { CreditUserModal } from "../modals/CreditUserModal";
 import { Button } from "../ui/button"; // Assuming you have a Button component
@@ -52,6 +56,7 @@ import { fetchDeliveryDrivers } from "@/services/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import AddOptionsModal from "./AddOptionsModal";
+import { Textarea } from "@/components/ui/textarea";
 
 interface OrderCardProps {
   order: Order;
@@ -260,55 +265,61 @@ const OrderCard: React.FC<OrderCardProps> = ({
     setShowPaymentModal(false);
   };
 
-  const handleItemDeleted = (deletedItemAmount: number) => {
-    setOrder((prevOrder) => ({
-      ...prevOrder,
-      total_amount: Number(
-        (Number(prevOrder.total_amount) - deletedItemAmount).toFixed(2)
-      ),
-    }));
-    onStatusUpdated();
+  const handleItemDeleted = async () => {
+    try {
+      // Get the latest order data
+      const response = await api.get(`/orders/${order.id}/`);
+      const updatedOrder = response.data;
+      
+      // Update local state with the fresh data
+      setOrder(updatedOrder);
+      
+      // Notify parent component about the update
+      onOrderUpdated(updatedOrder);
+      
+      // Force a refetch of the orders list
+      // refetchOrders();
+    } catch (error) {
+      console.error("Error updating order after item deletion:", error);
+    }
   };
 
   const handleAddProductSubmit = async (
-    products: { dish: Dish; quantity: number }[]
+    products: {
+      dish_name: string;
+      price: number;
+      size_name: string | null;
+      quantity: number;
+      is_newly_added: boolean;
+    }[]
   ) => {
     try {
-      const newTotalAmount = products.reduce<number>(
-        (sum, product) =>
-          sum +
-          product.quantity *
-            (typeof product.dish.price === "number"
-              ? product.dish.price
-              : parseFloat(product.dish.price)),
-        Number(order.total_amount)
-      );
+      // Calculate new total amount with proper decimal handling
+      const currentTotal = parseFloat(order.total_amount?.toString() || '0');
+      const productsTotal = products.reduce((sum, item) => {
+        return sum + (item.price * item.quantity);
+      }, 0);
+      
+      // Round to 2 decimal places
+      const newTotalAmount = Number((currentTotal + productsTotal).toFixed(2));
 
       const response = await api.put(`/orders/${order.id}/`, {
-        items: products.map((product) => ({
-          dish: product.dish.id,
-          quantity: product.quantity,
-          total_amount:
-            product.quantity *
-            (typeof product.dish.price === "number"
-              ? product.dish.price
-              : parseFloat(product.dish.price)),
-          is_newly_added: true,
-        })),
-        total_amount: newTotalAmount.toFixed(2),
+        items: products,
+        total_amount: newTotalAmount
       });
 
       if (response.status === 200) {
+        setOrder(response.data);
+        onOrderUpdated(response.data);
         setShowAddProductModal(false);
-
-        const updatedOrderResponse = await api.get(`/orders/${order.id}/`);
-        if (updatedOrderResponse.status === 200) {
-          const updatedOrder = updatedOrderResponse.data;
-          setOrder(updatedOrder);
-        }
       }
     } catch (error) {
-      console.error("Failed to add products to the order:", error);
+      console.error("Error adding products:", error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to add products to the order',
+        icon: 'error',
+      });
     }
   };
 
@@ -381,7 +392,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
             : undefined,
         };
       }
-      console.log("aditionaldata", additionalData);
 
       const response = await updateOrderStatusNew(
         Number(order.id),
@@ -621,6 +631,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
   // Add state for the delivery info modal
   const [showDeliveryInfoModal, setShowDeliveryInfoModal] = useState(false);
 
+  const [showChairDetails, setShowChairDetails] = useState<boolean>(false);
+
+  const [showKitchenNoteModal, setShowKitchenNoteModal] = useState(false);
+  const [kitchenNoteInput, setKitchenNoteInput] = useState("");
+
   return (
     <div
       key={order.id}
@@ -637,9 +652,36 @@ const OrderCard: React.FC<OrderCardProps> = ({
               onChange={handleOrderSelection}
               className="mr-4 w-6 h-6 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <h2 className="text-lg font-semibold text-gray-800">
-              Order #{order.id}
-            </h2>
+            <div className="flex flex-col">
+              <h2 className="text-lg font-semibold text-gray-800">
+                Order #{order.id}
+              </h2>
+              {order.kitchen_note && (
+                <div className="mt-2">
+                  <div className="flex items-center mb-2">
+                    <StickyNote className="h-4 w-4 text-amber-500 mr-2" />
+                    <span className="text-sm font-semibold text-amber-700">Kitchen Notes:</span>
+                  </div>
+                  <ul className="list-disc list-inside pl-6 space-y-1">
+                    {order.kitchen_note.split(',').map((note, index) => (
+                      <li key={index} className="text-sm text-amber-600 font-medium bg-amber-50 px-3 py-1 rounded-full inline-block mr-2 mb-2">
+                        {note.trim()}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {!order.kitchen_note && (
+                <button
+                  onClick={() => setShowKitchenNoteModal(true)}
+                  className="flex items-center space-x-2 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg transition-colors"
+                >
+                  <Plus size={16} />
+                  <StickyNote size={16} />
+                  <span className="text-sm font-medium">Add Kitchen Note</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Action Buttons Container */}
@@ -764,9 +806,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
       <div className="space-y-3">
         {order.items && Array.isArray(order.items) && order.items.length > 0 ? (
-          order.items.map((item, index) => (
+          order.items.map((item) => (
             <OrderItems
-              key={index}
+              key={item.id}
               orderItem={item}
               dishes={dishes}
               isNewlyAdded={item.is_newly_added}
@@ -1416,10 +1458,17 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
       <div className="hidden">
         <div ref={kitchenPrintRef}>
-          <KitchenPrint order={order} dishes={dishes} />
+          <KitchenPrint 
+            order={order} 
+            dishes={dishes} 
+          />
         </div>
         <div ref={salesPrintRef}>
-          <SalesPrint order={order} dishes={dishes} logoInfo={logoInfo} />
+          <SalesPrint 
+            order={order} 
+            dishes={dishes} 
+            logoInfo={logoInfo} 
+          />
         </div>
       </div>
 
@@ -1539,6 +1588,136 @@ const OrderCard: React.FC<OrderCardProps> = ({
             </div>
             <Button type="submit">Save Chair Booking</Button>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add this section at the bottom of the card, before the closing div */}
+      {order.chair_details && order.chair_details.length > 0 && (
+        <div className="mt-4 border-t pt-4">
+          <div className="flex items-center mb-3">
+            <Armchair className="h-5 w-5 text-purple-500 mr-2" />
+            <h3 className="text-lg font-semibold text-purple-800">Chair Details</h3>
+            <button
+              onClick={() => setShowChairDetails(!showChairDetails)}
+              className="p-2 hover:bg-purple-100 rounded-full transition-colors ml-2"
+              title={showChairDetails ? "Hide Details" : "Show Details"}
+            >
+              {showChairDetails ? (
+                <EyeOff className="h-5 w-5 text-purple-600" />
+              ) : (
+                <Eye className="h-5 w-5 text-purple-600" />
+              )}
+            </button>
+          </div>
+          
+          {showChairDetails && (
+            <div className="animate-in slide-in-from-top duration-300">
+              {order.chair_details.map((chair) => (
+                <div 
+                  key={chair.id}
+                  className="bg-purple-50 rounded-lg p-4 space-y-2"
+                >
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-purple-600 font-medium">Chair Name</p>
+                      <p className="font-semibold">{chair.chair_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-purple-600 font-medium">Customer</p>
+                      <p className="font-semibold">{chair.customer_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-purple-600 font-medium">Mobile</p>
+                      <p className="font-semibold">{chair.customer_mob}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-purple-600 font-medium">Start Time</p>
+                      <p className="font-semibold">
+                        {new Date(chair.start_time).toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-purple-600 font-medium">End Time</p>
+                      <p className="font-semibold">
+                        {new Date(chair.end_time).toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-purple-600 font-medium">Duration</p>
+                      <p className="font-semibold">{chair.total_time}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-purple-600 font-medium">Amount</p>
+                      <p className="font-semibold text-green-600">
+                        QAR {typeof chair.amount === 'string' ? parseFloat(chair.amount).toFixed(2) : chair.amount.toFixed(2)}
+                      </p>
+                    </div>
+                    {chair.booking_id && (
+                      <div>
+                        <p className="text-sm text-purple-600 font-medium">Booking ID</p>
+                        <p className="font-semibold">#{chair.booking_id}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <Dialog open={showKitchenNoteModal} onOpenChange={setShowKitchenNoteModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Kitchen Note</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Textarea
+                id="kitchen-note"
+                placeholder="Enter kitchen notes (separate multiple notes with commas)"
+                value={kitchenNoteInput}
+                onChange={(e) => setKitchenNoteInput(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowKitchenNoteModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  try {
+                    const response = await api.patch(`/orders/${order.id}/`, {
+                      kitchen_note: kitchenNoteInput
+                    });
+                    
+                    if (response.status === 200) {
+                      setOrder({
+                        ...order,
+                        kitchen_note: kitchenNoteInput
+                      });
+                      
+                      onOrderUpdated(response.data);
+                      
+                      setShowKitchenNoteModal(false);
+                      setKitchenNoteInput("");
+                      
+                    }
+                  } catch (error) {
+                    console.error('Failed to update kitchen note:', error);
+
+                  }
+                }}
+                className="bg-amber-600 hover:bg-amber-700"
+              >
+                Save Note
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

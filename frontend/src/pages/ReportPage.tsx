@@ -24,6 +24,11 @@ import {
   TableRow,
   TableFooter,
 } from "@/components/ui/table";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { ChevronsUpDown } from "lucide-react";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SalesReport {
   id: number;
@@ -64,7 +69,7 @@ interface MessReport {
 }
 
 interface ProductReport {
-  product_name: string;
+  dish_name: string;
   total_quantity: number;
   total_amount: number;
   invoice_number: string;
@@ -168,6 +173,12 @@ interface OnlinePlatform {
   logo: string;
 }
 
+// Add interface for Product
+interface Product {
+  id: number;
+  name: string;
+}
+
 const ReportPage: React.FC = () => {
   const [reportType, setReportType] = useState<"sales" | "mess" | "product" | "onlineDelivery" | "staff" | "driver">("sales");
   const [reports, setReports] = useState<SalesReport[]>([]);
@@ -199,9 +210,14 @@ const ReportPage: React.FC = () => {
   const [driverReports, setDriverReports] = useState<DriverReport[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [onlinePlatforms, setOnlinePlatforms] = useState<OnlinePlatform[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<string>("");
 
   useEffect(() => {
     fetchDataWithFilter({});
+    if (reportType === "product") {
+      fetchProducts();
+    }
   }, [reportType, fromDate, toDate, showCancelledOrders]);
 
   useEffect(() => {
@@ -359,7 +375,7 @@ const ReportPage: React.FC = () => {
     setShowCancelledOrders(!showCancelledOrders);
   };
 
-  const handleButtonClick = (buttonName: string, platformId?: number) => {
+  const handleButtonClick = async (buttonName: string, platformId?: number) => {
     let filter: Record<string, string> = {};
     setActiveButton(buttonName);
 
@@ -455,7 +471,19 @@ const ReportPage: React.FC = () => {
   };
 
   const handleEdit = (item: any) => {
-    setSelectedItem(item);
+    // Calculate default split amounts for cash-bank payment method
+    const splitAmount = parseFloat(item.total_amount) / 2;
+    
+    // Set the payment-specific amounts based on payment method
+    const updatedItem = {
+      ...item,
+      cash_amount: item.payment_method === 'cash' ? item.total_amount : 
+                   item.payment_method === 'cash-bank' ? splitAmount : 0,
+      bank_amount: item.payment_method === 'bank' ? item.total_amount :
+                   item.payment_method === 'cash-bank' ? splitAmount : 0,
+    };
+    
+    setSelectedItem(updatedItem);
     if (reportType === "sales") {
       setIsSalesEditModalOpen(true);
     } else if (reportType === "mess") {
@@ -565,12 +593,13 @@ const ReportPage: React.FC = () => {
 
   interface ReportTableProps {
     data: any[];
+    allData: any[];
     reportType: 'sales' | 'mess' | 'product' | 'onlineDelivery' | 'staff' | 'driver';
     onEdit?: (item: any) => void;
     onViewHistory?: (item: any) => void;
   }
 
-  const ReportTable: React.FC<ReportTableProps> = ({ data, reportType, onEdit, onViewHistory }) => {
+  const ReportTable: React.FC<ReportTableProps> = ({ data, allData, reportType, onEdit, onViewHistory }) => {
     const columns = useMemo(() => {
       switch (reportType) {
         case 'sales':
@@ -600,7 +629,7 @@ const ReportPage: React.FC = () => {
           ];
         case 'product':
           return [
-            { key: 'product_name', header: 'Product Name' },
+            { key: 'dish_name', header: 'Product Name' },
             { key: 'total_quantity', header: 'Total Quantity', align: 'right' },
             { key: 'invoice_number', header: 'Invoice Number' },
             { key: 'order_created_at', header: 'Order Created At', format: (value: string) => formatDate(value) },
@@ -654,50 +683,97 @@ const ReportPage: React.FC = () => {
       }
     }, [reportType]);
 
-    const totals = useMemo(() => {
+    // Calculate subtotals for current page
+    const subtotals = useMemo(() => {
       return data.reduce((acc, item) => {
-        columns.forEach(column => {
-          if (column.align === 'right' && typeof item[column.key] === 'number') {
-            acc[column.key] = (acc[column.key] || 0) + item[column.key];
-          }
-        });
-        return acc;
-      }, {});
-    }, [data, columns]);
-
-    const grandTotals = useMemo(() => {
-      if (reportType === 'sales') {
-        return {
-          total_amount: data.reduce((acc, item) => acc + parseFloat(item.total_amount.toString()), 0),
-          cash_amount: data.reduce((acc, item) => acc + parseFloat(item.cash_amount.toString()), 0),
-          bank_amount: data.reduce((acc, item) => acc + parseFloat(item.bank_amount.toString()), 0),
-          credit_amount: data.reduce((acc, item) => acc + parseFloat(item.credit_amount.toString()), 0),
-        };
-      } else if (reportType === 'product') {
-        return {
-          total_amount: data.reduce((acc, item) => acc + parseFloat(item.total_amount.toString()), 0),
-          cash_amount: data.reduce((acc, item) => acc + parseFloat(item.cash_amount.toString()), 0),
-          bank_amount: data.reduce((acc, item) => acc + parseFloat(item.bank_amount.toString()), 0),
-          credit_amount: data.reduce((acc, item) => acc + parseFloat(item.credit_amount.toString()), 0),
-        };
-      } else if (reportType === 'staff') {
-        return {
-          total_amount: data.reduce((acc, item) => acc + parseFloat(item.total_amount.toString()), 0),
-          cash_amount: data.reduce((acc, item) => acc + parseFloat(item.cash_amount.toString()), 0),
-          bank_amount: data.reduce((acc, item) => acc + parseFloat(item.bank_amount.toString()), 0),
-          credit_amount: data.reduce((acc, item) => acc + parseFloat(item.credit_amount.toString()), 0),
-        };
-      } else if (reportType === 'driver') {
-        return {
-          total_amount: data.reduce((acc, item) => acc + parseFloat(item.total_amount.toString()), 0),
-          cash_amount: data.reduce((acc, item) => acc + parseFloat(item.cash_amount.toString()), 0),
-          bank_amount: data.reduce((acc, item) => acc + parseFloat(item.bank_amount.toString()), 0),
-          credit_amount: data.reduce((acc, item) => acc + parseFloat(item.credit_amount.toString()), 0),
-          delivery_charge: data.reduce((acc, item) => acc + parseFloat(item.delivery_charge.toString()), 0),
-        };
-      }
-      return {};
+        switch (reportType) {
+          case 'sales':
+            return {
+              total_amount: (acc.total_amount || 0) + parseFloat(item.total_amount.toString()),
+              cash_amount: (acc.cash_amount || 0) + parseFloat(item.cash_amount.toString()),
+              bank_amount: (acc.bank_amount || 0) + parseFloat(item.bank_amount.toString()),
+              credit_amount: (acc.credit_amount || 0) + parseFloat(item.credit_amount.toString()),
+            };
+          case 'product':
+            return {
+              total_quantity: (acc.total_quantity || 0) + parseFloat(item.total_quantity.toString()),
+              total_amount: (acc.total_amount || 0) + parseFloat(item.total_amount.toString()),
+              cash_amount: (acc.cash_amount || 0) + parseFloat(item.cash_amount.toString()),
+              bank_amount: (acc.bank_amount || 0) + parseFloat(item.bank_amount.toString()),
+              credit_amount: (acc.credit_amount || 0) + parseFloat(item.credit_amount.toString()),
+            };
+          case 'onlineDelivery':
+            return {
+              total_amount: (acc.total_amount || 0) + parseFloat(item.total_amount.toString()),
+              percentage_amount: (acc.percentage_amount || 0) + parseFloat(item.percentage_amount.toString()),
+              balance_amount: (acc.balance_amount || 0) + parseFloat(item.balance_amount.toString()),
+            };
+          case 'staff':
+            return {
+              total_amount: (acc.total_amount || 0) + parseFloat(item.total_amount.toString()),
+              cash_amount: (acc.cash_amount || 0) + parseFloat(item.cash_amount.toString()),
+              bank_amount: (acc.bank_amount || 0) + parseFloat(item.bank_amount.toString()),
+              credit_amount: (acc.credit_amount || 0) + parseFloat(item.credit_amount.toString()),
+            };
+          case 'driver':
+            return {
+              total_amount: (acc.total_amount || 0) + parseFloat(item.total_amount.toString()),
+              cash_amount: (acc.cash_amount || 0) + parseFloat(item.cash_amount.toString()),
+              bank_amount: (acc.bank_amount || 0) + parseFloat(item.bank_amount.toString()),
+              credit_amount: (acc.credit_amount || 0) + parseFloat(item.credit_amount.toString()),
+              delivery_charge: (acc.delivery_charge || 0) + parseFloat(item.delivery_charge.toString()),
+            };
+          default:
+            return acc;
+        }
+      }, {} as Record<string, number>);
     }, [data, reportType]);
+
+    // Calculate grand totals for all data
+    const grandTotals = useMemo(() => {
+      return allData.reduce((acc, item) => {
+        switch (reportType) {
+          case 'sales':
+            return {
+              total_amount: (acc.total_amount || 0) + parseFloat(item.total_amount.toString()),
+              cash_amount: (acc.cash_amount || 0) + parseFloat(item.cash_amount.toString()),
+              bank_amount: (acc.bank_amount || 0) + parseFloat(item.bank_amount.toString()),
+              credit_amount: (acc.credit_amount || 0) + parseFloat(item.credit_amount.toString()),
+            };
+          case 'product':
+            return {
+              total_quantity: (acc.total_quantity || 0) + parseFloat(item.total_quantity.toString()),
+              total_amount: (acc.total_amount || 0) + parseFloat(item.total_amount.toString()),
+              cash_amount: (acc.cash_amount || 0) + parseFloat(item.cash_amount.toString()),
+              bank_amount: (acc.bank_amount || 0) + parseFloat(item.bank_amount.toString()),
+              credit_amount: (acc.credit_amount || 0) + parseFloat(item.credit_amount.toString()),
+            };
+          case 'onlineDelivery':
+            return {
+              total_amount: (acc.total_amount || 0) + parseFloat(item.total_amount.toString()),
+              percentage_amount: (acc.percentage_amount || 0) + parseFloat(item.percentage_amount.toString()),
+              balance_amount: (acc.balance_amount || 0) + parseFloat(item.balance_amount.toString()),
+            };
+          case 'staff':
+            return {
+              total_amount: (acc.total_amount || 0) + parseFloat(item.total_amount.toString()),
+              cash_amount: (acc.cash_amount || 0) + parseFloat(item.cash_amount.toString()),
+              bank_amount: (acc.bank_amount || 0) + parseFloat(item.bank_amount.toString()),
+              credit_amount: (acc.credit_amount || 0) + parseFloat(item.credit_amount.toString()),
+            };
+          case 'driver':
+            return {
+              total_amount: (acc.total_amount || 0) + parseFloat(item.total_amount.toString()),
+              cash_amount: (acc.cash_amount || 0) + parseFloat(item.cash_amount.toString()),
+              bank_amount: (acc.bank_amount || 0) + parseFloat(item.bank_amount.toString()),
+              credit_amount: (acc.credit_amount || 0) + parseFloat(item.credit_amount.toString()),
+              delivery_charge: (acc.delivery_charge || 0) + parseFloat(item.delivery_charge.toString()),
+            };
+          default:
+            return acc;
+        }
+      }, {} as Record<string, number>);
+    }, [allData, reportType]);
 
     const formatDate = (dateString: string) => {
       const date = new Date(dateString);
@@ -753,12 +829,43 @@ const ReportPage: React.FC = () => {
             ))}
           </TableBody>
           <TableFooter>
+            {/* Subtotal Row */}
             <TableRow>
-              {columns.map((column) => (
-                <TableCell key={column.key} className={column.align === 'right' ? 'text-right font-bold' : ''}>
-                  {column.key in totals ? (column.format ? column.format(totals[column.key]) : totals[column.key]) : 
-                   column.key === columns[0].key ? 'Grand Total' : 
-                   column.key in grandTotals ? (column.format ? column.format(grandTotals[column.key as keyof typeof grandTotals]) : grandTotals[column.key as keyof typeof grandTotals]) : ''}
+              {columns.map((column, index) => (
+                <TableCell 
+                  key={column.key} 
+                  className={column.align === 'right' ? 'text-right font-medium' : ''}
+                >
+                  {index === 0 ? 'Page Subtotal' : 
+                   subtotals[column.key] !== undefined ? 
+                     (column.format ? 
+                       column.format(subtotals[column.key]) : 
+                       reportType === 'product' && column.key === 'total_quantity' ? 
+                         subtotals[column.key].toFixed(0) : 
+                         subtotals[column.key].toFixed(2)
+                     ) 
+                     : ''}
+                </TableCell>
+              ))}
+              {showActions && <TableCell />}
+            </TableRow>
+            
+            {/* Grand Total Row */}
+            <TableRow>
+              {columns.map((column, index) => (
+                <TableCell 
+                  key={column.key} 
+                  className={column.align === 'right' ? 'text-right font-bold' : ''}
+                >
+                  {index === 0 ? 'Grand Total' : 
+                   grandTotals[column.key] !== undefined ? 
+                     (column.format ? 
+                       column.format(grandTotals[column.key]) : 
+                       reportType === 'product' && column.key === 'total_quantity' ? 
+                         grandTotals[column.key].toFixed(0) : 
+                         grandTotals[column.key].toFixed(2)
+                     ) 
+                     : ''}
                 </TableCell>
               ))}
               {showActions && <TableCell />}
@@ -778,6 +885,41 @@ const ReportPage: React.FC = () => {
     } catch (error) {
       console.error("Error fetching drivers:", error);
     }
+  };
+
+  // Add function to fetch products
+  const fetchProducts = async () => {
+    try {
+      const response = await api.get('/dishes/');
+      const uniqueProducts = response.data.reduce((acc: any[], curr: any) => {
+        if (!acc.find((item: any) => item.name === curr.name)) {
+          acc.push({ id: curr.id, name: curr.name });
+        }
+        return acc;
+      }, []);
+      setProducts(uniqueProducts);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+
+  // Add handler for product selection
+  const handleProductSelect = (productName: string) => {
+    setSelectedProduct(productName);
+    const params = new URLSearchParams();
+    
+    if (fromDate) params.append('from_date', format(fromDate, 'yyyy-MM-dd'));
+    if (toDate) params.append('to_date', format(toDate, 'yyyy-MM-dd'));
+    if (productName) params.append('dish_name', productName);
+
+    // Fetch product report with the dish name
+    api.get(`/orders/product_wise_report/?${params.toString()}`)
+      .then((response) => {
+        setProductReports(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching product report:", error);
+      });
   };
 
   return (
@@ -938,6 +1080,47 @@ const ReportPage: React.FC = () => {
                       ))}
                     </>
                   )}
+                  {reportType === "product" && activeButton === "All" && (
+                    <div className="mb-4">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-[200px] justify-between"
+                          >
+                            {selectedProduct || "Select Product"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[200px] p-0">
+                          <Command>
+                            <CommandInput placeholder="Search products..." />
+                            <CommandList>
+                              <CommandEmpty>No products found.</CommandEmpty>
+                              <CommandGroup>
+                                {products.map((product) => (
+                                  <CommandItem
+                                    key={product.id}
+                                    value={product.name}
+                                    onSelect={() => handleProductSelect(product.name)}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        selectedProduct === product.name ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    {product.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
                 </div>
 
                 {reportType === "staff" && (
@@ -984,6 +1167,7 @@ const ReportPage: React.FC = () => {
               <TabsContent value="sales" className="space-y-4">
                 <ReportTable 
                   data={paginatedReports} 
+                  allData={reports} 
                   reportType="sales" 
                   onEdit={handleEdit}
                   onViewHistory={handleViewHistory}
@@ -993,6 +1177,7 @@ const ReportPage: React.FC = () => {
               <TabsContent value="mess" className="space-y-4">
                 <ReportTable 
                   data={paginatedMessReports} 
+                  allData={messReports} 
                   reportType="mess" 
                   onEdit={handleEdit}
                   onViewHistory={handleViewHistory}
@@ -1002,6 +1187,7 @@ const ReportPage: React.FC = () => {
               <TabsContent value="product" className="space-y-4">
                 <ReportTable 
                   data={paginatedProductReports} 
+                  allData={productReports} 
                   reportType="product"
                 />
               </TabsContent>
@@ -1009,6 +1195,7 @@ const ReportPage: React.FC = () => {
               <TabsContent value="onlineDelivery" className="space-y-4">
                 <ReportTable 
                   data={paginatedOnlineDeliveryReports} 
+                  allData={onlineDeliveryReports} 
                   reportType="onlineDelivery"
                 />
               </TabsContent>
@@ -1016,6 +1203,7 @@ const ReportPage: React.FC = () => {
               <TabsContent value="staff" className="space-y-4">
                 <ReportTable 
                   data={paginatedStaffReports} 
+                  allData={staffReports} 
                   reportType="staff"
                 />
               </TabsContent>
@@ -1023,6 +1211,7 @@ const ReportPage: React.FC = () => {
               <TabsContent value="driver" className="space-y-4">
                 <ReportTable 
                   data={driverReports} 
+                  allData={driverReports} 
                   reportType="driver"
                 />
               </TabsContent>

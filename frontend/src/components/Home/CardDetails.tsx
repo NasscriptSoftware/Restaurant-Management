@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import OrdersListing, { Order } from "./OrdersListing";
-import { useDishes } from "@/hooks/useDishes";
 
 interface CardDetailsProps {
   selectedCard: {
@@ -33,8 +32,6 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
-  const { dishes } = useDishes();
-  const data = dishes;
 
   const ordersPerPage = 5;
 
@@ -230,7 +227,6 @@ const CardDetails: React.FC<CardDetailsProps> = ({ selectedCard }) => {
         currentPage={currentPage}
         handlePreviousPage={handlePreviousPage}
         handleNextPage={handleNextPage}
-        dishes={data}
       />
     </motion.div>
   );

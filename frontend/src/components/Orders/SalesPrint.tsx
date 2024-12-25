@@ -1,7 +1,6 @@
 import React from "react";
 import { Order, Dish } from "../../types/index";
 import { QRCodeSVG } from "qrcode.react";
-import { fetchDishSizes } from "../../services/api";
 import { Phone, MapPin, Mail } from "lucide-react";
 import { GiRotaryPhone } from "react-icons/gi";
 
@@ -22,7 +21,7 @@ interface SalesPrintProps {
   } | null;
 }
 
-const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
+const SalesPrint: React.FC<SalesPrintProps> = ({ order, logoInfo }) => {
   const formatDate = (datetime: string) => {
     const date = new Date(datetime);
     const options: Intl.DateTimeFormatOptions = {
@@ -53,30 +52,6 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
         0
       )
     : 0;
-
-  const [dishSizes, setDishSizes] = React.useState<{
-    [key: number]: { size: string; price: string };
-  }>({});
-
-  React.useEffect(() => {
-    const fetchSizes = async () => {
-      if (!order?.items) return;
-
-      const sizePromises = order.items.map(async (item) => {
-        if (item.dish_size) {
-          const sizeData = await fetchDishSizes(Number(item.dish_size));
-          return { [item.dish_size]: sizeData };
-        }
-        return null;
-      });
-
-      const sizes = await Promise.all(sizePromises);
-      const sizeObject = Object.assign({}, ...sizes.filter(Boolean));
-      setDishSizes(sizeObject);
-    };
-
-    fetchSizes();
-  }, [order?.items]);
 
   return (
     <div className="print-container w-full max-w-sm mx-auto p-4 text-xs font-sans text-black border border-dotted border-black">
@@ -149,7 +124,7 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
 
       {/* Order Info Section */}
       <div className="mb-4 pb-2 border-b border-black">
-        <h2 className=" font-medium capitalize">
+        <h2 className="font-medium capitalize">
           Order Type:{" "}
           <span className="font-bold capitalize">{order.order_type}</span>
         </h2>
@@ -175,30 +150,28 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
         <div>
           {Array.isArray(order?.items) && order.items.length > 0 ? (
             order.items.map((item, index) => {
-              const dish = dishes.find((dish) => dish.id === item.dish);
-              const sizeInfo = item.dish_size
-                ? dishSizes[Number(item.dish_size)]
-                : null;
+              const itemPrice = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
+              const totalPrice = itemPrice * item.quantity;
+              
               return (
                 <div
                   key={index}
                   className="flex justify-between py-1 border-b border-dotted border-black"
                 >
                   <span className="w-1/2">
-                    {dish ? dish.name : "Unknown Dish"} /{" "}
-                    {dish ? dish.arabic_name : "Unknown Dish"}
-                    {sizeInfo && (
-                      <span className="text-xs ml-1">({sizeInfo.size})</span>
+                    {item.dish_name}
+                    {item.arabic_name && (
+                      <span className="text-xs mr-2 ml-2">
+                        /{item.arabic_name}
+                      </span>
+                    )}
+                    {item.size_name && (
+                      <span className="text-xs ml-1">({item.size_name})</span>
                     )}
                   </span>
                   <span className="w-1/4 text-center">{item.quantity}</span>
                   <span className="w-1/4 text-right">
-                    QAR{" "}
-                    {sizeInfo
-                      ? parseFloat(sizeInfo.price) * Number(item.quantity)
-                      : dish
-                      ? parseFloat(String(dish.price)) * Number(item.quantity)
-                      : 0}
+                    QAR {totalPrice.toFixed(2)}
                   </span>
                 </div>
               );
@@ -209,25 +182,6 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
         </div>
       </div>
 
-      {/* Chair Details Section */}
-      {order.chair_details && order.chair_details.length > 0 && (
-        <div className="mb-4">
-          <p className="font-bold border-y border-black py-1">CHAIR DETAILS</p>
-          <div>
-            {order.chair_details.map((chair, index) => (
-              <div
-                key={index}
-                className="flex justify-between py-1 border-b border-dotted border-black"
-              >
-                <span>{chair.chair_name}</span>
-                <span>{chair.total_time} hrs</span>
-                <span>{chair.amount}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Totals Section */}
       <div className="mb-4 pb-2 border-b border-black">
         <div className="flex justify-between py-1">
@@ -237,18 +191,18 @@ const SalesPrint: React.FC<SalesPrintProps> = ({ order, dishes, logoInfo }) => {
         {order.chair_details && order.chair_details.length > 0 && (
           <div className="flex justify-between py-1">
             <span>Chair Amount:</span>
-            <span>{order.chair_amount}</span>
+            <span>QAR {order.chair_amount}</span>
           </div>
         )}
         {order.order_type === "delivery" && (
           <div className="flex justify-between py-1">
             <span>Delivery Charge:</span>
-            <span>QAR{order.delivery_charge}</span>
+            <span>QAR {order.delivery_charge}</span>
           </div>
         )}
         <div className="flex justify-between py-1 font-bold border-t border-black">
           <span>TOTAL AMOUNT:</span>
-          <span>QAR{order.total_amount}</span>
+          <span>QAR {order.total_amount}</span>
         </div>
       </div>
 

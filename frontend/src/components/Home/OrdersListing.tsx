@@ -6,16 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import OrderListItems from "./OrderListItems";
-import { Category,Size } from "@/types/index";
 
 export interface OrderItem {
-  item_id: number;
   id: number;
-  dish: number;
+  dish_name: string;
+  price: string;
   quantity: number;
   is_newly_added: boolean;
-  total_amount: number;
-  dish_size: number; }
+  size_name: string | null;
+  variants: Array<{
+    variantId: number;
+    name: string;
+    quantity: number;
+  }>;
+}
 
 export interface Order {
   id: number;
@@ -43,17 +47,6 @@ interface OrdersListingProps {
   currentPage: number;
   handlePreviousPage: () => void;
   handleNextPage: () => void;
-  dishes: Dish[] | undefined;
-}
-interface Dish {
-  id: number | string;
-  name: string;
-  description: string;
-  price: string | number;
-  image: string;
-  category: number | Category;
-  sizes?: Size[];
-  arabic_name: string;
 }
 
 const OrdersListing: React.FC<OrdersListingProps> = ({
@@ -64,7 +57,6 @@ const OrdersListing: React.FC<OrdersListingProps> = ({
   currentPage,
   handlePreviousPage,
   handleNextPage,
-  dishes,
 }) => {
   const [expandedOrder, setExpandedOrder] = React.useState<number | null>(null);
 
@@ -177,9 +169,8 @@ const OrdersListing: React.FC<OrdersListingProps> = ({
                       <OrderListItems
                         key={index}
                         orderItem={item}
-                        dishes={dishes}
                         orderId={order.id}
-                        onItemDeleted={() => {""}} // Add a proper handler if needed
+                        onItemDeleted={() => {""}}
                         order_status={order.status}
                         isNewlyAdded={item.is_newly_added}
                       />

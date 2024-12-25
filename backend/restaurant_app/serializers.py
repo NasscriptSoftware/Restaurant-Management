@@ -135,13 +135,28 @@ class OnlineOrderSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'percentage', 'reference', 'logo']
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    dish = serializers.PrimaryKeyRelatedField(queryset=Dish.objects.all())
-    dish_size = serializers.PrimaryKeyRelatedField(queryset=DishSize.objects.all(), required=False)
+    arabic_name = serializers.SerializerMethodField()
     
     class Meta:
         model = OrderItem
-        fields = ["id","dish", "quantity","is_newly_added","variants","dish_size",]
-
+        fields = [
+            "id", 
+            "dish_name", 
+            "arabic_name", 
+            "price", 
+            "size_name", 
+            "quantity", 
+            "is_newly_added", 
+            "variants"
+        ]
+    
+    def get_arabic_name(self, obj):
+        try:
+            # Get the first dish with matching name
+            dish = Dish.objects.filter(name=obj.dish_name).first()
+            return dish.arabic_name if dish else None
+        except Dish.DoesNotExist:
+            return None
 
 class CustomerDetailsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -185,7 +200,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "chair_details",
             "foc_products",
             "foc_product_details",
-            "credit_amount"
+            "credit_amount",
         ]
     
     def get_foc_product_details(self, obj):
@@ -199,7 +214,6 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-
         items_data = validated_data.pop("items")
         foc_products_data = validated_data.pop("foc_products", [])
         user = self.context["request"].user
@@ -208,15 +222,13 @@ class OrderSerializer(serializers.ModelSerializer):
 
         for item_data in items_data:
             order_item = OrderItem.objects.create(order=order, **item_data)
-            if order_item.dish_size:
-                total_amount += order_item.quantity * order_item.dish_size.price
-            else:
-                total_amount += order_item.quantity * order_item.dish.price
+            total_amount += order_item.quantity * order_item.price
         
         # Add delivery charge to total amount if it's not the default value
         if order.delivery_charge != 0:
             total_amount += order.delivery_charge
-
+        if order.chair_amount != 0:
+              total_amount += order.chair_amount
         order.total_amount = total_amount
         order.foc_products.set(foc_products_data)
         order.save()
@@ -233,20 +245,14 @@ class OrderSerializer(serializers.ModelSerializer):
 
         # Sum existing items' total amount
         for existing_item in instance.items.all():
-            if existing_item.dish_size:
-                total_amount += existing_item.quantity * existing_item.dish_size.price
-            else:
-                total_amount += existing_item.quantity * existing_item.dish.price
+            total_amount += existing_item.quantity * existing_item.price
 
         # Add new items' total amount
         if items_data:
             for item_data in items_data:
                 item_data['is_newly_added'] = True  # Marking as newly added
                 order_item = OrderItem.objects.create(order=instance, **item_data)
-                if order_item.dish_size:
-                    total_amount += order_item.quantity * order_item.dish_size.price
-                else:
-                    total_amount += order_item.quantity * order_item.dish.price
+                total_amount += order_item.quantity * order_item.price
         
         # Add delivery charge to total amount if it's not the default value
         if instance.delivery_charge != 0:
@@ -373,7 +379,6 @@ class OrderTypeChangeSerializer(serializers.ModelSerializer):
 
     
 class BillOrderItemSerializer(serializers.ModelSerializer):
-    dish_name = serializers.CharField(source='dish.name', read_only=True)
     item_total = serializers.SerializerMethodField()
 
     class Meta:
@@ -381,7 +386,7 @@ class BillOrderItemSerializer(serializers.ModelSerializer):
         fields = ['dish_name', 'quantity', 'item_total']
 
     def get_item_total(self, obj):
-        return obj.dish.price * obj.quantity
+        return obj.price * obj.quantity
     
 
 class BillOrderSerializer(serializers.ModelSerializer):
@@ -396,7 +401,7 @@ class BillOrderSerializer(serializers.ModelSerializer):
                   'delivery_charge', 'sub_total']
 
     def get_sub_total(self, obj):
-        return sum(item.dish.price * item.quantity for item in obj.items.all())
+        return sum(item.price * item.quantity for item in obj.items.all())
     
 
 class BillSerializer(serializers.ModelSerializer):
@@ -412,7 +417,6 @@ class BillSerializer(serializers.ModelSerializer):
         order = validated_data.pop('order_id')
         bill = Bill.objects.create(order=order, user=order.user, **validated_data)
         return bill
-
 
 
 

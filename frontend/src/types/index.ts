@@ -16,23 +16,23 @@ export interface Dish {
 }
 
 export interface OrderItem {
-  item_id: number | string;
-  is_newly_added: boolean | undefined;
-  dish: number | string;
-  quantity: number | string; 
-  variants?: { variantId: number; name: string; quantity: number }[];
-  id: number | string;
-  total_amount: number | string;
-  dish_size:number | string;
+  id: number;
+  dish_name: string;
+  arabic_name?: string | null;
+  price: string | number;
+  size_name: string | null;
+  quantity: number;
+  is_newly_added?: boolean;
+  variants: any[];
 }
 
 export interface Order {
-  id: number | string;
+  id: number;
+  items: OrderItem[];
   created_at: string;
   total_amount: string | number;
   status: "pending" | "approved" | "cancelled" | "delivered";
   bill_generated: boolean;
-  items: OrderItem[];
   order_type: "dining" | "takeaway" | "delivery" | "onlinedelivery";
   online_order: string ;
   delivery_order_status:
@@ -100,32 +100,17 @@ export interface DishFormData {
 }
 
 export interface OrderFormData {
-  items: {
-    id: number | string;
-    dish: number | string;
-    quantity: number | string;
-    variants: {
-      variantId: number;
-      name: string;
-      quantity: number | string;
-    }[];
-    is_newly_added: boolean;
-    size?: number | null;
-  }[];
+  items: OrderItem[];
   total_amount: number;
-  status: "pending" | "approved" | "cancelled" | "delivered";
-  order_type: "dining" | "takeaway" | "delivery" | "onlinedelivery";
-  payment_method?: "cash" | "bank" | "cash-bank" | "credit";
-  bank_amount?: number;
-  cash_amount?: number | string;
-  customer_name: string;
+  status: string;
+  order_type: string;
   address: string;
+  customer_name: string;
   customer_phone_number: string;
   delivery_charge: number;
   delivery_driver_id: number | null;
-  credit_user_id?: number | null;
-  kitchen_note?: string;
-  online_order?: string | null;
+  kitchen_note: string;
+  online_order?: string;
 }
 
 // Analytics types
@@ -419,6 +404,7 @@ export interface FOCProduct {
 }
 
 export interface ChairDetail {
+  id: number | string;
   chair_id: number;
   chair_name: string;
   customer_name: string;
@@ -427,9 +413,8 @@ export interface ChairDetail {
   end_time: string;
   amount: string | number;
   total_time: string;
-  id: number | string ;
   order: number;
-    
+  booking_id?: string;
 }
 
 export interface Size {

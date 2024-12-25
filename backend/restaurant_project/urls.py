@@ -12,6 +12,7 @@ from restaurant_app.views import (
     DishSizeViewSet,
     FOCProductViewSet,
     OnlineOrderViewSet,
+    OrderItemViewSet,
     UserViewSet,
     toggle_sidebar_item_active,
     CategoryViewSet,
@@ -69,6 +70,7 @@ router.register(r"categories", CategoryViewSet, basename="categories")
 router.register(r'customer-details', CustomerDetailsViewSet, basename='customer-details')
 router.register(r'online-orders', OnlineOrderViewSet)
 router.register(r"orders", OrderViewSet, basename="orders")  # Primary Orders ViewSet
+router.register(r'order-items', OrderItemViewSet, basename="order-items")
 router.register(r"order-type", OrderTypeChangeViewSet, basename="order_type")  # Separate route for changing order types
 router.register(r"bills", BillViewSet, basename="bills")
 router.register(r"notifications", NotificationViewSet, basename="notifications")

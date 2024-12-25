@@ -215,11 +215,11 @@ class Order(models.Model):
 
     user = models.ForeignKey(User, related_name="orders", on_delete=models.CASCADE)
     # created_at = models.DateTimeField(auto_now_add=True)
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now) 
     total_amount = models.DecimalField(max_digits=8, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     bill_generated = models.BooleanField(default=False)
-    order_type = models.CharField(
+    order_type = models.CharField(  
         max_length=20, choices=ORDER_TYPE_CHOICES, default="dining"
     )
     payment_method = models.CharField(
@@ -241,7 +241,7 @@ class Order(models.Model):
     credit_user_id = models.IntegerField(null=True, blank=True)
     kitchen_note = models.TextField(blank=True)
     online_order = models.ForeignKey(
-        'OnlineOrder', 
+        'OnlineOrder',  
         on_delete=models.SET_NULL,  
         null=True,  
         blank=True  
@@ -277,11 +277,24 @@ class Order(models.Model):
         return self.order_type == "delivery"
     
     def recalculate_total(self):
+        # Calculate sum of all items using the direct price field
         total_amount = sum(
-            item.dish_size.price if item.dish_size else item.dish.price
+            float(item.price) * item.quantity
             for item in self.items.all()
         )
-        total_amount += self.delivery_charge
+        
+        # Add delivery charge if present
+        if self.delivery_charge:
+            total_amount += float(self.delivery_charge)
+        
+        # Add chair amount if present
+        if self.chair_amount:
+            total_amount += float(self.chair_amount)
+        
+        # Round to 2 decimal places
+        total_amount = round(total_amount, 2)
+        
+        # Update and save
         self.total_amount = total_amount
         self.save(update_fields=["total_amount"])
 
@@ -301,15 +314,16 @@ def create_customer_details(sender, instance, **kwargs):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
-    dish_size = models.ForeignKey(DishSize, on_delete=models.CASCADE, null=True, blank=True)
+    dish_name = models.CharField(max_length=200)
+    price = models.DecimalField(max_digits=6, decimal_places=2)
+    size_name = models.CharField(max_length=20, blank=True, null=True)
     quantity = models.PositiveIntegerField(default=1)
     is_newly_added = models.BooleanField(default=False)
     variants = models.JSONField(default=list)
 
     def __str__(self):
-        size_info = f" - {self.dish_size.size}" if self.dish_size else ""
-        return f"{self.order.id} - {self.dish}{size_info} - {self.quantity}"
+        size_info = f" - {self.size_name}" if self.size_name else ""
+        return f"{self.order.id} - {self.dish_name}{size_info} - {self.quantity}"
 
 
 class Bill(models.Model):

@@ -14,7 +14,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Sum, Count, Avg, F, Value,DecimalField, IntegerField
 from django.utils.dateparse import parse_date
 from django.db.models import Q, Case, When
-from django.db.models.functions import TruncDate, TruncHour
+from django.db.models.functions import TruncDate, TruncHour, ExtractHour
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from delivery_drivers.models import DeliveryOrder
@@ -309,63 +309,107 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=['GET'])
     def dashboard_data(self, request):
-        time_range = request.query_params.get("time_range", "month")
-        queryset = self.get_queryset_by_time_range(time_range)
+        time_range = request.query_params.get('time_range', 'week')
+        today = timezone.now().date()
 
-        daily_sales = (
-            queryset.filter(status="delivered").annotate(date=TruncDate("created_at"))
-            .values("date")
-            .annotate(total_sales=Sum("total_amount"), order_count=Count("id"))
-            .order_by("date")
+        # Set date range based on time_range parameter
+        if time_range == 'day':
+            start_date = today
+        elif time_range == 'week':
+            start_date = today - timedelta(days=7)
+        elif time_range == 'month':
+            start_date = today - timedelta(days=30)
+        else:  # year
+            start_date = today - timedelta(days=365)
+
+        # Base queryset for the date range - only delivered orders
+        orders = Order.objects.filter(
+            created_at__date__gte=start_date,
+            status='delivered'  # Only consider delivered orders
         )
-        print("dialy_sales",daily_sales)
-        total_income = (
-            queryset.filter(status="delivered").aggregate(total_income=Sum("total_amount"))["total_income"] or 0
+        order_items = OrderItem.objects.filter(
+            order__created_at__date__gte=start_date,
+            order__status='delivered'  # Only consider items from delivered orders
         )
 
-        popular_time_slots = (
-            queryset.filter(status="delivered").annotate(hour=TruncHour("created_at"))
-            .values("hour")
-            .annotate(order_count=Count("id"))
-            .order_by("-order_count")[:5]
-        )
+        # Calculate metrics for delivered orders only
+        total_income = orders.aggregate(total=Sum('total_amount'))['total'] or 0
+        total_orders = orders.count()
+        avg_order_value = total_income / total_orders if total_orders > 0 else 0
 
+        # Top dishes from delivered orders
         top_dishes = (
-            OrderItem.objects.filter(order__in=queryset)
-            .values(
-                "dish__name",
-                "dish__image",
+            order_items
+            .values('dish_name')
+            .annotate(
+                orders=Count('id'),
+                total_sales=Sum(F('price') * F('quantity'))
             )
-            .annotate(orders=Count("id"))
-            .order_by("-orders")[:5]
+            .order_by('-orders')[:5]
         )
 
+        # Category sales from delivered orders
         category_sales = (
-            OrderItem.objects.filter(order__in=queryset)
-            .values("dish__category__name")
-            .annotate(value=Sum(F("quantity") * F("dish__price")))
-            .order_by("-value")
+            order_items
+            .values('dish_name')
+            .annotate(
+                value=Sum(F('price') * F('quantity'))
+            )
+            .order_by('-value')[:5]
         )
 
-        total_orders = queryset.filter(status="delivered").count()
-
-        avg_order_value = (
-            queryset.aggregate(avg_value=Avg("total_amount"))["avg_value"] or 0
+        # Popular time slots for delivered orders
+        popular_time_slots = (
+            orders
+            .annotate(hour=ExtractHour('created_at'))
+            .values('hour')
+            .annotate(order_count=Count('id'))
+            .order_by('-order_count')[:5]
         )
 
-        return Response(
-            {
-                "daily_sales": daily_sales,
-                "total_income": total_income,
-                "popular_time_slots": popular_time_slots,
-                "top_dishes": top_dishes,
-                "category_sales": category_sales,
-                "total_orders": total_orders,
-                "avg_order_value": avg_order_value,
-            }
+        # Daily sales data for delivered orders
+        daily_sales = []
+        current_date = start_date
+        while current_date <= today:
+            day_orders = orders.filter(created_at__date=current_date)
+            daily_sales.append({
+                'date': current_date.strftime('%Y-%m-%d'),
+                'total_sales': day_orders.aggregate(total=Sum('total_amount'))['total'] or 0,
+                'order_count': day_orders.count()
+            })
+            current_date += timedelta(days=1)
+
+        # Calculate trends for delivered orders
+        previous_start_date = start_date - timedelta(days=(today - start_date).days)
+        previous_orders = Order.objects.filter(
+            created_at__date__gte=previous_start_date,
+            created_at__date__lt=start_date,
+            status='delivered'  # Only consider delivered orders for trends
         )
+
+        previous_total_income = previous_orders.aggregate(total=Sum('total_amount'))['total'] or 0
+        previous_total_orders = previous_orders.count()
+        previous_avg_order = previous_total_income / previous_total_orders if previous_total_orders > 0 else 0
+
+        # Calculate percentage changes
+        total_income_trend = ((total_income - previous_total_income) / previous_total_income * 100) if previous_total_income > 0 else 0
+        total_orders_trend = ((total_orders - previous_total_orders) / previous_total_orders * 100) if previous_total_orders > 0 else 0
+        avg_order_trend = ((avg_order_value - previous_avg_order) / previous_avg_order * 100) if previous_avg_order > 0 else 0
+        print("popular_time_slots",popular_time_slots)
+        return Response({
+            'total_income': total_income,
+            'total_orders': total_orders,
+            'avg_order_value': avg_order_value,
+            'popular_time_slots': popular_time_slots,
+            'daily_sales': daily_sales,
+            'top_dishes': top_dishes,
+            'category_sales': category_sales,
+            'total_income_trend': total_income_trend,
+            'total_orders_trend': total_orders_trend,
+            'avg_order_value_trend': avg_order_trend,
+        })
 
     @action(detail=False, methods=["get"])
     def sales_trends(self, request):
@@ -424,50 +468,73 @@ class OrderViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def product_wise_report(self, request):
-        from_date = request.query_params.get('from_date')
-        to_date = request.query_params.get('to_date')
+        try:
+            # Get parameters from request
+            from_date = request.query_params.get('from_date')
+            to_date = request.query_params.get('to_date')
+            dish_name = request.query_params.get('dish_name')
+            
+            # Base query for OrderItems
+            query = OrderItem.objects.all()
+            
+            # Apply filters
+            if from_date and to_date:
+                query = query.filter(
+                    order__created_at__date__range=[from_date, to_date]
+                )
+            
+            # Filter by dish_name if provided
+            if dish_name:
+                query = query.filter(dish_name=dish_name)
 
-        # Parse the dates if they are provided
-        if from_date:
-            from_date = parse_date(from_date)
-        if to_date:
-            to_date = parse_date(to_date)
-
-        # Filter orders by the provided date range only if dates are available
-        filter_kwargs = {}
-        if from_date:
-            filter_kwargs['created_at__date__gte'] = from_date
-        if to_date:
-            filter_kwargs['created_at__date__lte'] = to_date
-
-        orders = Order.objects.filter(**filter_kwargs)
-
-        # Properly cast fields and define output fields in the aggregation
-        order_items = OrderItem.objects.filter(order__in=orders).values(
-            'dish__name'
-        ).annotate(
-            product_name=F('dish__name'),
-            total_quantity=Sum('quantity'),
-            total_amount=Sum(
-                Case(
-                    When(order__total_amount__isnull=False, then=F('order__total_amount')),
+            # Rest of the aggregation logic remains the same
+            product_report = query.values(
+                'dish_name',
+                'order__invoice_number',
+                'order__created_at',
+                'order__order_type',
+                'order__payment_method'
+            ).annotate(
+                total_quantity=Sum('quantity'),
+                total_amount=Sum(F('price') * F('quantity')),
+                cash_amount=Case(
+                    When(order__payment_method='cash', then=F('price') * F('quantity')),
+                    default=Value(0),
+                    output_field=DecimalField()
+                ),
+                bank_amount=Case(
+                    When(order__payment_method='bank', then=F('price') * F('quantity')),
+                    default=Value(0),
+                    output_field=DecimalField()
+                ),
+                credit_amount=Case(
+                    When(order__payment_method='credit', then=F('price') * F('quantity')),
                     default=Value(0),
                     output_field=DecimalField()
                 )
-            ),
-            invoice_number=F('order__invoice_number'),
-            order_created_at=F('order__created_at'),
-            order_type=F('order__order_type'),
-            cash_amount=F('order__cash_amount'),
-            bank_amount=F('order__bank_amount'),
-            credit_amount=F('order__credit_amount'),
-            payment_method=F('order__payment_method')
-        )
+            ).order_by('dish_name')
 
-        # Format the response
-        report_data = list(order_items)
+            # Format the response
+            formatted_report = [{
+                'dish_name': item['dish_name'],
+                'total_quantity': item['total_quantity'],
+                'total_amount': str(item['total_amount']),
+                'invoice_number': item['order__invoice_number'],
+                'order_created_at': item['order__created_at'],
+                'order_type': item['order__order_type'],
+                'payment_method': item['order__payment_method'],
+                'cash_amount': str(item['cash_amount']),
+                'bank_amount': str(item['bank_amount']),
+                'credit_amount': str(item['credit_amount'])
+            } for item in product_report]
 
-        return Response(report_data)
+            return Response(formatted_report)
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=False, methods=['GET'], url_path='online-delivery-report')
     def online_delivery_report(self, request):
@@ -565,8 +632,8 @@ class OrderViewSet(viewsets.ModelViewSet):
             if to_date_parsed:
                 orders = orders.filter(created_at__date__lte=to_date_parsed)
 
-        # Prefetch related items and dishes
-        orders = orders.prefetch_related('items', 'items__dish')
+        # Only prefetch items since dish is no longer a relationship
+        orders = orders.prefetch_related('items')
         
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
@@ -700,6 +767,34 @@ class OrderTypeChangeViewSet(viewsets.ViewSet):
                 return Response(response_data, status=status.HTTP_200_OK)
 
             return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class OrderItemViewSet(viewsets.ModelViewSet):
+    queryset = OrderItem.objects.all()
+    serializer_class = OrderItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def partial_update(self, request, *args, **kwargs):
+        order_item = self.get_object()
+        
+        # Check if the associated order is already delivered
+        if order_item.order.status == "delivered":
+            return Response(
+                {"error": "Cannot modify items of delivered orders"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Update the price
+        serializer = self.get_serializer(order_item, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            
+            # Recalculate the order total
+            order_item.order.recalculate_total()
+            
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

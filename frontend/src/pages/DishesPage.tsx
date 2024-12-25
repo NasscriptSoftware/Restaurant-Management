@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, UseQueryResult } from "react-query";
 import { Check, ChevronsUpDown, CircleCheck, Search, Image, ImageOff, HandPlatter, Coffee } from "lucide-react";
@@ -35,7 +35,6 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import Loader from "@/components/Layout/Loader";
 import { AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/features/store";
@@ -45,10 +44,17 @@ import {
   setItems,
   updateQuantity,
 } from "@/features/slices/orderSlice";
+import debounce from 'lodash/debounce';
+import { memo } from 'react';
 
 type OrderType = "dining" | "takeaway" | "delivery" | "onlinedelivery";
 
-export type OrderDish = Dish & { quantity: number; variants: any[]; selectedSize?: Size };
+export type OrderDish = Dish & { 
+  quantity: number; 
+  variants: any[]; 
+  selectedSize?: Size;
+  price: number;  // Ensure price is always number
+};
 
 // ... existing imports ...
 
@@ -68,6 +74,14 @@ interface Size {
 
 // Update the type definition
 type OnlineOrdersResponse = OnlineOrder[];
+
+// 1. Memoize category finding operations
+const useCategoryByName = (categories: Category[] | undefined, name: string) => {
+  return useMemo(() => 
+    categories?.find(category => category.name.toLowerCase() === name.toLowerCase()),
+    [categories, name]
+  );
+};
 
 const DishesPage: React.FC = () => {
   const dispatch = useDispatch();
@@ -91,13 +105,9 @@ const DishesPage: React.FC = () => {
   const [isMainDishesView, setIsMainDishesView] = useState(false);
   const [isServicesView, setIsServicesView] = useState(false);
 
-  const mainDishesCategory = categories?.find(
-    (category) => category.name.toLowerCase() === "main dishes"
-  );
-
-  const servicesCategory = categories?.find(
-    (category) => category.name.toLowerCase() === "services"
-  );
+  // 2. Use memoized categories
+  const mainDishesCategory = useCategoryByName(categories, "main dishes");
+  const servicesCategory = useCategoryByName(categories, "services");
 
   const [isOrderVisible, setIsOrderVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -137,6 +147,61 @@ const DishesPage: React.FC = () => {
 
   const data = dishes || [];
 
+  // 3. Memoize filtered dishes
+  const filteredDishes = useMemo(() => {
+    return data.filter((dish: Dish) => {
+      const categoryMatch =
+        selectedCategory === null ||
+        (typeof dish.category === "number"
+          ? dish.category === selectedCategory
+          : dish.category.id === selectedCategory);
+      const searchMatch = dish.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const mainDishesMatch = isMainDishesView
+        ? dish.category === mainDishesCategory?.id
+        : true;
+      const servicesMatch = isServicesView
+        ? dish.category === servicesCategory?.id
+        : true;
+      return categoryMatch && searchMatch && mainDishesMatch && servicesMatch;
+    });
+  }, [data, selectedCategory, searchQuery, isMainDishesView, isServicesView, mainDishesCategory, servicesCategory]);
+
+  // 4. Memoize the subtotal and total calculations
+  const { subtotal, total } = useMemo(() => {
+    const subtotal = orderItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    return { subtotal, total: subtotal };
+  }, [orderItems]);
+
+  // 5. Optimize customer search with debounce
+  const debouncedCustomerSearch = useCallback(
+    debounce((query: string) => {
+      if (query.length >= 3) {
+        fetchCustomerDetails().then((data) => {
+          const lowercaseQuery = query.toLowerCase();
+          const filteredCustomers = data.filter((customer: any) => {
+            return customer.customer_name.toLowerCase().includes(lowercaseQuery) ||
+                   customer.phone_number.includes(query);
+          });
+          setCustomers(filteredCustomers);
+        });
+      } else {
+        setCustomers([]);
+      }
+    }, 300),
+    []
+  );
+
+  // Update the customer search effect
+  useEffect(() => {
+    debouncedCustomerSearch(customerSearchQuery);
+    return () => debouncedCustomerSearch.cancel();
+  }, [customerSearchQuery, debouncedCustomerSearch]);
+
   const handleMainDishesClick = () => {
     setIsMainDishesView(true);
     setIsServicesView(false);
@@ -157,24 +222,6 @@ const DishesPage: React.FC = () => {
     setIsMainDishesView(false);
     setIsServicesView(false);
   };
-
-  const filteredDishes = data.filter((dish: Dish) => {
-    const categoryMatch =
-      selectedCategory === null ||
-      (typeof dish.category === "number"
-        ? dish.category === selectedCategory
-        : dish.category.id === selectedCategory);
-    const searchMatch = dish.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const mainDishesMatch = isMainDishesView
-      ? dish.category === mainDishesCategory?.id
-      : true;
-    const servicesMatch = isServicesView
-      ? dish.category === servicesCategory?.id
-      : true;
-    return categoryMatch && searchMatch && mainDishesMatch && servicesMatch;
-  });
 
   useEffect(() => {
     if (showSuccessModal) {
@@ -205,25 +252,6 @@ const DishesPage: React.FC = () => {
     localStorage.setItem("showImage", JSON.stringify(showImage));
   }, [showImage]);
 
-  useEffect(() => {
-    if (customerSearchQuery.length >= 3) {
-      fetchCustomerDetails().then((data) => {
-        console.log("API response:", data);
-        const lowercaseQuery = customerSearchQuery.toLowerCase();
-        const filteredCustomers = data.filter((customer: any) => {
-          const nameMatch = customer.customer_name.toLowerCase().includes(lowercaseQuery);
-          const phoneMatch = customer.phone_number.includes(customerSearchQuery);
-          console.log(`Customer: ${customer.customer_name}, Name match: ${nameMatch}, Phone match: ${phoneMatch}`);
-          return nameMatch || phoneMatch;
-        });
-        console.log("Filtered customers:", filteredCustomers);
-        setCustomers(filteredCustomers);
-      });
-    } else {
-      setCustomers([]);
-    }
-  }, [customerSearchQuery]);
-
   const handleSelectCustomer = (customer: any) => {
     setCustomerName(customer.customer_name);
     setDeliveryAddress(customer.address);
@@ -233,32 +261,63 @@ const DishesPage: React.FC = () => {
   };
 
   const handleAddDish = (dish: Dish & { selectedSize?: Size }) => {
-    if (dish.sizes && dish.sizes.length > 0) {
-      // If the dish has sizes, add each size as a separate item
-      dish.sizes.forEach((size) => {
-        const newDish = {
-          ...dish,
-          id: `${dish.id}-${size.id}`, // Create a unique ID for each size
-          price: parseFloat(size.price),
+    const isServiceDish = typeof dish.category === 'number' 
+      ? dish.category === servicesCategory?.id
+      : dish.category.id === servicesCategory?.id;
+
+    if (isServiceDish) {
+      const dishId = typeof dish.id === 'string' ? Number(dish.id) : dish.id;
+      if (isNaN(dishId)) {
+        throw new Error(`Invalid dish ID: ${dish.id}`);
+      }
+
+      const orderData: OrderFormData = {
+        items: [{
+          id: dishId,
+          dish_name: dish.name,
+          price: dish.price.toString(),
           quantity: 1,
           variants: [],
-          selectedSize: size,
+          is_newly_added: false,
+          size_name: null
+        }],
+        total_amount: typeof dish.price === 'string' ? parseFloat(dish.price) : dish.price,
+        status: "pending",
+        order_type: "dining",
+        address: "",
+        customer_name: "",
+        customer_phone_number: "",
+        delivery_charge: 0,
+        delivery_driver_id: null,
+        kitchen_note: "",
+      };
 
+      createOrder(orderData);
+      setShowSuccessModal(true);
+    } else {
+      if (dish.sizes && dish.sizes.length > 0) {
+        dish.sizes.forEach((size) => {
+          const newDish: OrderDish = {
+            ...dish,
+            id: `${dish.id}-${size.id}`,
+            price: parseFloat(size.price),
+            quantity: 1,
+            variants: [],
+            selectedSize: size,
+          };
+          dispatch(addItem(newDish));
+        });
+      } else {
+        const newDish: OrderDish = {
+          ...dish,
+          price: typeof dish.price === 'string' ? parseFloat(dish.price) : dish.price,
+          quantity: 1,
+          variants: [],
         };
         dispatch(addItem(newDish));
-      });
-    } else {
-      // If the dish doesn't have sizes, add it as before
-      const price = dish.price ? dish.price : 0;
-      const newDish = {
-        ...dish,
-        price,
-        quantity: 1,
-        variants: [],
-      };
-      dispatch(addItem(newDish));
+      }
+      setIsOrderVisible(true);
     }
-    setIsOrderVisible(true);
   };
 
   const updateQuantityFn = (id: number | string, change: number) => {
@@ -280,41 +339,38 @@ const DishesPage: React.FC = () => {
           setError("Delivery address is required for delivery orders.");
           return;
         }
-        // if (!selectedDriver) {
-        //   setError("A delivery driver must be selected for delivery orders.");
-        //   return;
-        // }
       }
+
       const orderData: OrderFormData = {
         items: orderItems.map((item) => {
-          let dishId = item.id;
-          let sizeId = null;
+          let dishId: number;
+          let sizeId: number | null = null;
 
-          // Check if the item has a selectedSize property
+          // Handle composite IDs (dish-size format)
           if (item.selectedSize && typeof item.selectedSize.id === "number") {
             sizeId = item.selectedSize.id;
-            // If the item.id is a string, it might be the composite id
+            // Extract the dish ID from the composite ID
             if (typeof item.id === "string") {
               const parts = item.id.split("-");
-              if (parts.length === 2) {
-                dishId = parseInt(parts[0], 10);
-                // We already have sizeId from selectedSize, so we don't need to parse it again
-              } else {
-                // If it's not in the expected format, use the whole string as dishId
-                dishId = parseInt(item.id, 10) || item.id;
+              dishId = parts.length === 2 ? parseInt(parts[0], 10) : Number(item.id);
+              if (isNaN(dishId)) {
+                throw new Error(`Invalid dish ID: ${item.id}`);
               }
+            } else {
+              dishId = item.id;
             }
           } else {
-            // If there's no selectedSize, treat the id as is
-            dishId =
-              typeof item.id === "string"
-                ? parseInt(item.id, 10) || item.id
-                : item.id;
+            // Handle regular IDs
+            dishId = typeof item.id === "string" ? Number(item.id) : item.id;
+            if (isNaN(dishId)) {
+              throw new Error(`Invalid dish ID: ${item.id}`);
+            }
           }
 
           return {
             id: dishId,
-            dish: dishId,
+            dish_name: item.name,
+            price: item.price.toString(),
             quantity: item.quantity || 0,
             variants: item.variants.map((variant) => ({
               variantId: variant.variantId,
@@ -322,6 +378,7 @@ const DishesPage: React.FC = () => {
               quantity: variant.quantity,
             })),
             is_newly_added: false,
+            size_name: item.selectedSize?.size || null,
             ...(sizeId !== null ? { dish_size: sizeId } : {}),
           };
         }),
@@ -330,12 +387,9 @@ const DishesPage: React.FC = () => {
         order_type: orderType,
         address: orderType === "delivery" ? deliveryAddress : "",
         customer_name: orderType === "delivery" ? customerName : "",
-        customer_phone_number:
-          orderType === "delivery" ? customerMobileNumber : "",
-        delivery_charge:
-          orderType === "delivery" ? parseFloat(deliveryCharge) : 0,
-        delivery_driver_id:
-          orderType === "delivery" && selectedDriver ? selectedDriver.id : null,
+        customer_phone_number: orderType === "delivery" ? customerMobileNumber : "",
+        delivery_charge: orderType === "delivery" ? parseFloat(deliveryCharge) : 0,
+        delivery_driver_id: orderType === "delivery" && selectedDriver ? selectedDriver.id : null,
         kitchen_note: kitchenNote,
       };
 
@@ -345,7 +399,6 @@ const DishesPage: React.FC = () => {
       }
 
       console.log("orderData", orderData);
-
       createOrder(orderData);
       setShowSuccessModal(true);
       handleClearItems();
@@ -388,9 +441,32 @@ const DishesPage: React.FC = () => {
   if (isLoading)
     return (
       <Layout>
-        <Loader />
+        <div className="flex flex-col lg:flex-row">
+          <div className="w-full pr-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start mb-8">
+              <div className="flex flex-col gap-2 ml-10 mt-2">
+                <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="h-10 w-64 bg-gray-200 rounded animate-pulse" />
+                <div className="h-10 w-10 bg-gray-200 rounded animate-pulse" />
+                <div className="h-8 w-28 bg-gray-200 rounded-full animate-pulse" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+              {[...Array(20)].map((_, i) => (
+                <div key={i} className="flex flex-col gap-2">
+                  <div className="h-40 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </Layout>
     );
+
   if (isError)
     return (
       <div className="flex justify-center items-center h-screen">
@@ -398,11 +474,8 @@ const DishesPage: React.FC = () => {
       </div>
     );
 
-  const subtotal = orderItems.reduce(
-    (sum, item) => sum + (typeof item.price === 'number' ? item.price : parseFloat(item.price)) * item.quantity,
-    0
-  );
-  const total = subtotal;
+  // 6. Memoize the DishList component
+  const MemoizedDishList = memo(DishList);
 
   return (
     <Layout>
@@ -515,11 +588,11 @@ const DishesPage: React.FC = () => {
                 </Button>
               ))}
           </div>
-          <DishList
+          <MemoizedDishList
             dishes={
               isServicesView
-                ? filteredDishes as Dish[]
-                : filterOutServiceDishes(filteredDishes) as Dish[]
+                ? filteredDishes
+                : filterOutServiceDishes(filteredDishes)
             }
             onAddDish={handleAddDish}
             showImage={showImage}

@@ -1,14 +1,17 @@
 import React from "react";
 
 type ProductReport = {
-  product_name: string;
+  dish_name: string;
+  total_quantity: number;
+  total_amount: number;
   invoice_number: string;
-  created_at: string;
+  order_created_at: string;
   order_type: string;
-  payment_method: string;
   cash_amount: string;
   bank_amount: string;
-  total_amount: number;
+  credit_amount: string;
+  payment_method: string;
+  created_at: string;
 };
 
 export interface SalesReport {
@@ -312,7 +315,8 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
           <table>
             <thead>
               <tr>
-                <th>ID</th>
+                <th>Product Name</th>
+                <th>Quantity</th>
                 <th>Invoice No</th>
                 <th>Date</th>
                 <th>Order Type</th>
@@ -324,21 +328,22 @@ const SalesPrint: React.FC<SalesPrintProps> = ({
             </thead>
             <tbody>
               ${productReports
-              .map(
-                (report) => `
-                <tr>
-                  <td>${report.product_name}</td>
-                  <td>${report.invoice_number}</td>
-                  <td>${new Date(report.created_at).toLocaleDateString()}</td>
-                  <td>${report.order_type}</td>
-                  <td>${report.payment_method}</td>
-                  <td>${report.cash_amount}</td>
-                  <td>${report.bank_amount}</td>
-                  <td>${report.total_amount}</td>
-                </tr>
-              `
-              )
-              .join("")}
+                .map(
+                  (report) => `
+                  <tr>
+                    <td>${report.dish_name}</td>
+                    <td>${report.total_quantity}</td>
+                    <td>${report.invoice_number}</td>
+                    <td>${new Date(report.order_created_at).toLocaleDateString()}</td>
+                    <td>${report.order_type}</td>
+                    <td>${report.payment_method}</td>
+                    <td>${report.cash_amount}</td>
+                    <td>${report.bank_amount}</td>
+                    <td>${report.total_amount}</td>
+                  </tr>
+                `
+                )
+                .join("")}
             </tbody>
             <tfoot>
               <tr>

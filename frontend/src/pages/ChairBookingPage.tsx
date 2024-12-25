@@ -41,7 +41,6 @@ type ChairBooking = {
 }
 
 type View = 'booked' | 'available' | 'book' | 'history'
-type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed'
 
 // Add this type for cell editing
 type EditableCellProps = {
