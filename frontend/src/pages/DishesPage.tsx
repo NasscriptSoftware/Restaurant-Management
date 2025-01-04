@@ -346,10 +346,8 @@ const DishesPage: React.FC = () => {
           let dishId: number;
           let sizeId: number | null = null;
 
-          // Handle composite IDs (dish-size format)
           if (item.selectedSize && typeof item.selectedSize.id === "number") {
             sizeId = item.selectedSize.id;
-            // Extract the dish ID from the composite ID
             if (typeof item.id === "string") {
               const parts = item.id.split("-");
               dishId = parts.length === 2 ? parseInt(parts[0], 10) : Number(item.id);
@@ -360,7 +358,6 @@ const DishesPage: React.FC = () => {
               dishId = item.id;
             }
           } else {
-            // Handle regular IDs
             dishId = typeof item.id === "string" ? Number(item.id) : item.id;
             if (isNaN(dishId)) {
               throw new Error(`Invalid dish ID: ${item.id}`);
@@ -385,15 +382,14 @@ const DishesPage: React.FC = () => {
         total_amount: parseFloat(total.toFixed(2)),
         status: "pending",
         order_type: orderType,
-        address: orderType === "delivery" ? deliveryAddress : "",
-        customer_name: orderType === "delivery" ? customerName : "",
-        customer_phone_number: orderType === "delivery" ? customerMobileNumber : "",
+        address: deliveryAddress || "",
+        customer_name: customerName || "",
+        customer_phone_number: customerMobileNumber || "",
         delivery_charge: orderType === "delivery" ? parseFloat(deliveryCharge) : 0,
         delivery_driver_id: orderType === "delivery" && selectedDriver ? selectedDriver.id : null,
         kitchen_note: kitchenNote,
       };
 
-      // Add online_order only if orderType is "onlinedelivery"
       if (orderType === "onlinedelivery" && onlineDeliveryData) {
         orderData.online_order = JSON.stringify(onlineDeliveryData.id);
       }
@@ -752,6 +748,71 @@ const DishesPage: React.FC = () => {
                   </Command>
                 </div>
               )}
+              {(orderType === "dining" || orderType === "takeaway") && (
+                <div className="w-full">
+                  <div className="mt-4 flex flex-col gap-2 w-full">
+                    <Label className="text-sm font-medium mb-2 block">
+                      Select Customer
+                    </Label>
+                    <Input
+                      type="text"
+                      placeholder="Search Customer..."
+                      value={customerSearchQuery}
+                      onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                      className="h-9 w-full"
+                    />
+                    {customers.length > 0 ? (
+                      <ul className="mt-2 border rounded-md shadow-sm w-full">
+                        {customers.map((customer) => (
+                          <li
+                            key={customer.id}
+                            onClick={() => handleSelectCustomer(customer)}
+                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                          >
+                            {customer.customer_name} - {customer.phone_number}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      customerSearchQuery.length >= 3 && (
+                        <p className="mt-2 text-sm text-gray-500">No customers found</p>
+                      )
+                    )}
+                    <div className="w-full space-y-4">
+                      <div className="flex flex-col gap-2 w-full">
+                        <Label htmlFor="customerName">Customer Name (Optional)</Label>
+                        <Input
+                          id="customerName"
+                          value={customerName}
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          placeholder="Enter customer name"
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2 w-full">
+                        <Label htmlFor="customerMobileNumber">Customer Number (Optional)</Label>
+                        <Input
+                          id="customerMobileNumber"
+                          value={customerMobileNumber}
+                          onChange={(e) => setCustomerMobileNumber(e.target.value)}
+                          placeholder="Enter customer contact number"
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2 w-full">
+                        <Label htmlFor="address">Address (Optional)</Label>
+                        <Input
+                          id="address"
+                          value={deliveryAddress}
+                          onChange={(e) => setDeliveryAddress(e.target.value)}
+                          placeholder="Enter address"
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               {orderType === "delivery" && (
                 <div className="w-full">
                   <div className="mt-4 flex flex-col gap-2 w-full">
@@ -880,24 +941,21 @@ const DishesPage: React.FC = () => {
                         <AlertDescription>{error}</AlertDescription>
                       </Alert>
                     )}
-                    <Button className="w-full my-6" onClick={handleCheckout}>
-                      Checkout
-                    </Button>
                   </div>
                 </div>
               )}
-              {orderType !== "delivery" && (
-                <div className="mt-4 w-full">
-                  {error && (
-                    <Alert variant="destructive" className="mt-4">
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
+              <div className="mt-4 w-full">
+                {error && (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                {orderType !== "onlinedelivery" && (
                   <Button className="w-full my-6" onClick={handleCheckout}>
                     Checkout
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}

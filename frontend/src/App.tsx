@@ -35,6 +35,7 @@ const SalesReportPage = lazy(() => import("./pages/ReportPage"));
 const TransactionsPage = lazy(() => import("./pages/TransactionsPage"));
 const ShareManagement = lazy(() => import("./pages/ShareManagement"));
 const DayBookPage = lazy(() => import("./pages/DayBookPage"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
 
 function App() {
   return (
@@ -126,6 +127,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/landing"
+                  element={
+                    <ProtectedRoute allowedRoles={["staff", "admin"]}>
+                      <LandingPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/home"
                   element={
                     <ProtectedRoute allowedRoles={["staff", "admin"]}>
@@ -149,10 +158,10 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                 <Route
+                <Route
                   path="/chair-booking"
                   element={
-                    <ProtectedRoute allowedRoles={["admin","staff"]}>
+                    <ProtectedRoute allowedRoles={["admin", "staff"]}>
                       <ChairBooking />
                     </ProtectedRoute>
                   }

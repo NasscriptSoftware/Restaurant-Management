@@ -302,15 +302,16 @@ class Order(models.Model):
 @receiver(post_save, sender=Order)
 def create_customer_details(sender, instance, **kwargs):
     # Check if the order type is "delivery"
-    if instance.order_type == "delivery":
-        # Check if the phone number exists in the CustomerDetails table
-        if not CustomerDetails.objects.filter(phone_number=instance.customer_phone_number).exists():
-            # Create a new CustomerDetails entry
-            CustomerDetails.objects.create(
-                customer_name=instance.customer_name,
-                phone_number=instance.customer_phone_number,
-                address=instance.address
-            )
+    if instance.customer_phone_number != "" and instance.customer_name != "" and instance.address != "" and instance.order_type != "onlinedelivery":
+        if instance.order_type == "delivery" or instance.order_type == "dining" or instance.order_type == "takeaway":
+            # Check if the phone number exists in the CustomerDetails table
+            if not CustomerDetails.objects.filter(phone_number=instance.customer_phone_number).exists():
+                # Create a new CustomerDetails entry
+                CustomerDetails.objects.create(
+                    customer_name=instance.customer_name,
+                    phone_number=instance.customer_phone_number,
+                    address=instance.address
+                )
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
