@@ -5,6 +5,7 @@ import Layout from '@/components/Layout/Layout'
 
 export default function Dashboard() {
     const cards = [
+        { name: "Customers", icon: ClipboardList, href: "/customer-details" },
         { name: "Dishes", icon: UtensilsCrossed, href: "/dishes" },
         { name: "Orders", icon: ClipboardList, href: "/orders" },
         { name: "Chairs", icon: Armchair, href: "/chairs" },

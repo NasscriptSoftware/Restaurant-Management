@@ -30,6 +30,7 @@ import {
   ChevronLeft,
   CalendarCheck ,
   Bolt,
+  ClipboardList,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import LogoutBtn from "./LogoutBtn";
@@ -58,7 +59,7 @@ const iconMap = {
   armchair: Armchair,
   calendarcheck: CalendarCheck,
   bolt:Bolt,
-
+  clipboardlist:ClipboardList,
 };
 
 interface MenuItem {

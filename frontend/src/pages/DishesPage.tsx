@@ -950,11 +950,9 @@ const DishesPage: React.FC = () => {
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
-                {orderType !== "onlinedelivery" && (
-                  <Button className="w-full my-6" onClick={handleCheckout}>
-                    Checkout
-                  </Button>
-                )}
+                <Button className="w-full my-6" onClick={handleCheckout}>
+                  Checkout
+                </Button>
               </div>
             </div>
           </div>
